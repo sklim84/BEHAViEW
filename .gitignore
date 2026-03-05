@@ -1,0 +1,2 @@
+# _visualize 하위 디렉토리 제외 (파일은 포함)
+_visualize/*/
