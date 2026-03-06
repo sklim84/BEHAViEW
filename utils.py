@@ -157,7 +157,9 @@ def evaluate_with_metrics(z, y, split):
     }
 
 
-def visualize_tsne(seed, embeddings, labels, save_path=None, max_samples=50000):
+def visualize_tsne(seed, embeddings, labels, save_path=None, max_samples=50000, skip=False):
+    if skip:
+        return 0.0, 0.0
     y_np = labels.cpu().numpy() if torch.is_tensor(labels) else labels
 
     if len(embeddings) > max_samples:

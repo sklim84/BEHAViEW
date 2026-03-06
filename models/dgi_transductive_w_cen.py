@@ -83,7 +83,7 @@ def train(encoder_model, contrast_model, data, x_cen, optimizer):
 def test(seed, encoder_model, data, x_cen, vis_save_path):
     encoder_model.eval()
     z, _, _ = encoder_model(data.x, x_cen, data.edge_index)
-    ari_score, sil_score = visualize_tsne(seed, z.detach().cpu().numpy(), data.y, save_path=vis_save_path)
+    ari_score, sil_score = visualize_tsne(seed, z.detach().cpu().numpy(), data.y, save_path=vis_save_path, skip=args.skip_tsne)
     split = get_split(num_samples=z.size()[0], train_ratio=0.1, test_ratio=0.8)
     result = evaluate_with_metrics(z, data.y, split)
     return result, ari_score, sil_score

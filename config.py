@@ -22,6 +22,9 @@ parser.add_argument('--gconv_nlayers', type=int, default=3)
 # GRACE
 parser.add_argument('--proj_dim', type=int, default=32)
 
+# Evaluation
+parser.add_argument('--skip_tsne', action='store_true', help='Skip t-SNE visualization (for HP search)')
+
 
 def get_config():
     return parser.parse_args()

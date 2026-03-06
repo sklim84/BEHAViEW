@@ -57,17 +57,43 @@ COMMON_ARGS = {
 RESULT_FILE = './results/exp_results_hp_search.csv'
 
 
+def load_completed_jobs():
+    """이미 완료된 (model, lr, input_dim, hidden_dim, gconv_nlayers) 조합 로드"""
+    completed = set()
+    if not os.path.exists(RESULT_FILE):
+        return completed
+    with open(RESULT_FILE, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            key = (
+                row['Model'],
+                float(row['lr']),
+                int(row['input_dim']),
+                int(row['hidden_dim']),
+                int(row['gconv_nlayers']),
+            )
+            completed.add(key)
+    return completed
+
+
 def generate_jobs():
-    """모든 모델 × 하이퍼파라미터 조합 생성"""
+    """모든 모델 × 하이퍼파라미터 조합 생성 (완료된 작업 제외)"""
+    completed = load_completed_jobs()
     jobs = []
+    skipped = 0
     keys = list(SEARCH_SPACE.keys())
     values = list(SEARCH_SPACE.values())
 
     for model_name, model_cfg in MODELS.items():
         for combo in itertools.product(*values):
             hp = dict(zip(keys, combo))
+            key = (model_name, hp['lr'], hp['input_dim'], hp['hidden_dim'], hp['gconv_nlayers'])
+            if key in completed:
+                skipped += 1
+                continue
             jobs.append((model_name, model_cfg, hp))
 
+    print(f'[HP Search] Skipping {skipped} already completed jobs')
     return jobs
 
 
@@ -77,6 +103,7 @@ def build_command(model_name, model_cfg, hp, gpu_id):
     cmd += ['--model_name', model_name]
     cmd += ['--gpu', str(gpu_id)]
     cmd += ['--metric_save_path', RESULT_FILE]
+    cmd += ['--skip_tsne']
 
     for k, v in COMMON_ARGS.items():
         if k == 'cen_feats':

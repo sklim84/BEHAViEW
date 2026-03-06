@@ -140,7 +140,7 @@ def run_experiment(data, x_cen, args, device, vis_save_path):
     Z = test(encoder_model, data, x_cen, args.gconv_nlayers, batch_size, device)
     z1 = Z.detach().cpu()
 
-    ari_score, sil_score = visualize_tsne(args.seed, z1.numpy(), data.y, save_path=vis_save_path)
+    ari_score, sil_score = visualize_tsne(args.seed, z1.numpy(), data.y, save_path=vis_save_path, skip=args.skip_tsne)
     split = get_split(num_samples=z1.size(0), train_ratio=0.1, test_ratio=0.8)
     eval_result = evaluate_with_metrics(z1, data.y, split)
 
