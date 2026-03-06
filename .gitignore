@@ -1,2 +1,4 @@
-# _visualize 하위 디렉토리 제외 (파일은 포함)
-_visualize/*/
+# visualize 하위 디렉토리 제외 (파일은 포함)
+visualize/*/
+__pycache__/
+*.pyc
