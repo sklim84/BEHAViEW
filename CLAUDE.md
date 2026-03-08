@@ -65,13 +65,21 @@ The `_w_org` models are baselines using only node features with standard dual-au
 
 **Main pipeline**: `pp_hofinet.py` — HOFINET.csv (한글 컬럼) → 컬럼 영문 변환 → source/target 생성 → 노드 피처 집계 → 중심성 계산 → `HOFINET_NODE_FEAT.csv` + `HOFINET_EDGES.csv`
 
+3가지 실행 모드 지원:
+
 ```bash
-# 전처리 실행 (전체 데이터)
+# CPU only (NetworkX)
 python datasets/pp_hofinet.py
 
-# 대규모 그래프에서 betweenness centrality 근사 계산
-python datasets/pp_hofinet.py --bc_k 1000
+# GPU 가속 (cuGraph)
+python datasets/pp_hofinet.py --use_gpu
+
+# Memgraph 사용
+python datasets/pp_hofinet.py --use_memgraph
+python datasets/pp_hofinet.py --use_memgraph --mg_host 192.168.1.10 --mg_port 7687
 ```
+
+그래프 피처 목록: dc, cc, pagerank, hits_hub, hits_auth, katz, eigenvector, kcore, triangle
 
 HOFINET.csv 컬럼 매핑: 거래일자→tran_dt, 출금금융회사일련번호→wd_fc_sn, 출금계좌일련번호→wd_ac_sn, 입금금융회사일련번호→dps_fc_sn, 입금계좌일련번호→dps_ac_sn, 자금구분→fnd_type, 매체구분→md_type, 거래금액→tran_amt, 이상거래여부→label(0/1)
 
@@ -84,6 +92,40 @@ Legacy scripts (이전 HF_TRNS_TRAN 데이터용): `pp_00_fnd_type.py`, `pp_01_d
 - `analysis/`: Network statistics, centrality distribution analysis, homophily analysis
 - `results/`: Experiment result CSVs with metrics per run
 - `visualize/`: t-SNE plots and hyperparameter sensitivity heatmaps
+
+## Memgraph 설정
+
+Memgraph v3.8.1이 로컬에 설치/기동됨 (sudo 없이 .deb 추출 방식)
+
+- **바이너리**: `/home/work/kftc_sklim/memgraph/extracted/usr/lib/memgraph/memgraph`
+- **데이터**: `/home/work/kftc_sklim/memgraph/data`
+- **로그**: `/home/work/kftc_sklim/memgraph/log/`
+- **쿼리 모듈**: `/home/work/kftc_sklim/memgraph/extracted/usr/lib/memgraph/query_modules/`
+- **커스텀 모듈**: `graph_features.py` — degree_centrality, hits, katz_centrality, eigenvector_centrality, triangle_count, closeness_centrality
+- **내장 모듈**: `nxalg.py` — pagerank, core_number
+
+기동 명령:
+```bash
+export LD_LIBRARY_PATH=/home/work/kftc_sklim/memgraph/extracted/usr/lib/memgraph:$LD_LIBRARY_PATH
+nohup /home/work/kftc_sklim/memgraph/extracted/usr/lib/memgraph/memgraph \
+  --bolt-port 7687 \
+  --data-directory /home/work/kftc_sklim/memgraph/data \
+  --log-file /home/work/kftc_sklim/memgraph/log/memgraph.log \
+  --query-modules-directory /home/work/kftc_sklim/memgraph/extracted/usr/lib/memgraph/query_modules \
+  --storage-properties-on-edges=true \
+  --log-level WARNING \
+  --telemetry-enabled=false \
+  > /home/work/kftc_sklim/memgraph/log/stdout.log 2>&1 &
+```
+
+다른 서버에서 Memgraph 설정 재현:
+```bash
+mkdir -p ~/memgraph && cd ~/memgraph
+curl -L -o memgraph.deb https://download.memgraph.com/memgraph/v3.8.1/ubuntu-24.04/memgraph_3.8.1-1_amd64.deb
+dpkg-deb -x memgraph.deb ./extracted
+pip install neo4j
+# graph_features.py를 query_modules/에 복사 후 기동
+```
 
 ## Git
 

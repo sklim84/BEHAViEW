@@ -3,8 +3,10 @@ HOFINET.csv 전처리 파이프라인
 원시 거래 데이터 → 노드 피처 CSV + 엣지 CSV 생성
 
 사용법:
-    python datasets/pp_hofinet.py              # CPU only
-    python datasets/pp_hofinet.py --use_gpu    # GPU 가속 (cuGraph)
+    python datasets/pp_hofinet.py                          # CPU only (NetworkX)
+    python datasets/pp_hofinet.py --use_gpu                # GPU 가속 (cuGraph)
+    python datasets/pp_hofinet.py --use_memgraph           # Memgraph 사용
+    python datasets/pp_hofinet.py --use_memgraph --mg_host 192.168.1.10 --mg_port 7687
 """
 
 import argparse
@@ -138,6 +140,153 @@ def compute_graph_features_gpu(edge_df, node_index):
     return results
 
 
+def compute_graph_features_memgraph(edge_df, node_index, host='127.0.0.1', port=7687):
+    """Memgraph 기반 그래프 피처 계산
+    Memgraph 쿼리 모듈을 통해 모든 그래프 피처를 계산합니다.
+    - graph_features.*: 커스텀 모듈 (dc, hits, katz, eigenvector, triangle, cc)
+    - nxalg.*: 내장 NetworkX 래퍼 (pagerank, core_number)
+    Returns: dict of {feature_name: {node_id: value}}
+    """
+    from neo4j import GraphDatabase
+
+    results = {}
+
+    # --- Memgraph 연결 및 그래프 데이터 적재 ---
+    print(f'[INFO] Connecting to Memgraph at {host}:{port}...')
+    driver = GraphDatabase.driver(f'bolt://{host}:{port}', auth=('', ''))
+    driver.verify_connectivity()
+    print('[INFO] Connected to Memgraph')
+
+    try:
+        print('[INFO] Loading graph into Memgraph...')
+        t0 = time.time()
+        with driver.session(database='memgraph') as session:
+            session.run('MATCH (n) DETACH DELETE n')
+            session.run('CREATE INDEX ON :Account(nid)')
+
+            # 배치 단위로 노드 생성
+            batch_size = 10000
+            node_ids = list(node_index.values())
+            for i in range(0, len(node_ids), batch_size):
+                batch = node_ids[i:i + batch_size]
+                session.run(
+                    'UNWIND $nodes AS nid CREATE (:Account {nid: nid})',
+                    nodes=batch
+                )
+
+            # 배치 단위로 엣지 생성
+            src_ids = edge_df['source'].map(node_index).values
+            tgt_ids = edge_df['target'].map(node_index).values
+            edges = [{'s': int(s), 't': int(t)} for s, t in zip(src_ids, tgt_ids)]
+            for i in range(0, len(edges), batch_size):
+                batch = edges[i:i + batch_size]
+                session.run(
+                    'UNWIND $edges AS e '
+                    'MATCH (a:Account {nid: e.s}), (b:Account {nid: e.t}) '
+                    'CREATE (a)-[:TX]->(b)',
+                    edges=batch
+                )
+        print(f'[INFO] Graph loaded into Memgraph: {len(node_ids):,} nodes, {len(edges):,} edges ({time.time()-t0:.1f}s)')
+
+        with driver.session(database='memgraph') as session:
+            # Degree Centrality
+            t0 = time.time()
+            result = session.run(
+                'CALL graph_features.degree_centrality("undirected") '
+                'YIELD node, degree '
+                'RETURN node.nid AS nid, degree'
+            )
+            results['dc'] = {record['nid']: record['degree'] for record in result}
+            print(f'[INFO] Degree centrality done (Memgraph, {time.time()-t0:.1f}s)')
+
+            # PageRank
+            t0 = time.time()
+            result = session.run(
+                'CALL nxalg.pagerank() '
+                'YIELD node, rank '
+                'RETURN node.nid AS nid, rank'
+            )
+            results['pagerank'] = {record['nid']: record['rank'] for record in result}
+            print(f'[INFO] PageRank done (Memgraph, {time.time()-t0:.1f}s)')
+
+            # HITS
+            t0 = time.time()
+            result = session.run(
+                'CALL graph_features.hits() '
+                'YIELD node, hubs, authorities '
+                'RETURN node.nid AS nid, hubs, authorities'
+            )
+            hits_data = [(r['nid'], r['hubs'], r['authorities']) for r in result]
+            results['hits_hub'] = {nid: h for nid, h, a in hits_data}
+            results['hits_auth'] = {nid: a for nid, h, a in hits_data}
+            print(f'[INFO] HITS done (Memgraph, {time.time()-t0:.1f}s)')
+
+            # Katz Centrality
+            t0 = time.time()
+            try:
+                result = session.run(
+                    'CALL graph_features.katz_centrality() '
+                    'YIELD node, rank '
+                    'RETURN node.nid AS nid, rank'
+                )
+                results['katz'] = {record['nid']: record['rank'] for record in result}
+                print(f'[INFO] Katz centrality done (Memgraph, {time.time()-t0:.1f}s)')
+            except Exception as e:
+                print(f'[WARN] Katz centrality failed: {e}')
+                results['katz'] = {}
+
+            # K-core (core number)
+            t0 = time.time()
+            result = session.run(
+                'CALL nxalg.core_number() '
+                'YIELD node, core '
+                'RETURN node.nid AS nid, core'
+            )
+            results['kcore'] = {record['nid']: record['core'] for record in result}
+            print(f'[INFO] K-core done (Memgraph, {time.time()-t0:.1f}s)')
+
+            # Eigenvector Centrality
+            t0 = time.time()
+            try:
+                result = session.run(
+                    'CALL graph_features.eigenvector_centrality() '
+                    'YIELD node, rank '
+                    'RETURN node.nid AS nid, rank'
+                )
+                results['eigenvector'] = {record['nid']: record['rank'] for record in result}
+                print(f'[INFO] Eigenvector centrality done (Memgraph, {time.time()-t0:.1f}s)')
+            except Exception as e:
+                print(f'[WARN] Eigenvector centrality failed: {e}')
+                results['eigenvector'] = {}
+
+            # Triangle Count
+            t0 = time.time()
+            result = session.run(
+                'CALL graph_features.triangle_count() '
+                'YIELD node, count '
+                'RETURN node.nid AS nid, count'
+            )
+            results['triangle'] = {record['nid']: record['count'] for record in result}
+            print(f'[INFO] Triangle count done (Memgraph, {time.time()-t0:.1f}s)')
+
+            # Closeness Centrality
+            t0 = time.time()
+            result = session.run(
+                'CALL graph_features.closeness_centrality() '
+                'YIELD node, rank '
+                'RETURN node.nid AS nid, rank'
+            )
+            results['cc'] = {record['nid']: record['rank'] for record in result}
+            print(f'[INFO] Closeness centrality done (Memgraph, {time.time()-t0:.1f}s)')
+
+    finally:
+        driver.close()
+        print('[INFO] Memgraph connection closed')
+
+    return results
+
+
+
 def compute_graph_features_cpu(G):
     """NetworkX CPU 기반 그래프 피처 계산"""
     results = {}
@@ -188,7 +337,7 @@ def compute_graph_features_cpu(G):
 GRAPH_FEATURE_NAMES = ['dc', 'cc', 'pagerank', 'hits_hub', 'hits_auth', 'katz', 'eigenvector', 'kcore', 'triangle']
 
 
-def build_node_features(df, seed=2025, use_gpu=False):
+def build_node_features(df, seed=2025, use_gpu=False, use_memgraph=False, mg_host='127.0.0.1', mg_port=7687):
     """거래 데이터로부터 노드 피처 + 그래프 피처 + 엣지 리스트 생성"""
     print('[INFO] Building node features...')
 
@@ -215,7 +364,13 @@ def build_node_features(df, seed=2025, use_gpu=False):
 
     # 그래프 피처 계산
     print('[INFO] Computing graph features...')
-    if use_gpu:
+    if use_memgraph:
+        node_index = {acc: i for i, acc in enumerate(node_features.index)}
+        feat_dicts = compute_graph_features_memgraph(edge_df, node_index, host=mg_host, port=mg_port)
+        for feat_name, feat_dict in feat_dicts.items():
+            node_features[feat_name] = node_features.index.map(
+                lambda x, fd=feat_dict, ni=node_index: fd.get(ni.get(x, -1), 0))
+    elif use_gpu:
         node_index = {acc: i for i, acc in enumerate(node_features.index)}
         feat_dicts = compute_graph_features_gpu(edge_df, node_index)
         for feat_name, feat_dict in feat_dicts.items():
@@ -228,25 +383,26 @@ def build_node_features(df, seed=2025, use_gpu=False):
         for feat_name, feat_dict in feat_dicts.items():
             node_features[feat_name] = pd.Series(feat_dict)
 
-    # Closeness centrality (CPU only — cuGraph 미지원)
-    print('[INFO] Computing closeness centrality (CPU)...')
-    if use_gpu:
-        node_index = {acc: i for i, acc in enumerate(node_features.index)}
-        src_ids = edge_df['source'].map(node_index).values
-        tgt_ids = edge_df['target'].map(node_index).values
-        G_nx = nx.DiGraph()
-        G_nx.add_edges_from(zip(src_ids, tgt_ids))
-    else:
-        G_nx = G
-    t0 = time.time()
-    cc_dict = nx.closeness_centrality(G_nx)
-    if use_gpu:
-        cc_dict = {int(k): v for k, v in cc_dict.items()}
-        node_features['cc'] = node_features.index.map(
-            lambda x: cc_dict.get(node_index.get(x, -1), 0))
-    else:
-        node_features['cc'] = pd.Series(cc_dict)
-    print(f'[INFO] Closeness centrality done (CPU, {time.time()-t0:.1f}s)')
+    # Closeness centrality (cuGraph 미지원, Memgraph는 graph_features 모듈에서 처리)
+    if not use_memgraph:
+        print('[INFO] Computing closeness centrality (CPU)...')
+        if use_gpu:
+            node_index = {acc: i for i, acc in enumerate(node_features.index)}
+            src_ids = edge_df['source'].map(node_index).values
+            tgt_ids = edge_df['target'].map(node_index).values
+            G_nx = nx.DiGraph()
+            G_nx.add_edges_from(zip(src_ids, tgt_ids))
+        else:
+            G_nx = G
+        t0 = time.time()
+        cc_dict = nx.closeness_centrality(G_nx)
+        if use_gpu:
+            cc_dict = {int(k): v for k, v in cc_dict.items()}
+            node_features['cc'] = node_features.index.map(
+                lambda x: cc_dict.get(node_index.get(x, -1), 0))
+        else:
+            node_features['cc'] = pd.Series(cc_dict)
+        print(f'[INFO] Closeness centrality done (CPU, {time.time()-t0:.1f}s)')
 
     node_features.fillna(0, inplace=True)
 
@@ -288,14 +444,24 @@ def main():
     parser.add_argument('--output_dir', type=str, default='./datasets')
     parser.add_argument('--use_gpu', action='store_true',
                         help='GPU 가속 사용 (cuGraph, cc는 CPU)')
+    parser.add_argument('--use_memgraph', action='store_true',
+                        help='Memgraph 사용 (dc,pagerank,hits,katz,kcore는 Memgraph, 나머지 NetworkX 폴백)')
+    parser.add_argument('--mg_host', type=str, default='127.0.0.1',
+                        help='Memgraph 호스트 (기본: 127.0.0.1)')
+    parser.add_argument('--mg_port', type=int, default=7687,
+                        help='Memgraph 포트 (기본: 7687)')
     parser.add_argument('--seed', type=int, default=2025)
     args = parser.parse_args()
+
+    if args.use_gpu and args.use_memgraph:
+        parser.error('--use_gpu와 --use_memgraph는 동시에 사용할 수 없습니다')
 
     df = load_and_rename(args.input)
     df = add_source_target(df)
 
     node_features, edge_df = build_node_features(
-        df, seed=args.seed, use_gpu=args.use_gpu)
+        df, seed=args.seed, use_gpu=args.use_gpu,
+        use_memgraph=args.use_memgraph, mg_host=args.mg_host, mg_port=args.mg_port)
     save_outputs(node_features, edge_df, args.output_name, args.output_dir)
 
     print(f'\n[INFO] Preprocessing complete!')
