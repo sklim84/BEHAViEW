@@ -66,11 +66,13 @@ def train(loader, encoder_model, contrast_model, optimizer, x_cen, device):
     total_loss = 0
     for batch in loader:
         batch = batch.to(device)
-        batch_x_cen = x_cen[batch.n_id.cpu()].to(device)
+        batch_x_cen = x_cen[batch.n_id]
 
         optimizer.zero_grad()
         z1, z2 = encoder_model(batch.x, batch_x_cen, batch.edge_index, batch.edge_attr)
-        h1, h2 = [encoder_model.project(z) for z in [z1, z2]]
+        h1 = encoder_model.project(z1)
+        h2 = encoder_model.project(z2)
+        h1, h2 = h1[:batch.batch_size], h2[:batch.batch_size]
 
         loss = contrast_model(h1, h2)
         loss.backward()
@@ -79,8 +81,10 @@ def train(loader, encoder_model, contrast_model, optimizer, x_cen, device):
     return total_loss / len(loader)
 
 
-def test(encoder_model, data, x_cen, num_layers=2, batch_size=4096, device='cuda'):
+def test(encoder_model, data, x_cen, num_layers=2, batch_size=4096, device=None):
     encoder_model.eval()
+    old_aug1 = encoder_model.augmentor1
+    old_aug2 = encoder_model.augmentor2
     encoder_model.augmentor1 = A.Identity()
     encoder_model.augmentor2 = A.Identity()
 
@@ -94,17 +98,21 @@ def test(encoder_model, data, x_cen, num_layers=2, batch_size=4096, device='cuda
         shuffle=False
     )
 
-    with torch.no_grad():
-        for batch in test_loader:
-            batch = batch.to(device)
-            z1, _ = encoder_model(
-                batch.x,
-                x_cen[batch.n_id.cpu()].to(device),
-                batch.edge_index,
-                getattr(batch, 'edge_attr', None)
-            )
-            h1 = encoder_model.project(z1)
-            Z[batch.n_id] = h1
+    try:
+        with torch.no_grad():
+            for batch in test_loader:
+                batch = batch.to(device)
+                z1, _ = encoder_model(
+                    batch.x,
+                    x_cen[batch.n_id],
+                    batch.edge_index,
+                    getattr(batch, 'edge_attr', None)
+                )
+                h1 = encoder_model.project(z1)
+                Z[batch.n_id[:batch.batch_size]] = h1[:batch.batch_size]
+    finally:
+        encoder_model.augmentor1 = old_aug1
+        encoder_model.augmentor2 = old_aug2
 
     return Z
 
@@ -130,14 +138,15 @@ def run_experiment(data, x_cen, args, device, vis_save_path):
 
     batch_size = 4096
     train_loader = NeighborLoader(data, num_neighbors=[10, 10], batch_size=batch_size, shuffle=True)
+    x_cen_gpu = x_cen.to(device)
 
     with tqdm(total=1000, desc='(T) With Centrality') as pbar:
         for epoch in range(1, 1001):
-            loss = train(train_loader, encoder_model, contrast_model, optimizer, x_cen, device)
+            loss = train(train_loader, encoder_model, contrast_model, optimizer, x_cen_gpu, device)
             pbar.set_postfix({'loss': loss})
             pbar.update()
 
-    Z = test(encoder_model, data, x_cen, args.gconv_nlayers, batch_size, device)
+    Z = test(encoder_model, data, x_cen_gpu, args.gconv_nlayers, batch_size, device)
     z1 = Z.detach().cpu()
 
     ari_score, sil_score = visualize_tsne(args.seed, z1.numpy(), data.y, save_path=vis_save_path, skip=args.skip_tsne)

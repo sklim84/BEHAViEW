@@ -5,6 +5,7 @@ import GCL.augmentors as A
 import torch
 from torch import nn
 from torch.optim import Adam
+from torch.utils.checkpoint import checkpoint
 from GCL.eval import get_split
 from GCL.models import DualBranchContrast
 from torch_geometric.nn import GCNConv
@@ -53,12 +54,17 @@ class Encoder(torch.nn.Module):
         x1, edge_index1, edge_weight1 = aug1(x_agg, edge_index, edge_weight)
         x2, edge_index2, edge_weight2 = aug2(x_cen, edge_index, edge_weight)
 
-        z1 = self.encoder1(x1, edge_index1, edge_weight1)
-        z2 = self.encoder2(x2, edge_index2, edge_weight2)
+        # Pre-compute corrupted inputs (random permutation) before checkpoint
+        x1n, edge_index1n, edge_weight1n = self.corruption(x1, edge_index1, edge_weight1)
+        x2n, edge_index2n, edge_weight2n = self.corruption(x2, edge_index2, edge_weight2)
+
+        # Gradient checkpointing: recompute intermediates during backward to save memory
+        z1 = checkpoint(self.encoder1, x1, edge_index1, edge_weight1, use_reentrant=False)
+        z2 = checkpoint(self.encoder2, x2, edge_index2, edge_weight2, use_reentrant=False)
         g1 = self.project(torch.sigmoid(z1.mean(dim=0, keepdim=True)))
         g2 = self.project(torch.sigmoid(z2.mean(dim=0, keepdim=True)))
-        z1n = self.encoder1(*self.corruption(x1, edge_index1, edge_weight1))
-        z2n = self.encoder2(*self.corruption(x2, edge_index2, edge_weight2))
+        z1n = checkpoint(self.encoder1, x1n, edge_index1n, edge_weight1n, use_reentrant=False)
+        z2n = checkpoint(self.encoder2, x2n, edge_index2n, edge_weight2n, use_reentrant=False)
         return z1, z2, g1, g2, z1n, z2n
 
 
@@ -72,11 +78,12 @@ def train(encoder_model, contrast_model, data, x_cen, optimizer):
     return loss.item()
 
 
-def test(seed, encoder_model, data, x_cen, vis_save_path):
+def test(seed, encoder_model, data, x_cen, vis_save_path, skip_tsne):
     encoder_model.eval()
-    z1, z2, _, _, _, _ = encoder_model(data.x, x_cen, data.edge_index)
+    with torch.no_grad():
+        z1, z2, _, _, _, _ = encoder_model(data.x, x_cen, data.edge_index)
     z = z1 + z2
-    ari_score, sil_score = visualize_tsne(seed, z.detach().cpu().numpy(), data.y, save_path=vis_save_path, skip=args.skip_tsne)
+    ari_score, sil_score = visualize_tsne(seed, z.detach().cpu().numpy(), data.y, save_path=vis_save_path, skip=skip_tsne)
     split = get_split(num_samples=z.size()[0], train_ratio=0.1, test_ratio=0.8)
     result = evaluate_with_metrics(z, data.y, split)
     return result, ari_score, sil_score
@@ -100,16 +107,18 @@ def main(args):
     contrast_model = DualBranchContrast(loss=loss_fn, mode='G2L').to(device)
     optimizer = Adam(encoder_model.parameters(), lr=args.lr)
 
+    x_cen_gpu = x_cen.to(device)
+
     with tqdm(total=200, desc='(T)') as pbar:
         for epoch in range(1, 201):
-            loss = train(encoder_model, contrast_model, data, x_cen.to(device), optimizer)
+            loss = train(encoder_model, contrast_model, data, x_cen_gpu, optimizer)
             pbar.set_postfix({'loss': loss})
             pbar.update()
 
     os.makedirs('./visualize/MVGRL', exist_ok=True)
     cen_feats = "_".join(str(item) for item in args.cen_feats)
     vis_save_path = f'./visualize/MVGRL/tsne_{args.model_name}_{args.node_data_name}_{cen_feats}_{args.lr}_{args.input_dim}_{args.hidden_dim}_{args.gconv_nlayers}_{args.loss}.png'
-    test_result, ari_score, sil_score = test(args.seed, encoder_model, data, x_cen.to(device), vis_save_path)
+    test_result, ari_score, sil_score = test(args.seed, encoder_model, data, x_cen_gpu, vis_save_path, args.skip_tsne)
     print(test_result)
     print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}')
 
