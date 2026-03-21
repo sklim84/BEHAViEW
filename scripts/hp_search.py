@@ -22,7 +22,8 @@ import itertools
 import os
 
 from scripts.hp_common import (
-    MODELS, load_completed_jobs, run_parallel, wait_for_gpu_idle,
+    MODELS, MODELS_CEN, MODELS_ORG, MODELS_ALL,
+    load_completed_jobs, run_parallel, wait_for_gpu_idle,
 )
 
 # ============================================================
@@ -75,6 +76,20 @@ PRESETS = {
         'result_file': './results/exp_results_hp_search_v2.csv',
         'num_gpus': 6,
     },
+    'compare': {
+        'cen_feats_sets': {
+            'baseline': 'dc cc pagerank hits_hub hits_auth kcore triangle',
+        },
+        'search_space': {
+            'input_dim': [8, 16, 32],
+            'hidden_dim': [128, 256, 512],
+            'lr': [1e-4, 5e-4, 1e-3, 1e-2],
+            'gconv_nlayers': [2, 3],
+        },
+        'result_file': './results/exp_results_hp_compare.csv',
+        'num_gpus': 6,
+        'models': 'all',  # _w_cen + _w_org 모두
+    },
 }
 
 COMMON_ARGS = {
@@ -87,8 +102,10 @@ COMMON_ARGS = {
 # ============================================================
 # 작업 생성
 # ============================================================
-def generate_jobs(search_space, result_file, cen_feats_sets):
+def generate_jobs(search_space, result_file, cen_feats_sets, models=None):
     """모델 × cen_feats × HP 조합 생성 (완료 제외)"""
+    if models is None:
+        models = MODELS
     multi_set = len(cen_feats_sets) > 1
 
     if multi_set:
@@ -115,11 +132,13 @@ def generate_jobs(search_space, result_file, cen_feats_sets):
     keys = list(search_space.keys())
     values = list(search_space.values())
 
-    for model_name, model_cfg in MODELS.items():
-        for cen_name, cen_feats in cen_feats_sets.items():
+    for model_name, model_cfg in models.items():
+        is_org = '_w_org' in model_name
+        feats_iter = {'none': ''} if is_org else cen_feats_sets
+        for cen_name, cen_feats in feats_iter.items():
             for combo in itertools.product(*values):
                 hp = dict(zip(keys, combo))
-                if multi_set:
+                if multi_set and not is_org:
                     key = (model_name, cen_feats, hp['lr'], hp['input_dim'],
                            hp['hidden_dim'], hp['gconv_nlayers'])
                 else:
@@ -139,7 +158,7 @@ def generate_jobs(search_space, result_file, cen_feats_sets):
 def main():
     parser = argparse.ArgumentParser(description='HP Search (unified)')
     parser.add_argument('--preset', choices=list(PRESETS.keys()),
-                        help='프리셋 선택 (baseline/17feat/v2)')
+                        help='프리셋 선택 (baseline/17feat/v2/compare)')
     parser.add_argument('--cen_feats', nargs='+',
                         help='커스텀 cen_feats (프리셋 대신 사용)')
     parser.add_argument('--num_gpus', type=int, help='사용할 GPU 수')
@@ -168,6 +187,15 @@ def main():
     result_file = cfg['result_file']
     num_gpus = cfg['num_gpus']
 
+    # 모델 세트 결정
+    models_key = cfg.get('models', 'cen')
+    if models_key == 'all':
+        selected_models = MODELS_ALL
+    elif models_key == 'org':
+        selected_models = MODELS_ORG
+    else:
+        selected_models = MODELS_CEN
+
     # CLI 오버라이드 적용
     if args.cen_feats:
         cen_feats_sets = {'custom': ' '.join(args.cen_feats)}
@@ -190,12 +218,13 @@ def main():
         wait_for_gpu_idle()
 
     # 작업 생성
-    jobs, skipped = generate_jobs(search_space, result_file, cen_feats_sets)
+    jobs, skipped = generate_jobs(search_space, result_file, cen_feats_sets,
+                                  models=selected_models)
     n_hp = len(list(itertools.product(*search_space.values())))
 
     print(f'[{label}] Skipping {skipped} already completed jobs')
-    print(f'[{label}] {len(MODELS)} models × '
-          f'{len(cen_feats_sets)} sets × {n_hp} HP = {len(jobs)} jobs')
+    print(f'[{label}] {len(selected_models)} models × '
+          f'{len(cen_feats_sets)} cen_feats sets × {n_hp} HP = {len(jobs)} jobs')
     print(f'[{label}] Search space: {search_space}')
     for name, feats in cen_feats_sets.items():
         print(f'[{label}] cen_feats[{name}] ({len(feats.split())}): {feats}')

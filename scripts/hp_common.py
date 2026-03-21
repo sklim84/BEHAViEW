@@ -9,8 +9,8 @@ import subprocess
 import time
 from collections import deque
 
-# 6 모델 공통 설정
-MODELS = {
+# 6 아키텍처 × 2 변형 = 12 모델
+MODELS_CEN = {
     'bgrl_w_cen': {
         'script': 'models/bgrl_w_cen.py',
         'fixed': {'loss': 'BarlowTwins'},
@@ -37,10 +37,41 @@ MODELS = {
     },
 }
 
+MODELS_ORG = {
+    'bgrl_w_org': {
+        'script': 'models/bgrl_w_org.py',
+        'fixed': {'loss': 'BarlowTwins'},
+    },
+    'dgi_inductive_w_org': {
+        'script': 'models/dgi_inductive_w_org.py',
+        'fixed': {'loss': 'JSD'},
+    },
+    'dgi_transductive_w_org': {
+        'script': 'models/dgi_transductive_w_org.py',
+        'fixed': {'loss': 'JSD'},
+    },
+    'gbt_w_org': {
+        'script': 'models/gbt_w_org.py',
+        'fixed': {'loss': 'BarlowTwins'},
+    },
+    'grace_w_org': {
+        'script': 'models/grace_w_org.py',
+        'fixed': {'loss': 'InfoNCE', 'proj_dim': 32},
+    },
+    'mvgrl_w_org': {
+        'script': 'models/mvgrl_w_org.py',
+        'fixed': {'loss': 'BootstrapLatent'},
+    },
+}
+
+MODELS = MODELS_CEN  # 기존 호환성 유지
+MODELS_ALL = {**MODELS_CEN, **MODELS_ORG}
+
 
 def build_command(model_cfg, model_name, hp, gpu_id, result_file,
                   common_args, cen_feats=None):
     """모델 실행 커맨드 생성"""
+    is_org = '_w_org' in model_name
     cmd = ['python', '-u', model_cfg['script']]
     cmd += ['--model_name', model_name]
     cmd += ['--gpu', str(gpu_id)]
@@ -49,11 +80,12 @@ def build_command(model_cfg, model_name, hp, gpu_id, result_file,
 
     for k, v in common_args.items():
         if k == 'cen_feats':
-            cmd += ['--cen_feats'] + str(v).split()
+            if not is_org:
+                cmd += ['--cen_feats'] + str(v).split()
         else:
             cmd += [f'--{k}', str(v)]
 
-    if cen_feats:
+    if cen_feats and not is_org:
         cmd += ['--cen_feats'] + cen_feats.split()
 
     for k, v in hp.items():

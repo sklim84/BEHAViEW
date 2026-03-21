@@ -1,13 +1,19 @@
-torch>=2.0.0
-torch-geometric>=2.5.0
+torch>=2.10.0
+torch-geometric>=2.7.0
 PyGCL==0.1.2
-networkx>=3.0
-scikit-learn>=1.3.0
-matplotlib>=3.7.0
-pandas>=2.0.0
-numpy>=1.24.0
-scipy>=1.10.0
-tqdm>=4.65.0
+networkx>=3.6
+scikit-learn>=1.7.0
+matplotlib>=3.10.0
+pandas>=2.3.0
+numpy>=2.2.0
+scipy>=1.16.0
+tqdm>=4.67.0
+
+# PyGCL 패치 필요 (PyTorch 2.10+ 환경):
+#   GCL/augmentors/__init__.py — RWSampling lazy import
+#   GCL/augmentors/functional.py — torch_sparse/torch_scatter try/except
+#   GCL/models/samplers.py — torch_scatter try/except
+#   GCL/utils.py — dgl lazy import
 
 # GPU 가속 중심성 계산 (선택사항)
 # cugraph-cu12>=26.0.0

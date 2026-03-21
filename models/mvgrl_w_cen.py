@@ -58,13 +58,20 @@ class Encoder(torch.nn.Module):
         x1n, edge_index1n, edge_weight1n = self.corruption(x1, edge_index1, edge_weight1)
         x2n, edge_index2n, edge_weight2n = self.corruption(x2, edge_index2, edge_weight2)
 
-        # Gradient checkpointing: recompute intermediates during backward to save memory
-        z1 = checkpoint(self.encoder1, x1, edge_index1, edge_weight1, use_reentrant=False)
-        z2 = checkpoint(self.encoder2, x2, edge_index2, edge_weight2, use_reentrant=False)
+        if self.training:
+            z1 = checkpoint(self.encoder1, x1, edge_index1, edge_weight1, use_reentrant=False)
+            z2 = checkpoint(self.encoder2, x2, edge_index2, edge_weight2, use_reentrant=False)
+        else:
+            z1 = self.encoder1(x1, edge_index1, edge_weight1)
+            z2 = self.encoder2(x2, edge_index2, edge_weight2)
         g1 = self.project(torch.sigmoid(z1.mean(dim=0, keepdim=True)))
         g2 = self.project(torch.sigmoid(z2.mean(dim=0, keepdim=True)))
-        z1n = checkpoint(self.encoder1, x1n, edge_index1n, edge_weight1n, use_reentrant=False)
-        z2n = checkpoint(self.encoder2, x2n, edge_index2n, edge_weight2n, use_reentrant=False)
+        if self.training:
+            z1n = checkpoint(self.encoder1, x1n, edge_index1n, edge_weight1n, use_reentrant=False)
+            z2n = checkpoint(self.encoder2, x2n, edge_index2n, edge_weight2n, use_reentrant=False)
+        else:
+            z1n = self.encoder1(x1n, edge_index1n, edge_weight1n)
+            z2n = self.encoder2(x2n, edge_index2n, edge_weight2n)
         return z1, z2, g1, g2, z1n, z2n
 
 

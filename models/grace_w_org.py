@@ -71,8 +71,9 @@ def train(train_loader, encoder_model, contrast_model, optimizer, device):
     return total_loss / max(1, len(train_loader))
 
 
-def test(seed, encoder_model, data, vis_save_path, num_layers=2, batch_size=4096, device='cuda'):
+def test(seed, encoder_model, data, vis_save_path, num_layers=2, batch_size=4096, device='cuda', skip_tsne=False):
     encoder_model.eval()
+    old_aug = encoder_model.augmentor
     encoder_model.augmentor = (A.Identity(), A.Identity())
 
     out_dim = encoder_model.fc2.out_features
@@ -80,22 +81,25 @@ def test(seed, encoder_model, data, vis_save_path, num_layers=2, batch_size=4096
 
     test_loader = NeighborLoader(data, num_neighbors=[-1] * num_layers, batch_size=batch_size, shuffle=False)
 
-    with torch.no_grad():
-        for batch in test_loader:
-            batch = batch.to(device)
-            z, _, _ = encoder_model(batch.x, batch.edge_index, getattr(batch, 'edge_attr', None))
-            h = encoder_model.project(z)
-            Z[batch.n_id] = h
+    try:
+        with torch.no_grad():
+            for batch in test_loader:
+                batch = batch.to(device)
+                z, _, _ = encoder_model(batch.x, batch.edge_index, getattr(batch, 'edge_attr', None))
+                h = encoder_model.project(z)
+                Z[batch.n_id[:batch.batch_size]] = h[:batch.batch_size]
+    finally:
+        encoder_model.augmentor = old_aug
 
     split = get_split(num_samples=Z.size()[0], train_ratio=0.1, test_ratio=0.8)
-    ari_score, sil_score = visualize_tsne(seed, Z.detach().cpu().numpy(), data.y, save_path=vis_save_path)
+    ari_score, sil_score = visualize_tsne(seed, Z.detach().cpu().numpy(), data.y, save_path=vis_save_path, skip=skip_tsne)
     result = evaluate_with_metrics(Z, data.y, split)
     return result, ari_score, sil_score
 
 
 def main(args):
     set_seed(args.seed)
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device(f'cuda:{args.gpu}')
     print(f'##### device: {device}')
 
     data, _ = load_graph_data(args, device=device)
@@ -120,7 +124,7 @@ def main(args):
 
     os.makedirs('./visualize/GRACE', exist_ok=True)
     vis_save_path = f'./visualize/GRACE/tsne_GRACE_w_org_{args.node_data_name}.png'
-    test_result, ari_score, sil_score = test(args.seed, encoder_model, data, vis_save_path, 2, batch_size, device)
+    test_result, ari_score, sil_score = test(args.seed, encoder_model, data, vis_save_path, 2, batch_size, device, args.skip_tsne)
     print(test_result)
     print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}')
 
