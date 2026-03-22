@@ -49,7 +49,7 @@ def build_result_dict(model_name, args, test_result, ari_score, sil_score, use_c
         'Model': model_name,
         'Data': args.node_data_name,
         'Seed': args.seed,
-        'cen_feats': args.cen_feats if use_cen else "None",
+        'struct_feats': args.struct_feats if use_cen else "None",
         'lr': args.lr if use_cen else -1,
         'input_dim': getattr(args, 'input_dim', -1) if use_cen else -1,
         'hidden_dim': args.hidden_dim if use_cen else -1,

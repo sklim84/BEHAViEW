@@ -69,7 +69,7 @@ MODELS_ALL = {**MODELS_CEN, **MODELS_ORG}
 
 
 def build_command(model_cfg, model_name, hp, gpu_id, result_file,
-                  common_args, cen_feats=None):
+                  common_args, struct_feats=None):
     """모델 실행 커맨드 생성"""
     is_org = '_w_org' in model_name
     cmd = ['python', '-u', model_cfg['script']]
@@ -79,14 +79,14 @@ def build_command(model_cfg, model_name, hp, gpu_id, result_file,
     cmd += ['--skip_tsne']
 
     for k, v in common_args.items():
-        if k == 'cen_feats':
+        if k == 'struct_feats':
             if not is_org:
-                cmd += ['--cen_feats'] + str(v).split()
+                cmd += ['--struct_feats'] + str(v).split()
         else:
             cmd += [f'--{k}', str(v)]
 
-    if cen_feats and not is_org:
-        cmd += ['--cen_feats'] + cen_feats.split()
+    if struct_feats and not is_org:
+        cmd += ['--struct_feats'] + struct_feats.split()
 
     for k, v in hp.items():
         cmd += [f'--{k}', str(v)]
@@ -162,12 +162,12 @@ def generate_jobs(search_space, result_file, models=None,
 
 
 def run_parallel(jobs, num_gpus, result_file, common_args, log_dir='logs',
-                 log_prefix='hp_search', cen_feats=None, label='HP Search'):
+                 log_prefix='hp_search', struct_feats=None, label='HP Search'):
     """GPU에 분배하여 병렬 실행.
 
     jobs: [(model_name, model_cfg, hp, ...)] 리스트
-    cen_feats: 문자열 또는 None. None이면 common_args에서 가져옴.
-        job이 5-tuple이면 (model_name, model_cfg, hp, cen_feats, cen_name)으로 간주.
+    struct_feats: 문자열 또는 None. None이면 common_args에서 가져옴.
+        job이 5-tuple이면 (model_name, model_cfg, hp, struct_feats, cen_name)으로 간주.
     """
     total = len(jobs)
     print(f'[{label}] Total jobs: {total}, GPUs: {num_gpus}')
@@ -187,16 +187,16 @@ def run_parallel(jobs, num_gpus, result_file, common_args, log_dir='logs',
                 job = queue.popleft()
                 model_name, model_cfg, hp = job[0], job[1], job[2]
 
-                # cen_feats / cen_name 결정
-                job_cen_feats = cen_feats
+                # struct_feats / cen_name 결정
+                job_struct_feats = struct_feats
                 extra_label = ''
                 if len(job) >= 5:
-                    job_cen_feats = job[3]
+                    job_struct_feats = job[3]
                     extra_label = f' [{job[4]}]'
 
                 cmd = build_command(
                     model_cfg, model_name, hp, gpu_id, result_file,
-                    common_args, cen_feats=job_cen_feats)
+                    common_args, struct_feats=job_struct_feats)
 
                 log_file = open(
                     os.path.join(log_dir, f'{log_prefix}_gpu{gpu_id}.log'), 'w')

@@ -34,24 +34,24 @@ class GConv(torch.nn.Module):
 
 
 class Encoder(torch.nn.Module):
-    def __init__(self, encoder, proj_agg, proj_cen, augmentor1, augmentor2, hidden_dim, proj_dim):
+    def __init__(self, encoder, proj_behav, proj_struct, augmentor1, augmentor2, hidden_dim, proj_dim):
         super(Encoder, self).__init__()
-        self.proj_agg = proj_agg
-        self.proj_cen = proj_cen
+        self.proj_behav = proj_behav
+        self.proj_struct = proj_struct
         self.encoder = encoder
         self.augmentor1 = augmentor1
         self.augmentor2 = augmentor2
         self.fc1 = torch.nn.Linear(hidden_dim, proj_dim)
         self.fc2 = torch.nn.Linear(proj_dim, hidden_dim)
 
-    def forward(self, x_agg, x_cen, edge_index, edge_weight=None):
-        x1, edge_index1, edge_weight1 = self.augmentor1(x_agg, edge_index, edge_weight)
-        x2, edge_index2, edge_weight2 = self.augmentor2(x_cen, edge_index, edge_weight)
+    def forward(self, x_behav, x_struct, edge_index, edge_weight=None):
+        x1, edge_index1, edge_weight1 = self.augmentor1(x_behav, edge_index, edge_weight)
+        x2, edge_index2, edge_weight2 = self.augmentor2(x_struct, edge_index, edge_weight)
 
-        z1 = self.proj_agg(x1)
+        z1 = self.proj_behav(x1)
         z1 = self.encoder(z1, edge_index1, edge_weight1)
 
-        z2 = self.proj_cen(x2)
+        z2 = self.proj_struct(x2)
         z2 = self.encoder(z2, edge_index2, edge_weight2)
 
         return z1, z2
@@ -61,15 +61,15 @@ class Encoder(torch.nn.Module):
         return self.fc2(z)
 
 
-def train(loader, encoder_model, contrast_model, optimizer, x_cen, device):
+def train(loader, encoder_model, contrast_model, optimizer, x_struct, device):
     encoder_model.train()
     total_loss = 0
     for batch in loader:
         batch = batch.to(device)
-        batch_x_cen = x_cen[batch.n_id]
+        batch_x_struct = x_struct[batch.n_id]
 
         optimizer.zero_grad()
-        z1, z2 = encoder_model(batch.x, batch_x_cen, batch.edge_index, batch.edge_attr)
+        z1, z2 = encoder_model(batch.x, batch_x_struct, batch.edge_index, batch.edge_attr)
         h1 = encoder_model.project(z1)
         h2 = encoder_model.project(z2)
         h1, h2 = h1[:batch.batch_size], h2[:batch.batch_size]
@@ -81,7 +81,7 @@ def train(loader, encoder_model, contrast_model, optimizer, x_cen, device):
     return total_loss / len(loader)
 
 
-def test(encoder_model, data, x_cen, num_layers=2, batch_size=4096, device=None):
+def test(encoder_model, data, x_struct, num_layers=2, batch_size=4096, device=None):
     encoder_model.eval()
     old_aug1 = encoder_model.augmentor1
     old_aug2 = encoder_model.augmentor2
@@ -104,7 +104,7 @@ def test(encoder_model, data, x_cen, num_layers=2, batch_size=4096, device=None)
                 batch = batch.to(device)
                 z1, _ = encoder_model(
                     batch.x,
-                    x_cen[batch.n_id],
+                    x_struct[batch.n_id],
                     batch.edge_index,
                     getattr(batch, 'edge_attr', None)
                 )
@@ -117,15 +117,15 @@ def test(encoder_model, data, x_cen, num_layers=2, batch_size=4096, device=None)
     return Z
 
 
-def run_experiment(data, x_cen, args, device, vis_save_path):
+def run_experiment(data, x_struct, args, device, vis_save_path):
     gconv = GConv(args.input_dim, args.hidden_dim, torch.nn.ReLU(), args.gconv_nlayers).to(device)
-    proj_agg = torch.nn.Linear(data.x.shape[1], args.input_dim).to(device)
-    proj_cen = torch.nn.Linear(x_cen.shape[1], args.input_dim).to(device)
+    proj_behav = torch.nn.Linear(data.x.shape[1], args.input_dim).to(device)
+    proj_struct = torch.nn.Linear(x_struct.shape[1], args.input_dim).to(device)
 
     encoder_model = Encoder(
         encoder=gconv,
-        proj_agg=proj_agg,
-        proj_cen=proj_cen,
+        proj_behav=proj_behav,
+        proj_struct=proj_struct,
         augmentor1=A.Compose([A.EdgeRemoving(pe=0.0), A.FeatureMasking(pf=0.3)]),
         augmentor2=A.Compose([A.EdgeRemoving(pe=0.0), A.FeatureMasking(pf=0.3)]),
         hidden_dim=args.hidden_dim,
@@ -138,15 +138,15 @@ def run_experiment(data, x_cen, args, device, vis_save_path):
 
     batch_size = 4096
     train_loader = NeighborLoader(data, num_neighbors=[10, 10], batch_size=batch_size, shuffle=True)
-    x_cen_gpu = x_cen.to(device)
+    x_struct_gpu = x_struct.to(device)
 
     with tqdm(total=1000, desc='(T) With Centrality') as pbar:
         for epoch in range(1, 1001):
-            loss = train(train_loader, encoder_model, contrast_model, optimizer, x_cen_gpu, device)
+            loss = train(train_loader, encoder_model, contrast_model, optimizer, x_struct_gpu, device)
             pbar.set_postfix({'loss': loss})
             pbar.update()
 
-    Z = test(encoder_model, data, x_cen_gpu, args.gconv_nlayers, batch_size, device)
+    Z = test(encoder_model, data, x_struct_gpu, args.gconv_nlayers, batch_size, device)
     z1 = Z.detach().cpu()
 
     ari_score, sil_score = visualize_tsne(args.seed, z1.numpy(), data.y, save_path=vis_save_path, skip=args.skip_tsne)
@@ -161,16 +161,16 @@ def main(args):
     device = torch.device(f'cuda:{args.gpu}' if torch.cuda.is_available() else 'cpu')
     print(f"##### device: {device}")
 
-    data, x_cen = load_graph_data(args, device=None)
+    data, x_struct = load_graph_data(args, device=None)
     print(data)
 
     os.makedirs('./visualize/GRACE', exist_ok=True)
-    cen_feats = "_".join(str(item) for item in args.cen_feats)
-    vis_save_path = f'./visualize/GRACE/tsne_{args.model_name}_{args.node_data_name}_{cen_feats}_{args.lr}_{args.input_dim}_{args.hidden_dim}_{args.proj_dim}_{args.gconv_nlayers}_{args.loss}.png'
+    struct_feats = "_".join(str(item) for item in args.struct_feats)
+    vis_save_path = f'./visualize/GRACE/tsne_{args.model_name}_{args.node_data_name}_{struct_feats}_{args.lr}_{args.input_dim}_{args.hidden_dim}_{args.proj_dim}_{args.gconv_nlayers}_{args.loss}.png'
 
-    test_result, ari_score, sil_score = run_experiment(data, x_cen, args, device, vis_save_path)
+    test_result, ari_score, sil_score = run_experiment(data, x_struct, args, device, vis_save_path)
     print(test_result)
-    print(f'(E) With Centrality: Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}')
+    print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}, F1_fraud={test_result["f1_1"]:.4f}')
 
     result = build_result_dict('GRACE_w_cen', args, test_result, ari_score, sil_score, use_cen=True)
     save_results_to_csv([result], args.metric_save_path)

@@ -6,7 +6,7 @@ metric_save_path='./results/exp_results_rq5.csv'
 node_data_name='HOFINET_NODE_FEAT'
 edge_data_name='HOFINET_EDGES'
 
-cen_feats="dc cc pagerank hits_hub hits_auth kcore triangle"
+struct_feats="dc cc pagerank hits_hub hits_auth kcore triangle"
 
 # BGRL
 python -u models/bgrl_w_cen.py \
@@ -16,7 +16,7 @@ python -u models/bgrl_w_cen.py \
               --metric_save_path $metric_save_path \
               --node_data_name $node_data_name \
               --edge_data_name $edge_data_name \
-              --cen_feats $cen_feats \
+              --struct_feats $struct_feats \
               --lr 0.1 \
               --input_dim 16 \
               --hidden_dim 512 \
@@ -39,7 +39,7 @@ python -u models/dgi_inductive_w_cen.py \
               --metric_save_path $metric_save_path \
               --node_data_name $node_data_name \
               --edge_data_name $edge_data_name \
-              --cen_feats $cen_feats \
+              --struct_feats $struct_feats \
               --lr 0.01 \
               --input_dim 8 \
               --hidden_dim 128 \
@@ -62,7 +62,7 @@ python -u models/dgi_transductive_w_cen.py \
               --metric_save_path $metric_save_path \
               --node_data_name $node_data_name \
               --edge_data_name $edge_data_name \
-              --cen_feats $cen_feats \
+              --struct_feats $struct_feats \
               --lr 0.001 \
               --input_dim 4 \
               --hidden_dim 256 \
@@ -85,7 +85,7 @@ python -u models/gbt_w_cen.py \
               --metric_save_path $metric_save_path \
               --node_data_name $node_data_name \
               --edge_data_name $edge_data_name \
-              --cen_feats $cen_feats \
+              --struct_feats $struct_feats \
               --lr 5e-4 \
               --input_dim 16 \
               --hidden_dim 128 \
@@ -107,7 +107,7 @@ python -u models/grace_w_cen.py \
                 --metric_save_path $metric_save_path \
                 --node_data_name $node_data_name \
                 --edge_data_name $edge_data_name \
-                --cen_feats $cen_feats \
+                --struct_feats $struct_feats \
                 --lr 0.0001 \
                 --input_dim 4 \
                 --hidden_dim 64 \
@@ -131,7 +131,7 @@ python -u models/mvgrl_w_cen.py \
               --metric_save_path $metric_save_path \
               --node_data_name $node_data_name \
               --edge_data_name $edge_data_name \
-              --cen_feats $cen_feats \
+              --struct_feats $struct_feats \
               --lr 0.0001 \
               --hidden_dim 128 \
               --gconv_nlayers 4 \

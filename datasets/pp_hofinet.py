@@ -22,7 +22,10 @@ import numpy as np
 import pandas as pd
 from scipy.stats import entropy
 
-from datasets.feature_utils import run_feature
+try:
+    from datasets.feature_utils import run_feature
+except ImportError:
+    from feature_utils import run_feature
 
 # HOFINET 한글 → 영문 컬럼 매핑
 COLUMN_MAP = {
@@ -311,14 +314,11 @@ def build_node_features(df, seed=2025, cpu_only=False, gpu_only=False,
     for months in [3, 6, 12]:
         cutoff = max_date - pd.DateOffset(months=months)
         df_win = df[df['tran_date'] >= cutoff]
-        prefix_out = f'out_{months}m_'
-        prefix_in = f'in_{months}m_'
-        win_out = df_win.groupby('source')['tran_amt'].agg(['mean', 'count']).add_prefix(prefix_out)
-        win_in = df_win.groupby('target')['tran_amt'].agg(['mean', 'count']).add_prefix(prefix_in)
+        win_out = df_win.groupby('source')['tran_amt'].agg(['mean', 'count']).add_prefix(f'out_{months}m_')
+        win_in = df_win.groupby('target')['tran_amt'].agg(['mean', 'count']).add_prefix(f'in_{months}m_')
         node_features = node_features.join(win_out, how='left').join(win_in, how='left')
     node_features.fillna(0, inplace=True)
     df.drop(columns=['tran_date'], inplace=True)
-    print(f'[INFO] Temporal features added: {[c for c in node_features.columns if "m_" in c]}')
 
     # 사기 레이블
     src_label = df.groupby('source')['label'].max()
@@ -333,8 +333,8 @@ def build_node_features(df, seed=2025, cpu_only=False, gpu_only=False,
     node_features = node_features.join(md_entropy, how='left').join(fnd_entropy, how='left')
     node_features.fillna(0, inplace=True)
 
-    # 엣지 리스트 (중복 제거)
-    edge_df = df[['source', 'target']].drop_duplicates()
+    # 엣지 리스트 (멀티엣지 보존 — 동일 계좌 간 반복 거래를 개별 엣지로 유지)
+    edge_df = df[['source', 'target']]
     node_index = {acc: i for i, acc in enumerate(node_features.index)}
 
     # ---- 그래프 피처 계산 ----

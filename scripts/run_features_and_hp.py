@@ -220,8 +220,8 @@ def merge_features_to_csv(new_features, n_nodes, node_df):
 # ============================================================
 # Step 2 & 3: GPU 모니터링 → HP search
 # ============================================================
-def build_cen_feats_sets(node_df):
-    """NODE_FEAT.csv의 centrality 피처 기반으로 cen_feats 조합 생성"""
+def build_struct_feats_sets(node_df):
+    """NODE_FEAT.csv의 centrality 피처 기반으로 struct_feats 조합 생성"""
     agg_prefixes = ('out_', 'in_mean', 'in_max', 'in_std', 'in_count',
                     'md_', 'fnd_')
     cen_cols = [c for c in node_df.columns
@@ -245,18 +245,18 @@ def build_cen_feats_sets(node_df):
         'top_discrim': ' '.join(top),
     }
 
-    print(f'\n[cen_feats 조합]')
+    print(f'\n[struct_feats 조합]')
     for name, feats in sets.items():
         print(f'  {name}: {feats}')
 
     return sets
 
 
-def generate_hp_jobs(cen_feats_sets):
-    """cen_feats 조합별 HP search 작업 생성"""
+def generate_hp_jobs(struct_feats_sets):
+    """struct_feats 조합별 HP search 작업 생성"""
     key_fields = [
         ('Model', str.lower),
-        ('cen_feats', lambda x: x),
+        ('struct_feats', lambda x: x),
         ('lr', float),
         ('input_dim', int),
         ('hidden_dim', int),
@@ -269,15 +269,15 @@ def generate_hp_jobs(cen_feats_sets):
     values = list(SEARCH_SPACE.values())
 
     for model_name, model_cfg in MODELS.items():
-        for cen_name, cen_feats in cen_feats_sets.items():
+        for cen_name, struct_feats in struct_feats_sets.items():
             for combo in itertools.product(*values):
                 hp = dict(zip(keys, combo))
-                key = (model_name, cen_feats, hp['lr'], hp['input_dim'],
+                key = (model_name, struct_feats, hp['lr'], hp['input_dim'],
                        hp['hidden_dim'], hp['gconv_nlayers'])
                 if key in completed:
                     skipped += 1
                     continue
-                jobs.append((model_name, model_cfg, hp, cen_feats, cen_name))
+                jobs.append((model_name, model_cfg, hp, struct_feats, cen_name))
 
     if skipped:
         print(f'[HP Search] {skipped} 이미 완료된 작업 스킵')
@@ -313,8 +313,8 @@ def main():
 
     # Step 3: HP search
     node_df = pd.read_csv(NODE_CSV)
-    cen_feats_sets = build_cen_feats_sets(node_df)
-    jobs = generate_hp_jobs(cen_feats_sets)
+    struct_feats_sets = build_struct_feats_sets(node_df)
+    jobs = generate_hp_jobs(struct_feats_sets)
 
     if not jobs:
         print('[HP Search] 모든 작업 완료됨')

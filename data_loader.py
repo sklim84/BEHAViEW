@@ -15,20 +15,23 @@ def load_graph_data(args, device=None):
 
     label = torch.tensor(df['label'].values, dtype=torch.long)
 
-    x_agg = torch.tensor(
-        df[[c for c in df.columns if c.startswith(('out_', 'in_', 'md_', 'fnd_', 'entropy'))]].values,
+    structural = {'dc', 'in_dc', 'out_dc', 'pagerank', 'hits_hub', 'hits_auth',
+                   'kcore', 'triangle', 'betweenness'}
+    x_behav = torch.tensor(
+        df[[c for c in df.columns
+            if c.startswith(('out_', 'in_', 'md_', 'fnd_', 'entropy')) and c not in structural]].values,
         dtype=torch.float
     )
-    x_cen = torch.tensor(
-        df[[c for c in df.columns if c in args.cen_feats]].values,
+    x_struct = torch.tensor(
+        df[[c for c in df.columns if c in args.struct_feats]].values,
         dtype=torch.float
     )
 
-    data = Data(x=x_agg, edge_index=edge_index, y=label)
+    data = Data(x=x_behav, edge_index=edge_index, y=label)
     if device:
         data = data.to(device)
 
-    return data, x_cen
+    return data, x_struct
 
 
 def load_knn_graph(knn_graph_name, device=None):

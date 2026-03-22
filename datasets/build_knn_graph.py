@@ -56,19 +56,19 @@ def main():
     cen_cols = ['dc', 'cc', 'pagerank', 'hits_hub', 'hits_auth', 'kcore', 'triangle']
     cen_cols = [c for c in cen_cols if c in df.columns]
 
-    x_agg = df[agg_cols].values
-    x_cen = df[cen_cols].values
+    x_behav = df[agg_cols].values
+    x_struct = df[cen_cols].values
 
     print(f'  Nodes: {len(df)}')
-    print(f'  x_agg features: {len(agg_cols)}')
-    print(f'  x_cen features: {len(cen_cols)} — {cen_cols}')
+    print(f'  x_behav features: {len(agg_cols)}')
+    print(f'  x_struct features: {len(cen_cols)} — {cen_cols}')
 
     for k in args.k:
         # (D) Feature k-NN graph
         if not os.path.exists(os.path.join(args.output_dir, f'HOFINET_KNN_FEAT_k{k}.csv')):
             print(f'\n[k={k}] Building feature k-NN graph...')
             t0 = time.time()
-            src, tgt = build_knn_edges(x_agg, k)
+            src, tgt = build_knn_edges(x_behav, k)
             elapsed = time.time() - t0
             out_path = os.path.join(args.output_dir, f'HOFINET_KNN_FEAT_k{k}.csv')
             pd.DataFrame({'source': src, 'target': tgt}).to_csv(out_path, index=False)
@@ -80,7 +80,7 @@ def main():
         if not os.path.exists(os.path.join(args.output_dir, f'HOFINET_KNN_CEN_k{k}.csv')):
             print(f'[k={k}] Building centrality k-NN graph...')
             t0 = time.time()
-            src, tgt = build_knn_edges(x_cen, k)
+            src, tgt = build_knn_edges(x_struct, k)
             elapsed = time.time() - t0
             out_path = os.path.join(args.output_dir, f'HOFINET_KNN_CEN_k{k}.csv')
             pd.DataFrame({'source': src, 'target': tgt}).to_csv(out_path, index=False)
@@ -117,7 +117,7 @@ def main():
         else:
             print(f'[k={k}] Strict behavioral k-NN already exists, skipping.')
 
-        # Structural k-NN (count + dc from x_agg + all centrality)
+        # Structural k-NN (count + dc from x_behav + all centrality)
         out_struct = os.path.join(args.output_dir, f'HOFINET_KNN_STRUCT_k{k}.csv')
         if not os.path.exists(out_struct):
             struct_from_agg = [c for c in agg_cols if c in ('out_count', 'in_count', 'in_dc', 'out_dc')]
@@ -137,7 +137,7 @@ def main():
         if not os.path.exists(out_hybrid):
             print(f'[k={k}] Building hybrid k-NN graph (feat+cen)...')
             t0 = time.time()
-            x_hybrid = np.hstack([x_agg, x_cen])
+            x_hybrid = np.hstack([x_behav, x_struct])
             src, tgt = build_knn_edges(x_hybrid, k)
             elapsed = time.time() - t0
             pd.DataFrame({'source': src, 'target': tgt}).to_csv(out_hybrid, index=False)

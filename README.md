@@ -28,27 +28,56 @@
 
 ## 피처 분류
 
-### Category A: Behavioral 피처 (8개)
+### Category A: Behavioral 피처 (x_behav, 22개)
 
 거래 행동 패턴 — 계좌가 "무엇을 하는가"
+
+**A1. 거래 금액 통계 (8)**
 
 | # | 피처 | 설명 | Fraud/Benign 비율 |
 |---|------|------|------------------|
 | 1 | out_mean | 출금 평균 금액 | 76.5x |
 | 2 | out_max | 출금 최대 금액 | 117.5x |
 | 3 | out_std | 출금 금액 표준편차 | 104.1x |
-| 4 | in_mean | 입금 평균 금액 | 39.2x |
-| 5 | in_max | 입금 최대 금액 | 51.1x |
-| 6 | in_std | 입금 금액 표준편차 | 51.3x |
-| 7 | md_type_entropy | 거래 매체 다양성 (PC/인터넷/모바일 등) | 7.1x |
-| 8 | fnd_type_entropy | 자금 구분 다양성 (급여/일반 등) | 28.4x |
+| 4 | out_count | 출금 거래 횟수 | ~8x |
+| 5 | in_mean | 입금 평균 금액 | 39.2x |
+| 6 | in_max | 입금 최대 금액 | 51.1x |
+| 7 | in_std | 입금 금액 표준편차 | 51.3x |
+| 8 | in_count | 입금 거래 횟수 | ~16x |
 
-### Category B: Structural 피처 (20개)
+**A2. 거래 다양성 (2)**
+
+| # | 피처 | 설명 | Fraud/Benign 비율 |
+|---|------|------|------------------|
+| 9 | md_type_entropy | 거래 매체 다양성 (PC/인터넷/모바일 등) | 7.1x |
+| 10 | fnd_type_entropy | 자금 구분 다양성 (급여/일반 등) | 28.4x |
+
+**A3. Temporal (12) — 최근 3/6/12개월 윈도우별 집계**
+
+| # | 피처 | 설명 |
+|---|------|------|
+| 11-12 | out_3m_mean, out_3m_count | 최근 3개월 출금 평균/횟수 |
+| 13-14 | in_3m_mean, in_3m_count | 최근 3개월 입금 평균/횟수 |
+| 15-16 | out_6m_mean, out_6m_count | 최근 6개월 출금 평균/횟수 |
+| 17-18 | in_6m_mean, in_6m_count | 최근 6개월 입금 평균/횟수 |
+| 19-20 | out_12m_mean, out_12m_count | 최근 12개월 출금 평균/횟수 |
+| 21-22 | in_12m_mean, in_12m_count | 최근 12개월 입금 평균/횟수 |
+
+### Category B: Structural 피처 (x_struct, 9개)
 
 네트워크 위상 — 계좌가 "네트워크에서 어디에 위치하는가"
 
-- **B1. Degree/Count (4)**: out_count, in_count, in_dc, out_dc
-- **B2. Graph Centrality (16)**: dc, pagerank, hits_hub, hits_auth, katz, eigenvector, kcore, triangle, cc, clustering, avg_neigh_deg, harmonic, sq_clustering, betweenness, louvain, constraint
+| # | 피처 | 설명 | Fraud/Benign 비율 |
+|---|------|------|------------------|
+| 23 | dc | Degree centrality (무방향) | 5.62x |
+| 24 | in_dc | 입금 방향 degree centrality | 6.63x |
+| 25 | out_dc | 출금 방향 degree centrality | 4.66x |
+| 26 | pagerank | PageRank | 1.41x |
+| 27 | hits_hub | HITS hub score | 4.42x |
+| 28 | hits_auth | HITS authority score | 8.14x |
+| 29 | kcore | K-core number | 2.75x |
+| 30 | triangle | Triangle count | 26.22x |
+| 31 | betweenness | Betweenness centrality | 11.05x |
 
 ---
 
@@ -59,7 +88,7 @@
 | 항목 | 값 |
 |------|-----|
 | 계좌 (노드) | 452,816 |
-| 이체 (엣지) | 2,558,743 (유향) |
+| 이체 (엣지) | 4,732,130 (유향, 멀티엣지) |
 | 의심 계좌 | 9,644 (2.13%) |
 | 기간 | 2021년 3분기 ~ 2024년 4분기 (40개월) |
 | AML 유형 | 6가지 |
@@ -74,7 +103,9 @@ AML 유형별 분포:
 
 ---
 
-## 실험 결과 (HOFINET, 4-seed 평균 ± 표준편차)
+## 실험 결과 (HOFINET, 멀티엣지 그래프, 4-seed 평균 ± 표준편차)
+
+> 아래 결과는 멀티엣지 + temporal 피처 반영 전 기준. 재실험 진행 중.
 
 ### RQ1: k-NN view vs augmentation 기반 view (BGRL)
 
