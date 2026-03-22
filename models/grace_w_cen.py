@@ -170,7 +170,7 @@ def main(args):
 
     test_result, ari_score, sil_score = run_experiment(data, x_cen, args, device, vis_save_path)
     print(test_result)
-    print(f'(E) With Centrality: Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}')
+    print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}, F1_fraud={test_result["f1_1"]:.4f}')
 
     result = build_result_dict('GRACE_w_cen', args, test_result, ari_score, sil_score, use_cen=True)
     save_results_to_csv([result], args.metric_save_path)

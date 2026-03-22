@@ -28,7 +28,7 @@
 
 ## 피처 분류
 
-### Category A: Behavioral 피처 (8개)
+### Category A: Behavioral 피처 (10개)
 
 거래 행동 패턴 — 계좌가 "무엇을 하는가"
 
@@ -37,18 +37,29 @@
 | 1 | out_mean | 출금 평균 금액 | 76.5x |
 | 2 | out_max | 출금 최대 금액 | 117.5x |
 | 3 | out_std | 출금 금액 표준편차 | 104.1x |
-| 4 | in_mean | 입금 평균 금액 | 39.2x |
-| 5 | in_max | 입금 최대 금액 | 51.1x |
-| 6 | in_std | 입금 금액 표준편차 | 51.3x |
-| 7 | md_type_entropy | 거래 매체 다양성 (PC/인터넷/모바일 등) | 7.1x |
-| 8 | fnd_type_entropy | 자금 구분 다양성 (급여/일반 등) | 28.4x |
+| 4 | out_count | 출금 거래 횟수 | ~8x |
+| 5 | in_mean | 입금 평균 금액 | 39.2x |
+| 6 | in_max | 입금 최대 금액 | 51.1x |
+| 7 | in_std | 입금 금액 표준편차 | 51.3x |
+| 8 | in_count | 입금 거래 횟수 | ~16x |
+| 9 | md_type_entropy | 거래 매체 다양성 (PC/인터넷/모바일 등) | 7.1x |
+| 10 | fnd_type_entropy | 자금 구분 다양성 (급여/일반 등) | 28.4x |
 
-### Category B: Structural 피처 (20개)
+### Category B: Structural 피처 (9개)
 
 네트워크 위상 — 계좌가 "네트워크에서 어디에 위치하는가"
 
-- **B1. Degree/Count (4)**: out_count, in_count, in_dc, out_dc
-- **B2. Graph Centrality (16)**: dc, pagerank, hits_hub, hits_auth, katz, eigenvector, kcore, triangle, cc, clustering, avg_neigh_deg, harmonic, sq_clustering, betweenness, louvain, constraint
+| # | 피처 | 설명 | Fraud/Benign 비율 |
+|---|------|------|------------------|
+| 11 | dc | Degree centrality (무방향) | 5.62x |
+| 12 | in_dc | 입금 방향 degree centrality | 6.63x |
+| 13 | out_dc | 출금 방향 degree centrality | 4.66x |
+| 14 | pagerank | PageRank | 1.41x |
+| 15 | hits_hub | HITS hub score | 4.42x |
+| 16 | hits_auth | HITS authority score | 8.14x |
+| 17 | kcore | K-core number | 2.75x |
+| 18 | triangle | Triangle count | 26.22x |
+| 19 | betweenness | Betweenness centrality | 11.05x |
 
 ---
 

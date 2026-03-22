@@ -151,7 +151,7 @@ def main(args):
     vis_save_path = f'./visualize/DGI_IND/tsne_{args.model_name}_{args.node_data_name}_{cen_feats}_{args.lr}_{args.input_dim}_{args.hidden_dim}_{args.gconv_nlayers}_{args.loss}.png'
     test_result, ari_score, sil_score = test(args.seed, encoder_model, data, x_cen, test_loader, device, vis_save_path)
     print(test_result)
-    print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}')
+    print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}, F1_fraud={test_result["f1_1"]:.4f}')
 
     result = build_result_dict('DGI_inductive_w_cen', args, test_result, ari_score, sil_score, use_cen=True)
     save_results_to_csv([result], args.metric_save_path)
