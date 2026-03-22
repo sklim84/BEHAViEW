@@ -300,10 +300,25 @@ def build_node_features(df, seed=2025, cpu_only=False, gpu_only=False,
     """거래 데이터로부터 노드 피처 + 그래프 피처 + 엣지 리스트 생성"""
     print('[INFO] Building node features...')
 
-    # 계좌별 거래 집계
+    # 계좌별 거래 집계 (전체 기간)
     features_out = df.groupby('source')['tran_amt'].agg(['mean', 'max', 'std', 'count']).add_prefix('out_')
     features_in = df.groupby('target')['tran_amt'].agg(['mean', 'max', 'std', 'count']).add_prefix('in_')
     node_features = pd.concat([features_out, features_in], axis=1).fillna(0)
+
+    # 시간 윈도우별 거래 집계 (최근 3/6/12개월)
+    df['tran_date'] = pd.to_datetime(df['tran_dt'], format='%Y%m%d')
+    max_date = df['tran_date'].max()
+    for months in [3, 6, 12]:
+        cutoff = max_date - pd.DateOffset(months=months)
+        df_win = df[df['tran_date'] >= cutoff]
+        prefix_out = f'out_{months}m_'
+        prefix_in = f'in_{months}m_'
+        win_out = df_win.groupby('source')['tran_amt'].agg(['mean', 'count']).add_prefix(prefix_out)
+        win_in = df_win.groupby('target')['tran_amt'].agg(['mean', 'count']).add_prefix(prefix_in)
+        node_features = node_features.join(win_out, how='left').join(win_in, how='left')
+    node_features.fillna(0, inplace=True)
+    df.drop(columns=['tran_date'], inplace=True)
+    print(f'[INFO] Temporal features added: {[c for c in node_features.columns if "m_" in c]}')
 
     # 사기 레이블
     src_label = df.groupby('source')['label'].max()

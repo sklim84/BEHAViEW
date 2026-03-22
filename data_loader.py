@@ -29,3 +29,13 @@ def load_graph_data(args, device=None):
         data = data.to(device)
 
     return data, x_cen
+
+
+def load_knn_graph(knn_graph_name, device=None):
+    """k-NN 그래프 edge index 로드."""
+    path = f'./datasets/{knn_graph_name}.csv'
+    df = pd.read_csv(path)
+    edge_index = torch.tensor([df['source'].values, df['target'].values], dtype=torch.long)
+    if device:
+        edge_index = edge_index.to(device)
+    return edge_index
