@@ -136,3 +136,25 @@
 | 입금 금융회사 | 54개 |
 | 출금 계좌 | 30,526개 |
 | 입금 계좌 | 422,698개 |
+
+## 7. 전처리 파이프라인
+
+`datasets/pp_hofinet.py` 실행 시 HOFINET.csv를 다음 파일로 변환:
+
+### 7.1 HOFINET_NODE_FEAT.csv
+- 노드 수: 452,816개 (출금/입금 계좌 통합)
+- 이상거래 비율: 2.13%
+- 피처 구성:
+  - **집계 피처** (x_agg): out_cnt, out_amt_sum/mean/std, in_cnt, in_amt_sum/mean/std, md_type_*, fnd_type_*, entropy_*
+  - **중심성 피처** (x_cen): dc, cc, pagerank, hits_hub, hits_auth, kcore, triangle, betweenness, louvain, constraint 등
+
+### 7.2 HOFINET_EDGES.csv
+- 엣지 수: 2,558,743개 (유향 그래프)
+- 컬럼: source, target
+
+### 7.3 실행 방법
+```bash
+python datasets/pp_hofinet.py                   # hybrid: cuGraph(GPU) + Memgraph
+python datasets/pp_hofinet.py --gpu_only        # cuGraph only
+python datasets/pp_hofinet.py --cpu_only        # NetworkX only
+```

@@ -1,3 +1,11 @@
+"""
+BGRL with k-NN Graph View — contrastive learning between
+original transaction graph and k-NN similarity graph.
+
+Settings:
+  (D) --knn_graph HOFINET_KNN_FEAT_k10  → feature similarity k-NN
+  (F) --knn_graph HOFINET_KNN_CEN_k10   → centrality similarity k-NN
+"""
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
@@ -11,7 +19,7 @@ from torch_geometric.nn import GCNConv
 from tqdm import tqdm
 
 from config import get_config
-from data_loader import load_graph_data
+from data_loader import load_graph_data, load_knn_graph
 from utils import set_seed, create_loss, build_result_dict, save_results_to_csv, evaluate_with_metrics, visualize_tsne
 
 
@@ -57,12 +65,10 @@ class GConv(torch.nn.Module):
 
 
 class Encoder(torch.nn.Module):
-    def __init__(self, encoder, proj_agg, proj_cen, augmentor, hidden_dim, dropout=0.2, predictor_norm='batch'):
+    def __init__(self, encoder, augmentor, hidden_dim, dropout=0.2, predictor_norm='batch'):
         super(Encoder, self).__init__()
         self.online_encoder = encoder
         self.target_encoder = None
-        self.proj_agg = proj_agg
-        self.proj_cen = proj_cen
         self.augmentor = augmentor
         self.predictor = torch.nn.Sequential(
             torch.nn.Linear(hidden_dim, hidden_dim),
@@ -82,40 +88,38 @@ class Encoder(torch.nn.Module):
             next_p = momentum * p.data + (1 - momentum) * new_p.data
             p.data = next_p
 
-    def forward(self, x_agg, x_cen, edge_index, edge_weight=None):
+    def forward(self, x, edge_index_trans, edge_index_knn, edge_weight=None):
         aug1, aug2 = self.augmentor
-        x1, edge_index1, edge_weight1 = aug1(x_agg, edge_index, edge_weight)
-        x2, edge_index2, edge_weight2 = aug2(x_cen, edge_index, edge_weight)
 
-        z1 = self.proj_agg(x1)
-        h1, h1_online = self.online_encoder(z1, edge_index1, edge_weight1)
+        x1, ei1, ew1 = aug1(x, edge_index_trans, edge_weight)
+        h1, h1_online = self.online_encoder(x1, ei1, ew1)
 
-        z2 = self.proj_cen(x2)
-        h2, h2_online = self.online_encoder(z2, edge_index2, edge_weight2)
+        x2, ei2, ew2 = aug2(x, edge_index_knn, edge_weight)
+        h2, h2_online = self.online_encoder(x2, ei2, ew2)
 
         h1_pred = self.predictor(h1_online)
         h2_pred = self.predictor(h2_online)
 
         with torch.no_grad():
-            z1 = self.proj_agg(x1)
-            _, h1_target = self.get_target_encoder()(z1, edge_index1, edge_weight1)
-            z2 = self.proj_cen(x2)
-            _, h2_target = self.get_target_encoder()(z2, edge_index2, edge_weight2)
+            x1_t, ei1_t, ew1_t = aug1(x, edge_index_trans, edge_weight)
+            _, h1_target = self.get_target_encoder()(x1_t, ei1_t, ew1_t)
+            x2_t, ei2_t, ew2_t = aug2(x, edge_index_knn, edge_weight)
+            _, h2_target = self.get_target_encoder()(x2_t, ei2_t, ew2_t)
 
         return h1, h2, h1_pred, h2_pred, h1_target, h2_target
 
 
 def bootstrap_latent_loss(h1_pred, h2_pred, h1_target, h2_target):
-    """BootstrapLatent L2L loss without N×N matrix (memory-efficient)"""
     loss = (2 - 2 * F.cosine_similarity(h1_pred, h2_target.detach(), dim=-1).mean() +
             2 - 2 * F.cosine_similarity(h2_pred, h1_target.detach(), dim=-1).mean())
     return loss
 
 
-def train(encoder_model, data, x_cen, optimizer):
+def train(encoder_model, x, edge_index_trans, edge_index_knn, optimizer):
     encoder_model.train()
     optimizer.zero_grad()
-    _, _, h1_pred, h2_pred, h1_target, h2_target = encoder_model(data.x, x_cen, data.edge_index, data.edge_attr)
+    _, _, h1_pred, h2_pred, h1_target, h2_target = encoder_model(
+        x, edge_index_trans, edge_index_knn)
     loss = bootstrap_latent_loss(h1_pred, h2_pred, h1_target, h2_target)
     loss.backward()
     optimizer.step()
@@ -123,14 +127,14 @@ def train(encoder_model, data, x_cen, optimizer):
     return loss.item()
 
 
-def test(seed, encoder_model, data, x_cen, vis_save_path, skip_tsne=False):
+def test(seed, encoder_model, x, edge_index_trans, edge_index_knn, y, vis_save_path, skip_tsne=False):
     encoder_model.eval()
     with torch.no_grad():
-        h1, h2, _, _, _, _ = encoder_model(data.x, x_cen, data.edge_index)
+        h1, h2, _, _, _, _ = encoder_model(x, edge_index_trans, edge_index_knn)
     z = torch.cat([h1, h2], dim=1)
-    ari_score, sil_score = visualize_tsne(seed, z.detach().cpu().numpy(), data.y, save_path=vis_save_path, skip=skip_tsne)
+    ari_score, sil_score = visualize_tsne(seed, z.detach().cpu().numpy(), y, save_path=vis_save_path, skip=skip_tsne)
     split = get_split(num_samples=z.size()[0], train_ratio=0.1, test_ratio=0.8)
-    result = evaluate_with_metrics(z, data.y, split)
+    result = evaluate_with_metrics(z, y, split)
     return result, ari_score, sil_score
 
 
@@ -139,42 +143,44 @@ def main(args):
     device = torch.device(f'cuda:{args.gpu}')
     print(f'##### device: {device}')
 
-    data, x_cen = load_graph_data(args, device=device)
-    print(data)
+    data, _ = load_graph_data(args, device=device)
+    print(f'Transaction graph: {data}')
+
+    edge_index_knn = load_knn_graph(args.knn_graph, device=device)
+    print(f'k-NN graph: {args.knn_graph} ({edge_index_knn.size(1)} edges)')
 
     aug1 = A.Compose([A.EdgeRemoving(pe=0.5), A.FeatureMasking(pf=0.1)])
     aug2 = A.Compose([A.EdgeRemoving(pe=0.5), A.FeatureMasking(pf=0.1)])
 
-    gconv = GConv(input_dim=args.input_dim, hidden_dim=args.hidden_dim, num_layers=args.gconv_nlayers).to(device)
-    proj_agg = torch.nn.Linear(data.x.size(1), args.input_dim)
-    proj_cen = torch.nn.Linear(x_cen.size(1), args.input_dim)
-
+    gconv = GConv(input_dim=data.x.size(1), hidden_dim=args.hidden_dim,
+                  num_layers=args.gconv_nlayers).to(device)
     encoder_model = Encoder(
-        encoder=gconv, proj_agg=proj_agg, proj_cen=proj_cen,
-        augmentor=(aug1, aug2), hidden_dim=args.hidden_dim
+        encoder=gconv, augmentor=(aug1, aug2), hidden_dim=args.hidden_dim,
     ).to(device)
 
     optimizer = Adam(encoder_model.parameters(), lr=args.lr)
 
-    total = 100
-    with tqdm(total=total, desc='(T)') as pbar:
-        for epoch in range(1, total + 1):
-            loss = train(encoder_model, data, x_cen.to(device), optimizer)
+    with tqdm(total=100, desc='(T)') as pbar:
+        for epoch in range(1, 101):
+            loss = train(encoder_model, data.x,
+                         data.edge_index, edge_index_knn, optimizer)
             pbar.set_postfix({'loss': loss})
             pbar.update()
 
-    os.makedirs('./visualize/BGRL_L2L', exist_ok=True)
-    cen_feats = "_".join(str(item) for item in args.cen_feats)
-    vis_save_path = f'./visualize/BGRL_L2L/tsne_{args.model_name}_{args.node_data_name}_{cen_feats}_{args.lr}_{args.input_dim}_{args.hidden_dim}_{args.gconv_nlayers}_{args.loss}.png'
-    test_result, ari_score, sil_score = test(args.seed, encoder_model, data, x_cen.to(device), vis_save_path, args.skip_tsne)
+    os.makedirs('./visualize/BGRL_KNN', exist_ok=True)
+    vis_save_path = f'./visualize/BGRL_KNN/tsne_{args.model_name}.png'
+    test_result, ari_score, sil_score = test(
+        args.seed, encoder_model, data.x,
+        data.edge_index, edge_index_knn, data.y, vis_save_path, args.skip_tsne)
     print(test_result)
     print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}')
 
-    result = build_result_dict(args.model_name, args, test_result, ari_score, sil_score, use_cen=True)
+    result = build_result_dict(args.model_name, args, test_result, ari_score, sil_score, use_cen=False)
     save_results_to_csv([result], args.metric_save_path)
 
 
 if __name__ == '__main__':
     args = get_config()
+    assert args.knn_graph is not None, '--knn_graph required (e.g., HOFINET_KNN_CEN_k10)'
     print(args)
     main(args)

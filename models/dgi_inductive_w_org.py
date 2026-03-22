@@ -70,7 +70,7 @@ def train(encoder_model, contrast_model, data, dataloader, optimizer, device):
     return total_loss / total_examples
 
 
-def test(seed, encoder_model, data, dataloader, device, vis_save_path):
+def test(seed, encoder_model, data, dataloader, device, vis_save_path, skip_tsne=False):
     encoder_model.eval()
     zs, n_ids = [], []
     with torch.no_grad():
@@ -84,7 +84,7 @@ def test(seed, encoder_model, data, dataloader, device, vis_save_path):
     for z, nid in zip(zs, n_ids):
         Z[nid] = z
 
-    ari_score, sil_score = visualize_tsne(seed, Z.numpy(), data.y, save_path=vis_save_path)
+    ari_score, sil_score = visualize_tsne(seed, Z.numpy(), data.y, save_path=vis_save_path, skip=skip_tsne)
     split = get_split(num_samples=Z.size()[0], train_ratio=0.1, test_ratio=0.8)
     result = evaluate_with_metrics(Z, data.y, split)
     return result, ari_score, sil_score
@@ -95,7 +95,7 @@ def main(args):
     torch.multiprocessing.set_sharing_strategy('file_system')
 
     set_seed(args.seed)
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device(f'cuda:{args.gpu}')
     print(f'##### device: {device}')
 
     data, _ = load_graph_data(args, device=None)
@@ -117,7 +117,7 @@ def main(args):
 
     os.makedirs('./visualize/DGI_IND', exist_ok=True)
     vis_save_path = f'./visualize/DGI_IND/tsne_DGI_inductive_w_org_{args.node_data_name}.png'
-    test_result, ari_score, sil_score = test(args.seed, encoder_model, data, test_loader, device, vis_save_path)
+    test_result, ari_score, sil_score = test(args.seed, encoder_model, data, test_loader, device, vis_save_path, args.skip_tsne)
     print(test_result)
     print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}')
 

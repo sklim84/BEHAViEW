@@ -12,7 +12,14 @@ from torch_geometric.utils import homophily
 # ---------------------------------------------------------------------
 def _ensure_source_target(df: pd.DataFrame) -> pd.DataFrame:
     if "source" not in df.columns or "target" not in df.columns:
-        if all(c in df.columns for c in ["wd_fc_sn", "wd_ac_sn", "dps_fc_sn", "dps_ac_sn"]):
+        # HOFINET Korean column mapping
+        kor_cols = ["출금금융회사일련번호", "출금계좌일련번호", "입금금융회사일련번호", "입금계좌일련번호"]
+        eng_cols = ["wd_fc_sn", "wd_ac_sn", "dps_fc_sn", "dps_ac_sn"]
+        if all(c in df.columns for c in kor_cols):
+            df = df.copy()
+            df["source"] = df[kor_cols[0]].astype(str) + "_" + df[kor_cols[1]].astype(str)
+            df["target"] = df[kor_cols[2]].astype(str) + "_" + df[kor_cols[3]].astype(str)
+        elif all(c in df.columns for c in eng_cols):
             df = df.copy()
             df["source"] = df["wd_fc_sn"].astype(str) + "_" + df["wd_ac_sn"].astype(str)
             df["target"] = df["dps_fc_sn"].astype(str) + "_" + df["dps_ac_sn"].astype(str)
@@ -179,11 +186,15 @@ def compute_homophily_metrics(
 # 실행 예시
 # ---------------------------------------------------------------------
 if __name__ == "__main__":
-    data_name = "HF_FND_2024_03_SP_H1"
-    input_path = os.path.join("..", "_datasets", f"{data_name}.csv")
+    data_name = "HOFINET"
+    input_path = os.path.join("datasets", f"{data_name}.csv")
 
     df = pd.read_csv(input_path)
-    metrics = compute_homophily_metrics(df)
+    # HOFINET uses '이상거래여부' (0/1) as label, mapped to 'label' by pp_hofinet.py
+    # For raw HOFINET.csv, use Korean column name with positive_values={1}
+    metrics = compute_homophily_metrics(
+        df, label_col="이상거래여부", positive_values={1, "1"}, agg="max"
+    )
 
     print("===== Homophily Metrics =====")
     print("[Overall]")

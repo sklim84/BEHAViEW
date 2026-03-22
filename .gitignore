@@ -1,4 +1,18 @@
-# visualize 하위 디렉토리 제외 (파일은 포함)
-visualize/*/
+# Python
 __pycache__/
 *.pyc
+
+# Visualizations
+visualize/*/
+
+# Logs
+logs/
+run.log
+
+# Experiment artifacts
+results.tsv
+program.md
+
+# Large data files (tracked via Git LFS or excluded)
+datasets/HOFINET.csv
+datasets/HOFINET_KNN_*.csv

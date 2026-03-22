@@ -116,11 +116,12 @@ def train(encoder_model, data, optimizer):
     return loss.item()
 
 
-def test(seed, encoder_model, data, vis_save_path):
+def test(seed, encoder_model, data, vis_save_path, skip_tsne=False):
     encoder_model.eval()
-    h1, h2, _, _, _, _ = encoder_model(data.x, data.edge_index)
+    with torch.no_grad():
+        h1, h2, _, _, _, _ = encoder_model(data.x, data.edge_index)
     z = torch.cat([h1, h2], dim=1)
-    ari_score, sil_score = visualize_tsne(seed, z.detach().cpu().numpy(), data.y, save_path=vis_save_path)
+    ari_score, sil_score = visualize_tsne(seed, z.detach().cpu().numpy(), data.y, save_path=vis_save_path, skip=skip_tsne)
     split = get_split(num_samples=z.size()[0], train_ratio=0.1, test_ratio=0.8)
     result = evaluate_with_metrics(z, data.y, split)
     return result, ari_score, sil_score
@@ -128,7 +129,7 @@ def test(seed, encoder_model, data, vis_save_path):
 
 def main(args):
     set_seed(args.seed)
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device(f'cuda:{args.gpu}')
     print(f'##### device: {device}')
 
     data, _ = load_graph_data(args, device=device)
@@ -149,7 +150,7 @@ def main(args):
 
     os.makedirs('./visualize/BGRL_L2L', exist_ok=True)
     vis_save_path = f'./visualize/BGRL_L2L/tsne_BGRL_L2L_w_org_{args.node_data_name}.png'
-    test_result, ari_score, sil_score = test(args.seed, encoder_model, data, vis_save_path)
+    test_result, ari_score, sil_score = test(args.seed, encoder_model, data, vis_save_path, args.skip_tsne)
     print(test_result)
     print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}')
 
