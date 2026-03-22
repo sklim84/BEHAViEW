@@ -10,9 +10,9 @@ parser.add_argument('--metric_save_path', type=str, default='./results/exp_resul
 parser.add_argument('--loss', type=str, default='InfoNCE')
 parser.add_argument('--gpu', type=str, default='0')
 parser.add_argument('--seed', type=int, default=2025)
-parser.add_argument('--cen_feats', nargs='+',
-                    help="List of graph feature types (dc, cc, pagerank, hits_hub, hits_auth, kcore, triangle)",
-                    default=['dc', 'cc', 'pagerank', 'hits_hub', 'hits_auth', 'kcore', 'triangle'])
+parser.add_argument('--struct_feats', nargs='+',
+                    help="List of structural feature types (dc, pagerank, hits_hub, hits_auth, kcore, triangle, betweenness)",
+                    default=['dc', 'pagerank', 'hits_hub', 'hits_auth', 'kcore', 'triangle', 'betweenness'])
 
 parser.add_argument('--lr', type=float, default=0.001)
 parser.add_argument('--input_dim', type=int, default=16)

@@ -101,7 +101,7 @@ def main(args):
     device = torch.device(f'cuda:{args.gpu}')
     print(f'##### device: {device}')
 
-    data, x_cen = load_graph_data(args, device=device)
+    data, x_struct = load_graph_data(args, device=device)
     print(f'Transaction graph: {data}')
 
     # Load k-NN graph

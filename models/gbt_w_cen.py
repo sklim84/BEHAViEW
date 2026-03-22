@@ -32,41 +32,41 @@ class GConv(torch.nn.Module):
 
 
 class Encoder(torch.nn.Module):
-    def __init__(self, encoder, proj_agg, proj_cen, augmentor):
+    def __init__(self, encoder, proj_behav, proj_struct, augmentor):
         super(Encoder, self).__init__()
-        self.proj_agg = proj_agg
-        self.proj_cen = proj_cen
+        self.proj_behav = proj_behav
+        self.proj_struct = proj_struct
         self.encoder = encoder
         self.augmentor = augmentor
 
-    def forward(self, x_agg, x_cen, edge_index, edge_weight=None, return_base=False):
+    def forward(self, x_behav, x_struct, edge_index, edge_weight=None, return_base=False):
         aug1, aug2 = self.augmentor
-        x1, edge_index1, edge_weight1 = aug1(x_agg, edge_index, edge_weight)
-        x2, edge_index2, edge_weight2 = aug2(x_cen, edge_index, edge_weight)
+        x1, edge_index1, edge_weight1 = aug1(x_behav, edge_index, edge_weight)
+        x2, edge_index2, edge_weight2 = aug2(x_struct, edge_index, edge_weight)
 
-        z1 = self.proj_agg(x1)
+        z1 = self.proj_behav(x1)
         z1 = self.encoder(z1, edge_index1, edge_weight1)
 
-        z2 = self.proj_cen(x2)
+        z2 = self.proj_struct(x2)
         z2 = self.encoder(z2, edge_index2, edge_weight2)
 
         if return_base:
-            z = self.proj_agg(x_agg)
+            z = self.proj_behav(x_behav)
             z = self.encoder(z, edge_index, edge_weight)
             return z, z1, z2
 
         return z1, z2
 
 
-def train(loader, encoder_model, contrast_model, optimizer, x_cen, device):
+def train(loader, encoder_model, contrast_model, optimizer, x_struct, device):
     encoder_model.train()
     total_loss = 0
     for batch in loader:
         batch = batch.to(device)
-        batch_x_cen = x_cen[batch.n_id]
+        batch_x_struct = x_struct[batch.n_id]
 
         optimizer.zero_grad()
-        z1, z2 = encoder_model(batch.x, batch_x_cen, batch.edge_index, batch.edge_attr)
+        z1, z2 = encoder_model(batch.x, batch_x_struct, batch.edge_index, batch.edge_attr)
         z1, z2 = z1[:batch.batch_size], z2[:batch.batch_size]
         loss = contrast_model(z1, z2)
         loss.backward()
@@ -75,7 +75,7 @@ def train(loader, encoder_model, contrast_model, optimizer, x_cen, device):
     return total_loss / len(loader)
 
 
-def test(encoder_model, data, x_cen, device, batch_size=4096):
+def test(encoder_model, data, x_struct, device, batch_size=4096):
     encoder_model.eval()
     old_aug = encoder_model.augmentor
     encoder_model.augmentor = (A.Identity(), A.Identity())
@@ -90,7 +90,7 @@ def test(encoder_model, data, x_cen, device, batch_size=4096):
             for batch in test_loader:
                 batch = batch.to(device)
                 z, _, _ = encoder_model(
-                    batch.x, x_cen[batch.n_id],
+                    batch.x, x_struct[batch.n_id],
                     batch.edge_index, getattr(batch, 'edge_attr', None),
                     return_base=True)
                 Z[batch.n_id[:batch.batch_size]] = z[:batch.batch_size]
@@ -104,37 +104,37 @@ def main(args):
     device = torch.device(f'cuda:{args.gpu}')
     print(f'##### device: {device}')
 
-    data, x_cen = load_graph_data(args, device=None)
+    data, x_struct = load_graph_data(args, device=None)
     print(data)
 
     aug1 = A.Compose([A.EdgeRemoving(pe=0.5), A.FeatureMasking(pf=0.1)])
     aug2 = A.Compose([A.EdgeRemoving(pe=0.5), A.FeatureMasking(pf=0.1)])
 
     gconv = GConv(input_dim=args.input_dim, hidden_dim=args.hidden_dim).to(device)
-    proj_agg = torch.nn.Linear(data.x.shape[1], args.input_dim)
-    proj_cen = torch.nn.Linear(x_cen.shape[1], args.input_dim)
+    proj_behav = torch.nn.Linear(data.x.shape[1], args.input_dim)
+    proj_struct = torch.nn.Linear(x_struct.shape[1], args.input_dim)
 
-    encoder_model = Encoder(encoder=gconv, proj_agg=proj_agg, proj_cen=proj_cen, augmentor=(aug1, aug2)).to(device)
+    encoder_model = Encoder(encoder=gconv, proj_behav=proj_behav, proj_struct=proj_struct, augmentor=(aug1, aug2)).to(device)
     loss_fn = create_loss(args.loss)
     contrast_model = WithinEmbedContrast(loss=loss_fn).to(device)
     optimizer = Adam(encoder_model.parameters(), lr=args.lr)
 
     batch_size = 4096
     train_loader = NeighborLoader(data, num_neighbors=[10, 10], batch_size=batch_size, shuffle=True)
-    x_cen_gpu = x_cen.to(device)
+    x_struct_gpu = x_struct.to(device)
 
     with tqdm(total=4000, desc='(T)') as pbar:
         for epoch in range(1, 4001):
-            loss = train(train_loader, encoder_model, contrast_model, optimizer, x_cen_gpu, device)
+            loss = train(train_loader, encoder_model, contrast_model, optimizer, x_struct_gpu, device)
             pbar.set_postfix({'loss': loss})
             pbar.update()
 
-    Z = test(encoder_model, data, x_cen_gpu, device, batch_size)
+    Z = test(encoder_model, data, x_struct_gpu, device, batch_size)
     z = Z.detach().cpu()
 
     os.makedirs('./visualize/GBT', exist_ok=True)
-    cen_feats = "_".join(str(item) for item in args.cen_feats)
-    vis_save_path = f'./visualize/GBT/tsne_{args.model_name}_{args.node_data_name}_{cen_feats}_{args.lr}_{args.input_dim}_{args.hidden_dim}_{args.gconv_nlayers}_{args.loss}.png'
+    struct_feats = "_".join(str(item) for item in args.struct_feats)
+    vis_save_path = f'./visualize/GBT/tsne_{args.model_name}_{args.node_data_name}_{struct_feats}_{args.lr}_{args.input_dim}_{args.hidden_dim}_{args.gconv_nlayers}_{args.loss}.png'
 
     ari_score, sil_score = visualize_tsne(args.seed, z.numpy(), data.y, save_path=vis_save_path, skip=args.skip_tsne)
     split = get_split(num_samples=z.size(0), train_ratio=0.1, test_ratio=0.8)

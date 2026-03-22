@@ -57,12 +57,12 @@ class GConv(torch.nn.Module):
 
 
 class Encoder(torch.nn.Module):
-    def __init__(self, encoder, proj_agg, proj_cen, augmentor, hidden_dim, dropout=0.2, predictor_norm='batch'):
+    def __init__(self, encoder, proj_behav, proj_struct, augmentor, hidden_dim, dropout=0.2, predictor_norm='batch'):
         super(Encoder, self).__init__()
         self.online_encoder = encoder
         self.target_encoder = None
-        self.proj_agg = proj_agg
-        self.proj_cen = proj_cen
+        self.proj_behav = proj_behav
+        self.proj_struct = proj_struct
         self.augmentor = augmentor
         self.predictor = torch.nn.Sequential(
             torch.nn.Linear(hidden_dim, hidden_dim),
@@ -82,24 +82,24 @@ class Encoder(torch.nn.Module):
             next_p = momentum * p.data + (1 - momentum) * new_p.data
             p.data = next_p
 
-    def forward(self, x_agg, x_cen, edge_index, edge_weight=None):
+    def forward(self, x_behav, x_struct, edge_index, edge_weight=None):
         aug1, aug2 = self.augmentor
-        x1, edge_index1, edge_weight1 = aug1(x_agg, edge_index, edge_weight)
-        x2, edge_index2, edge_weight2 = aug2(x_cen, edge_index, edge_weight)
+        x1, edge_index1, edge_weight1 = aug1(x_behav, edge_index, edge_weight)
+        x2, edge_index2, edge_weight2 = aug2(x_struct, edge_index, edge_weight)
 
-        z1 = self.proj_agg(x1)
+        z1 = self.proj_behav(x1)
         h1, h1_online = self.online_encoder(z1, edge_index1, edge_weight1)
 
-        z2 = self.proj_cen(x2)
+        z2 = self.proj_struct(x2)
         h2, h2_online = self.online_encoder(z2, edge_index2, edge_weight2)
 
         h1_pred = self.predictor(h1_online)
         h2_pred = self.predictor(h2_online)
 
         with torch.no_grad():
-            z1 = self.proj_agg(x1)
+            z1 = self.proj_behav(x1)
             _, h1_target = self.get_target_encoder()(z1, edge_index1, edge_weight1)
-            z2 = self.proj_cen(x2)
+            z2 = self.proj_struct(x2)
             _, h2_target = self.get_target_encoder()(z2, edge_index2, edge_weight2)
 
         return h1, h2, h1_pred, h2_pred, h1_target, h2_target
@@ -112,10 +112,10 @@ def bootstrap_latent_loss(h1_pred, h2_pred, h1_target, h2_target):
     return loss
 
 
-def train(encoder_model, data, x_cen, optimizer):
+def train(encoder_model, data, x_struct, optimizer):
     encoder_model.train()
     optimizer.zero_grad()
-    _, _, h1_pred, h2_pred, h1_target, h2_target = encoder_model(data.x, x_cen, data.edge_index, data.edge_attr)
+    _, _, h1_pred, h2_pred, h1_target, h2_target = encoder_model(data.x, x_struct, data.edge_index, data.edge_attr)
     loss = bootstrap_latent_loss(h1_pred, h2_pred, h1_target, h2_target)
     loss.backward()
     optimizer.step()
@@ -123,10 +123,10 @@ def train(encoder_model, data, x_cen, optimizer):
     return loss.item()
 
 
-def test(seed, encoder_model, data, x_cen, vis_save_path, skip_tsne=False):
+def test(seed, encoder_model, data, x_struct, vis_save_path, skip_tsne=False):
     encoder_model.eval()
     with torch.no_grad():
-        h1, h2, _, _, _, _ = encoder_model(data.x, x_cen, data.edge_index)
+        h1, h2, _, _, _, _ = encoder_model(data.x, x_struct, data.edge_index)
     z = torch.cat([h1, h2], dim=1)
     ari_score, sil_score = visualize_tsne(seed, z.detach().cpu().numpy(), data.y, save_path=vis_save_path, skip=skip_tsne)
     split = get_split(num_samples=z.size()[0], train_ratio=0.1, test_ratio=0.8)
@@ -139,18 +139,18 @@ def main(args):
     device = torch.device(f'cuda:{args.gpu}')
     print(f'##### device: {device}')
 
-    data, x_cen = load_graph_data(args, device=device)
+    data, x_struct = load_graph_data(args, device=device)
     print(data)
 
     aug1 = A.Compose([A.EdgeRemoving(pe=0.5), A.FeatureMasking(pf=0.1)])
     aug2 = A.Compose([A.EdgeRemoving(pe=0.5), A.FeatureMasking(pf=0.1)])
 
     gconv = GConv(input_dim=args.input_dim, hidden_dim=args.hidden_dim, num_layers=args.gconv_nlayers).to(device)
-    proj_agg = torch.nn.Linear(data.x.size(1), args.input_dim)
-    proj_cen = torch.nn.Linear(x_cen.size(1), args.input_dim)
+    proj_behav = torch.nn.Linear(data.x.size(1), args.input_dim)
+    proj_struct = torch.nn.Linear(x_struct.size(1), args.input_dim)
 
     encoder_model = Encoder(
-        encoder=gconv, proj_agg=proj_agg, proj_cen=proj_cen,
+        encoder=gconv, proj_behav=proj_behav, proj_struct=proj_struct,
         augmentor=(aug1, aug2), hidden_dim=args.hidden_dim
     ).to(device)
 
@@ -159,14 +159,14 @@ def main(args):
     total = 100
     with tqdm(total=total, desc='(T)') as pbar:
         for epoch in range(1, total + 1):
-            loss = train(encoder_model, data, x_cen.to(device), optimizer)
+            loss = train(encoder_model, data, x_struct.to(device), optimizer)
             pbar.set_postfix({'loss': loss})
             pbar.update()
 
     os.makedirs('./visualize/BGRL_L2L', exist_ok=True)
-    cen_feats = "_".join(str(item) for item in args.cen_feats)
-    vis_save_path = f'./visualize/BGRL_L2L/tsne_{args.model_name}_{args.node_data_name}_{cen_feats}_{args.lr}_{args.input_dim}_{args.hidden_dim}_{args.gconv_nlayers}_{args.loss}.png'
-    test_result, ari_score, sil_score = test(args.seed, encoder_model, data, x_cen.to(device), vis_save_path, args.skip_tsne)
+    struct_feats = "_".join(str(item) for item in args.struct_feats)
+    vis_save_path = f'./visualize/BGRL_L2L/tsne_{args.model_name}_{args.node_data_name}_{struct_feats}_{args.lr}_{args.input_dim}_{args.hidden_dim}_{args.gconv_nlayers}_{args.loss}.png'
+    test_result, ari_score, sil_score = test(args.seed, encoder_model, data, x_struct.to(device), vis_save_path, args.skip_tsne)
     print(test_result)
     print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}, F1_fraud={test_result["f1_1"]:.4f}')
 

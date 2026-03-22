@@ -8,7 +8,7 @@
     python scripts/hp_search.py --preset v2                # 3개 피처 세트 비교, 1296 jobs
 
     # 커스텀 실행
-    python scripts/hp_search.py --cen_feats dc cc pagerank --num_gpus 2
+    python scripts/hp_search.py --struct_feats dc cc pagerank --num_gpus 2
     python scripts/hp_search.py --preset 17feat --num_gpus 6 --lr 1e-4 5e-4 1e-3
 
     # GPU idle 대기 후 시작
@@ -31,7 +31,7 @@ from scripts.hp_common import (
 # ============================================================
 PRESETS = {
     'baseline': {
-        'cen_feats_sets': {
+        'struct_feats_sets': {
             'baseline': 'dc cc pagerank hits_hub hits_auth kcore triangle',
         },
         'search_space': {
@@ -44,7 +44,7 @@ PRESETS = {
         'num_gpus': 6,
     },
     '17feat': {
-        'cen_feats_sets': {
+        'struct_feats_sets': {
             '17feat': ('dc in_dc out_dc cc harmonic pagerank hits_hub '
                        'hits_auth eigenvector kcore triangle clustering '
                        'sq_clustering avg_neigh_deg betweenness louvain '
@@ -60,7 +60,7 @@ PRESETS = {
         'num_gpus': 1,
     },
     'v2': {
-        'cen_feats_sets': {
+        'struct_feats_sets': {
             'baseline': 'dc cc pagerank hits_hub hits_auth kcore triangle',
             'extended': ('dc cc pagerank hits_hub hits_auth kcore triangle '
                          'in_dc out_dc clustering avg_neigh_deg harmonic '
@@ -77,7 +77,7 @@ PRESETS = {
         'num_gpus': 6,
     },
     'compare': {
-        'cen_feats_sets': {
+        'struct_feats_sets': {
             'baseline': 'dc cc pagerank hits_hub hits_auth kcore triangle',
         },
         'search_space': {
@@ -102,16 +102,16 @@ COMMON_ARGS = {
 # ============================================================
 # 작업 생성
 # ============================================================
-def generate_jobs(search_space, result_file, cen_feats_sets, models=None):
-    """모델 × cen_feats × HP 조합 생성 (완료 제외)"""
+def generate_jobs(search_space, result_file, struct_feats_sets, models=None):
+    """모델 × struct_feats × HP 조합 생성 (완료 제외)"""
     if models is None:
         models = MODELS
-    multi_set = len(cen_feats_sets) > 1
+    multi_set = len(struct_feats_sets) > 1
 
     if multi_set:
         key_fields = [
             ('Model', str.lower),
-            ('cen_feats', lambda x: x),
+            ('struct_feats', lambda x: x),
             ('lr', float),
             ('input_dim', int),
             ('hidden_dim', int),
@@ -134,12 +134,12 @@ def generate_jobs(search_space, result_file, cen_feats_sets, models=None):
 
     for model_name, model_cfg in models.items():
         is_org = '_w_org' in model_name
-        feats_iter = {'none': ''} if is_org else cen_feats_sets
-        for cen_name, cen_feats in feats_iter.items():
+        feats_iter = {'none': ''} if is_org else struct_feats_sets
+        for cen_name, struct_feats in feats_iter.items():
             for combo in itertools.product(*values):
                 hp = dict(zip(keys, combo))
                 if multi_set and not is_org:
-                    key = (model_name, cen_feats, hp['lr'], hp['input_dim'],
+                    key = (model_name, struct_feats, hp['lr'], hp['input_dim'],
                            hp['hidden_dim'], hp['gconv_nlayers'])
                 else:
                     key = (model_name, hp['lr'], hp['input_dim'],
@@ -147,7 +147,7 @@ def generate_jobs(search_space, result_file, cen_feats_sets, models=None):
                 if key in completed:
                     skipped += 1
                     continue
-                jobs.append((model_name, model_cfg, hp, cen_feats, cen_name))
+                jobs.append((model_name, model_cfg, hp, struct_feats, cen_name))
 
     return jobs, skipped
 
@@ -159,8 +159,8 @@ def main():
     parser = argparse.ArgumentParser(description='HP Search (unified)')
     parser.add_argument('--preset', choices=list(PRESETS.keys()),
                         help='프리셋 선택 (baseline/17feat/v2/compare)')
-    parser.add_argument('--cen_feats', nargs='+',
-                        help='커스텀 cen_feats (프리셋 대신 사용)')
+    parser.add_argument('--struct_feats', nargs='+',
+                        help='커스텀 struct_feats (프리셋 대신 사용)')
     parser.add_argument('--num_gpus', type=int, help='사용할 GPU 수')
     parser.add_argument('--result_file', type=str, help='결과 CSV 경로')
     parser.add_argument('--wait_gpu_idle', action='store_true',
@@ -183,7 +183,7 @@ def main():
         label = 'HP Search [custom]'
 
     search_space = cfg['search_space'].copy()
-    cen_feats_sets = cfg['cen_feats_sets'].copy()
+    struct_feats_sets = cfg['struct_feats_sets'].copy()
     result_file = cfg['result_file']
     num_gpus = cfg['num_gpus']
 
@@ -197,8 +197,8 @@ def main():
         selected_models = MODELS_CEN
 
     # CLI 오버라이드 적용
-    if args.cen_feats:
-        cen_feats_sets = {'custom': ' '.join(args.cen_feats)}
+    if args.struct_feats:
+        struct_feats_sets = {'custom': ' '.join(args.struct_feats)}
     if args.num_gpus is not None:
         num_gpus = args.num_gpus
     if args.result_file:
@@ -218,16 +218,16 @@ def main():
         wait_for_gpu_idle()
 
     # 작업 생성
-    jobs, skipped = generate_jobs(search_space, result_file, cen_feats_sets,
+    jobs, skipped = generate_jobs(search_space, result_file, struct_feats_sets,
                                   models=selected_models)
     n_hp = len(list(itertools.product(*search_space.values())))
 
     print(f'[{label}] Skipping {skipped} already completed jobs')
     print(f'[{label}] {len(selected_models)} models × '
-          f'{len(cen_feats_sets)} cen_feats sets × {n_hp} HP = {len(jobs)} jobs')
+          f'{len(struct_feats_sets)} struct_feats sets × {n_hp} HP = {len(jobs)} jobs')
     print(f'[{label}] Search space: {search_space}')
-    for name, feats in cen_feats_sets.items():
-        print(f'[{label}] cen_feats[{name}] ({len(feats.split())}): {feats}')
+    for name, feats in struct_feats_sets.items():
+        print(f'[{label}] struct_feats[{name}] ({len(feats.split())}): {feats}')
 
     if not jobs:
         print(f'[{label}] No jobs to run — all completed!')
