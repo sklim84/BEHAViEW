@@ -43,33 +43,47 @@ class GConv(nn.Module):
         return z
 
 
+def subgraph_pool(z, edge_index):
+    """각 노드의 k-NN 이웃 임베딩 평균 (self 포함)."""
+    N, D = z.size()
+    src, tgt = edge_index[0], edge_index[1]
+    neigh_sum = torch.zeros(N, D, device=z.device)
+    neigh_count = torch.zeros(N, 1, device=z.device)
+    neigh_sum.scatter_add_(0, tgt.unsqueeze(1).expand(-1, D), z[src])
+    neigh_count.scatter_add_(0, tgt.unsqueeze(1), torch.ones(src.size(0), 1, device=z.device))
+    return (neigh_sum + z) / (neigh_count + 1).clamp(min=1)
+
+
 class Encoder(torch.nn.Module):
-    def __init__(self, encoder1, encoder2, hidden_dim):
+    def __init__(self, encoder1, encoder2, hidden_dim, use_subgraph_pool=False):
         super(Encoder, self).__init__()
         self.encoder1 = encoder1
         self.encoder2 = encoder2
         self.project = torch.nn.Linear(hidden_dim, hidden_dim)
         uniform(hidden_dim, self.project.weight)
+        self.use_subgraph_pool = use_subgraph_pool
 
     @staticmethod
     def corruption(x, edge_index, edge_weight):
         return x[torch.randperm(x.size(0))], edge_index, edge_weight
 
+    def _compute_summary(self, z, edge_index):
+        if self.use_subgraph_pool:
+            s = subgraph_pool(z, edge_index)
+            return self.project(torch.sigmoid(s))
+        else:
+            return self.project(torch.sigmoid(z.mean(dim=0, keepdim=True)))
+
     def forward(self, x, edge_index_trans, edge_index_knn, edge_weight=None):
-        # View 1: encoder1 on transaction graph
         if self.training:
             z1 = checkpoint(self.encoder1, x, edge_index_trans, edge_weight, use_reentrant=False)
-        else:
-            z1 = self.encoder1(x, edge_index_trans, edge_weight)
-
-        # View 2: encoder2 on k-NN graph
-        if self.training:
             z2 = checkpoint(self.encoder2, x, edge_index_knn, edge_weight, use_reentrant=False)
         else:
+            z1 = self.encoder1(x, edge_index_trans, edge_weight)
             z2 = self.encoder2(x, edge_index_knn, edge_weight)
 
-        g1 = self.project(torch.sigmoid(z1.mean(dim=0, keepdim=True)))
-        g2 = self.project(torch.sigmoid(z2.mean(dim=0, keepdim=True)))
+        g1 = self._compute_summary(z1, edge_index_trans)
+        g2 = self._compute_summary(z2, edge_index_knn)
 
         # Corrupted views
         x1n, ei1n, ew1n = self.corruption(x, edge_index_trans, edge_weight)
@@ -121,9 +135,12 @@ def main(args):
 
     # Single feature set — no projection needed, dual encoders
     input_dim = data.x.size(1)
+    use_subgraph = getattr(args, 'subgraph_pool', False)
     gconv1 = GConv(input_dim=input_dim, hidden_dim=args.hidden_dim, num_layers=args.gconv_nlayers).to(device)
     gconv2 = GConv(input_dim=input_dim, hidden_dim=args.hidden_dim, num_layers=args.gconv_nlayers).to(device)
-    encoder_model = Encoder(encoder1=gconv1, encoder2=gconv2, hidden_dim=args.hidden_dim).to(device)
+    encoder_model = Encoder(encoder1=gconv1, encoder2=gconv2, hidden_dim=args.hidden_dim,
+                           use_subgraph_pool=use_subgraph).to(device)
+    print(f'Subgraph pooling: {use_subgraph}')
 
     loss_fn = create_loss(args.loss)
     contrast_model = DualBranchContrast(loss=loss_fn, mode='G2L').to(device)

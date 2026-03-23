@@ -43,35 +43,53 @@ class GConv(nn.Module):
         return z
 
 
+def subgraph_pool(z, edge_index):
+    """각 노드의 k-NN 이웃 임베딩 평균 (self 포함)."""
+    N, D = z.size()
+    src, tgt = edge_index[0], edge_index[1]
+    neigh_sum = torch.zeros(N, D, device=z.device)
+    neigh_count = torch.zeros(N, 1, device=z.device)
+    neigh_sum.scatter_add_(0, tgt.unsqueeze(1).expand(-1, D), z[src])
+    neigh_count.scatter_add_(0, tgt.unsqueeze(1), torch.ones(src.size(0), 1, device=z.device))
+    return (neigh_sum + z) / (neigh_count + 1).clamp(min=1)
+
+
 class Encoder(torch.nn.Module):
-    def __init__(self, encoder, hidden_dim):
+    def __init__(self, encoder, hidden_dim, use_subgraph_pool=False):
         super(Encoder, self).__init__()
         self.encoder = encoder
         self.project = torch.nn.Linear(hidden_dim, hidden_dim)
         uniform(hidden_dim, self.project.weight)
+        self.use_subgraph_pool = use_subgraph_pool
 
     @staticmethod
     def corruption(x, edge_index):
         return x[torch.randperm(x.size(0))], edge_index
 
+    def _compute_summary(self, z, edge_index_knn):
+        """Global pooling 또는 subgraph pooling으로 graph summary 계산."""
+        if self.use_subgraph_pool:
+            # Subgraph pooling: 각 노드의 k-NN 이웃 평균 → per-node summary
+            s = subgraph_pool(z, edge_index_knn)
+            g = self.project(torch.sigmoid(s))
+        else:
+            # Global pooling: 전체 노드 평균 → single summary
+            g = self.project(torch.sigmoid(z.mean(dim=0, keepdim=True)))
+        return g
+
     def forward(self, x, edge_index_trans, edge_index_knn):
-        # View 1: encoder on transaction graph
         z1 = self.encoder(x, edge_index_trans)
-
-        # View 2: encoder on k-NN graph
         z2 = self.encoder(x, edge_index_knn)
-
         z = (z1 + z2) / 2
-        g = self.project(torch.sigmoid(z.mean(dim=0, keepdim=True)))
 
-        # Corrupted views
+        g = self._compute_summary(z, edge_index_knn)
+
         x_corr1, ei_corr1 = self.corruption(x, edge_index_trans)
         zn1 = self.encoder(x_corr1, ei_corr1)
-
         x_corr2, ei_corr2 = self.corruption(x, edge_index_knn)
         zn2 = self.encoder(x_corr2, ei_corr2)
-
         zn = (zn1 + zn2) / 2
+
         return z, g, zn
 
 
@@ -110,8 +128,10 @@ def main(args):
 
     # Single feature set — no projection needed
     input_dim = data.x.size(1)
+    use_subgraph = getattr(args, 'subgraph_pool', False)
     gconv = GConv(input_dim=input_dim, hidden_dim=args.hidden_dim, num_layers=args.gconv_nlayers).to(device)
-    encoder_model = Encoder(encoder=gconv, hidden_dim=args.hidden_dim).to(device)
+    encoder_model = Encoder(encoder=gconv, hidden_dim=args.hidden_dim, use_subgraph_pool=use_subgraph).to(device)
+    print(f'Subgraph pooling: {use_subgraph}')
 
     loss_fn = create_loss(args.loss)
     contrast_model = SingleBranchContrast(loss=loss_fn, mode='G2L').to(device)

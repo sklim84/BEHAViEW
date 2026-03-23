@@ -36,12 +36,23 @@ class GConv(nn.Module):
         return z
 
 
+def subgraph_pool(z, edge_index):
+    N, D = z.size()
+    src, tgt = edge_index[0], edge_index[1]
+    neigh_sum = torch.zeros(N, D, device=z.device)
+    neigh_count = torch.zeros(N, 1, device=z.device)
+    neigh_sum.scatter_add_(0, tgt.unsqueeze(1).expand(-1, D), z[src])
+    neigh_count.scatter_add_(0, tgt.unsqueeze(1), torch.ones(src.size(0), 1, device=z.device))
+    return (neigh_sum + z) / (neigh_count + 1).clamp(min=1)
+
+
 class Encoder(torch.nn.Module):
-    def __init__(self, encoder, hidden_dim):
+    def __init__(self, encoder, hidden_dim, use_subgraph_pool=False):
         super(Encoder, self).__init__()
         self.encoder = encoder
         self.project = torch.nn.Linear(hidden_dim, hidden_dim)
         uniform(hidden_dim, self.project.weight)
+        self.use_subgraph_pool = use_subgraph_pool
 
     @staticmethod
     def corruption(x, edge_index):
@@ -49,7 +60,10 @@ class Encoder(torch.nn.Module):
 
     def forward(self, x, edge_index):
         z = self.encoder(x, edge_index)
-        g = self.project(torch.sigmoid(z.mean(dim=0, keepdim=True)))
+        if self.use_subgraph_pool:
+            g = self.project(torch.sigmoid(subgraph_pool(z, edge_index)))
+        else:
+            g = self.project(torch.sigmoid(z.mean(dim=0, keepdim=True)))
         zn = self.encoder(*self.corruption(x, edge_index))
         return z, g, zn
 
@@ -82,10 +96,12 @@ def main(args):
     data, _ = load_graph_data(args, device=device)
     print(data)
 
-    gconv = GConv(input_dim=data.x.shape[1], hidden_dim=512, num_layers=2).to(device)
-    encoder_model = Encoder(encoder=gconv, hidden_dim=512).to(device)
+    use_subgraph = getattr(args, 'subgraph_pool', False)
+    gconv = GConv(input_dim=data.x.shape[1], hidden_dim=args.hidden_dim, num_layers=args.gconv_nlayers).to(device)
+    encoder_model = Encoder(encoder=gconv, hidden_dim=args.hidden_dim, use_subgraph_pool=use_subgraph).to(device)
     contrast_model = SingleBranchContrast(loss=L.JSD(), mode='G2L').to(device)
-    optimizer = Adam(encoder_model.parameters(), lr=0.01)
+    optimizer = Adam(encoder_model.parameters(), lr=args.lr)
+    print(f'Subgraph pooling: {use_subgraph}')
 
     with tqdm(total=300, desc='(T)') as pbar:
         for epoch in range(1, 301):

@@ -56,12 +56,25 @@ class GConv(torch.nn.Module):
         return z, self.projection_head(z)
 
 
+def subgraph_pool(z, edge_index):
+    """각 노드의 이웃 임베딩 평균 (self 포함)."""
+    N, D = z.size()
+    src, tgt = edge_index[0], edge_index[1]
+    neigh_sum = torch.zeros(N, D, device=z.device)
+    neigh_count = torch.zeros(N, 1, device=z.device)
+    neigh_sum.scatter_add_(0, tgt.unsqueeze(1).expand(-1, D), z[src])
+    neigh_count.scatter_add_(0, tgt.unsqueeze(1), torch.ones(src.size(0), 1, device=z.device))
+    return (neigh_sum + z) / (neigh_count + 1).clamp(min=1)
+
+
 class Encoder(torch.nn.Module):
-    def __init__(self, encoder, augmentor, hidden_dim, dropout=0.2, predictor_norm='batch'):
+    def __init__(self, encoder, augmentor, hidden_dim, dropout=0.2, predictor_norm='batch',
+                 use_subgraph_pool=False):
         super(Encoder, self).__init__()
         self.online_encoder = encoder
         self.target_encoder = None
         self.augmentor = augmentor
+        self.use_subgraph_pool = use_subgraph_pool
         self.predictor = torch.nn.Sequential(
             torch.nn.Linear(hidden_dim, hidden_dim),
             Normalize(hidden_dim, norm=predictor_norm),
@@ -88,12 +101,23 @@ class Encoder(torch.nn.Module):
         h1, h1_online = self.online_encoder(x1, edge_index1, edge_weight1)
         h2, h2_online = self.online_encoder(x2, edge_index2, edge_weight2)
 
+        if self.use_subgraph_pool:
+            h1_online = subgraph_pool(h1_online, edge_index1)
+            h2_online = subgraph_pool(h2_online, edge_index2)
+
         h1_pred = self.predictor(h1_online)
         h2_pred = self.predictor(h2_online)
 
         with torch.no_grad():
             _, h1_target = self.get_target_encoder()(x1, edge_index1, edge_weight1)
             _, h2_target = self.get_target_encoder()(x2, edge_index2, edge_weight2)
+            if self.use_subgraph_pool:
+                h1_target = subgraph_pool(h1_target, edge_index1)
+                h2_target = subgraph_pool(h2_target, edge_index2)
+
+        if self.use_subgraph_pool:
+            h1 = subgraph_pool(h1, edge_index1)
+            h2 = subgraph_pool(h2, edge_index2)
 
         return h1, h2, h1_pred, h2_pred, h1_target, h2_target
 
@@ -138,9 +162,12 @@ def main(args):
     aug1 = A.Compose([A.EdgeRemoving(pe=0.5), A.FeatureMasking(pf=0.1)])
     aug2 = A.Compose([A.EdgeRemoving(pe=0.5), A.FeatureMasking(pf=0.1)])
 
-    gconv = GConv(input_dim=data.x.shape[1], hidden_dim=256, num_layers=2).to(device)
-    encoder_model = Encoder(encoder=gconv, augmentor=(aug1, aug2), hidden_dim=256).to(device)
-    optimizer = Adam(encoder_model.parameters(), lr=0.01)
+    use_subgraph = getattr(args, 'subgraph_pool', False)
+    gconv = GConv(input_dim=data.x.shape[1], hidden_dim=args.hidden_dim, num_layers=args.gconv_nlayers).to(device)
+    encoder_model = Encoder(encoder=gconv, augmentor=(aug1, aug2), hidden_dim=args.hidden_dim,
+                           use_subgraph_pool=use_subgraph).to(device)
+    optimizer = Adam(encoder_model.parameters(), lr=args.lr)
+    print(f'Subgraph pooling: {use_subgraph}')
 
     with tqdm(total=100, desc='(T)') as pbar:
         for epoch in range(1, 101):
