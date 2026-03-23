@@ -64,12 +64,24 @@ class GConv(torch.nn.Module):
         return z, self.projection_head(z)
 
 
+def subgraph_pool(z, edge_index):
+    N, D = z.size()
+    src, tgt = edge_index[0], edge_index[1]
+    neigh_sum = torch.zeros(N, D, device=z.device)
+    neigh_count = torch.zeros(N, 1, device=z.device)
+    neigh_sum.scatter_add_(0, tgt.unsqueeze(1).expand(-1, D), z[src])
+    neigh_count.scatter_add_(0, tgt.unsqueeze(1), torch.ones(src.size(0), 1, device=z.device))
+    return (neigh_sum + z) / (neigh_count + 1).clamp(min=1)
+
+
 class Encoder(torch.nn.Module):
-    def __init__(self, encoder, augmentor, hidden_dim, dropout=0.2, predictor_norm='batch'):
+    def __init__(self, encoder, augmentor, hidden_dim, dropout=0.2, predictor_norm='batch',
+                 use_subgraph_pool=False):
         super(Encoder, self).__init__()
         self.online_encoder = encoder
         self.target_encoder = None
         self.augmentor = augmentor
+        self.use_subgraph_pool = use_subgraph_pool
         self.predictor = torch.nn.Sequential(
             torch.nn.Linear(hidden_dim, hidden_dim),
             Normalize(hidden_dim, norm=predictor_norm),
@@ -97,6 +109,10 @@ class Encoder(torch.nn.Module):
         x2, ei2, ew2 = aug2(x, edge_index_knn, edge_weight)
         h2, h2_online = self.online_encoder(x2, ei2, ew2)
 
+        if self.use_subgraph_pool:
+            h1_online = subgraph_pool(h1_online, ei1)
+            h2_online = subgraph_pool(h2_online, ei2)
+
         h1_pred = self.predictor(h1_online)
         h2_pred = self.predictor(h2_online)
 
@@ -105,6 +121,13 @@ class Encoder(torch.nn.Module):
             _, h1_target = self.get_target_encoder()(x1_t, ei1_t, ew1_t)
             x2_t, ei2_t, ew2_t = aug2(x, edge_index_knn, edge_weight)
             _, h2_target = self.get_target_encoder()(x2_t, ei2_t, ew2_t)
+            if self.use_subgraph_pool:
+                h1_target = subgraph_pool(h1_target, ei1_t)
+                h2_target = subgraph_pool(h2_target, ei2_t)
+
+        if self.use_subgraph_pool:
+            h1 = subgraph_pool(h1, ei1)
+            h2 = subgraph_pool(h2, ei2)
 
         return h1, h2, h1_pred, h2_pred, h1_target, h2_target
 
@@ -152,11 +175,14 @@ def main(args):
     aug1 = A.Compose([A.EdgeRemoving(pe=0.5), A.FeatureMasking(pf=0.1)])
     aug2 = A.Compose([A.EdgeRemoving(pe=0.5), A.FeatureMasking(pf=0.1)])
 
+    use_subgraph = getattr(args, 'subgraph_pool', False)
     gconv = GConv(input_dim=data.x.size(1), hidden_dim=args.hidden_dim,
                   num_layers=args.gconv_nlayers).to(device)
     encoder_model = Encoder(
         encoder=gconv, augmentor=(aug1, aug2), hidden_dim=args.hidden_dim,
+        use_subgraph_pool=use_subgraph,
     ).to(device)
+    print(f'Subgraph pooling: {use_subgraph}')
 
     optimizer = Adam(encoder_model.parameters(), lr=args.lr)
 
