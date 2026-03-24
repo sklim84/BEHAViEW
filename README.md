@@ -76,11 +76,11 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안    │
 | **MVGRL+BN** | 0.270 | **0.677** (+151%) | 0.204 (-24%) | **0.682** (+153%) | ✅ | GCN |
 | **GRACE+BN** | 0.286 | **0.676** (+136%) | 0.218 (-24%) | **0.681** (+138%) | ✅ | GCN |
 | **BGRL** | 0.315 | 0.566 (+80%) | 0.254 (-19%) | **0.647** (+105%) | ✅ | GCN |
-| **GIN** | 실험 중 | | | | ✅ | GIN |
+| **GIN** | 0.149 | **0.545** (+266%) | 0.121 (-19%) | **0.570** (+283%) | ✅ | GIN |
+| GCA | 0.048 | 0.064 (+31%) | 0.049 (+2%) | 0.085 (+75%) | ❌ | GCN |
 | DGI | 0.045 | 0.058 (+29%) | 0.048 (+7%) | 0.074 (+64%) | ❌ | GCN |
 | MVGRL | 0.045 | 0.056 (+24%) | 0.048 (+7%) | 0.071 (+56%) | ❌ | GCN |
 | GRACE | 0.045 | 0.056 (+27%) | 0.046 (+4%) | 0.069 (+54%) | ❌ | GCN |
-| GCA | 실험 중 | | | | ❌ | GCN |
 
 ### 핵심 발견
 
@@ -88,8 +88,8 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안    │
 2. **(c) Subgraph 단독**: BN encoder에서 오히려 악화 (-19~25%). transaction graph의 낮은 F-F/F-B 비율(1:5.7) 증폭
 3. **(d) 결합이 최고**: 모든 encoder에서 (d) > (b) > (a) > (c)
 4. **BN이 결정적**: BN 추가만으로 0.07 → 0.68 (~10배). 모든 per-layer BN encoder가 동등 성능 (0.681~0.682)
-5. **Encoder 아키텍처 무관**: BN만 있으면 DGI/MVGRL/GRACE/GBT 모두 동일 성능
-6. **제안 방법은 encoder 독립적**: behavioral view + subgraph pooling은 모든 encoder에서 일관된 상대적 개선 (+54~153%)
+5. **GCNConv + per-layer BN이 최적**: GCN+BN encoder 모두 동등 (0.681~0.682). GIN+BN은 차선 (0.570)
+6. **제안 방법은 encoder 독립적**: behavioral view + subgraph pooling은 모든 encoder에서 일관된 상대적 개선 (+54~283%)
 
 ## 빠른 시작
 
@@ -144,8 +144,7 @@ scripts/
 
 ## TODO
 
-- [x] (a)(b)(c)(d) ablation × 8 encoder (GCN, BN 변형)
-- [ ] GCA/GIN encoder 실험 (진행 중)
+- [x] (a)(b)(c)(d) ablation × 10 encoder (GCN/GIN, BN 변형, GCA)
 - [ ] AMLworld HI-Small 데이터셋 — 일반성 검증, GCPAL 직접 비교
 - [ ] SOTA AML 모델 비교
 
