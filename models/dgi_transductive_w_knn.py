@@ -93,11 +93,25 @@ class Encoder(torch.nn.Module):
         return z, g, zn
 
 
+def subgraph_contrastive_loss(z, g, zn):
+    """Per-node subgraph contrastive: node vs its local summary (positive), corrupted vs local summary (negative)."""
+    # g: [N, D] per-node subgraph summary
+    # z: [N, D] node embeddings (positive)
+    # zn: [N, D] corrupted node embeddings (negative)
+    pos = torch.sigmoid((z * g).sum(dim=1))    # positive score per node
+    neg = torch.sigmoid((zn * g).sum(dim=1))   # negative score per node
+    loss = -torch.log(pos + 1e-8).mean() - torch.log(1 - neg + 1e-8).mean()
+    return loss
+
+
 def train(encoder_model, contrast_model, x, edge_index_trans, edge_index_knn, optimizer):
     encoder_model.train()
     optimizer.zero_grad()
     z, g, zn = encoder_model(x, edge_index_trans, edge_index_knn)
-    loss = contrast_model(h=z, g=g, hn=zn)
+    if encoder_model.use_subgraph_pool:
+        loss = subgraph_contrastive_loss(z, g, zn)
+    else:
+        loss = contrast_model(h=z, g=g, hn=zn)
     loss.backward()
     optimizer.step()
     return loss.item()

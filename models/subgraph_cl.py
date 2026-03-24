@@ -88,10 +88,55 @@ class GNNEncoder_MVGRL(nn.Module):
         return x
 
 
+class GNNEncoder_GBT(nn.Module):
+    """GBT-style: GCN + BN + PReLU + Dropout (similar to BGRL but 2-layer BN)."""
+    def __init__(self, input_dim, hidden_dim, num_layers, dropout=0.2):
+        super().__init__()
+        self.layers = nn.ModuleList()
+        self.bns = nn.ModuleList()
+        self.layers.append(GCNConv(input_dim, hidden_dim))
+        self.bns.append(nn.BatchNorm1d(hidden_dim))
+        for _ in range(num_layers - 1):
+            self.layers.append(GCNConv(hidden_dim, hidden_dim))
+            self.bns.append(nn.BatchNorm1d(hidden_dim))
+        self.activation = nn.PReLU()
+        self.dropout = dropout
+
+    def forward(self, x, edge_index, edge_weight=None):
+        for conv, bn in zip(self.layers, self.bns):
+            x = conv(x, edge_index, edge_weight)
+            x = bn(x)
+            x = self.activation(x)
+            x = F.dropout(x, p=self.dropout, training=self.training)
+        return x
+
+
+class GNNEncoder_GRACE(nn.Module):
+    """GRACE-style: GCN + activation, with projection head built into SubgraphCL."""
+    def __init__(self, input_dim, hidden_dim, num_layers, dropout=0.2):
+        super().__init__()
+        self.layers = nn.ModuleList()
+        self.layers.append(GCNConv(input_dim, hidden_dim))
+        for _ in range(num_layers - 1):
+            self.layers.append(GCNConv(hidden_dim, hidden_dim))
+        self.activation = nn.ReLU()
+        self.dropout = dropout
+
+    def forward(self, x, edge_index, edge_weight=None):
+        for i, conv in enumerate(self.layers):
+            x = conv(x, edge_index, edge_weight)
+            if i < len(self.layers) - 1:
+                x = self.activation(x)
+                x = F.dropout(x, p=self.dropout, training=self.training)
+        return x
+
+
 ENCODERS = {
     'bgrl': GNNEncoder_BGRL,
     'dgi': GNNEncoder_DGI,
     'mvgrl': GNNEncoder_MVGRL,
+    'gbt': GNNEncoder_GBT,
+    'grace': GNNEncoder_GRACE,
 }
 
 
@@ -130,15 +175,20 @@ class SubgraphPooling(nn.Module):
 
 
 class SubgraphCL(nn.Module):
-    """Subgraph-level Contrastive Learning.
+    """Unified Contrastive Learning framework.
 
-    두 그래프에서 각각 GNN → subgraph pooling → projection → contrastive loss.
+    4가지 설정 지원:
+    (a) aug view + node-level: use_knn=False, use_subgraph=False
+    (b) behav view + node-level: use_knn=True, use_subgraph=False
+    (c) aug view + subgraph: use_knn=False, use_subgraph=True
+    (d) behav view + subgraph: use_knn=True, use_subgraph=True
     """
-    def __init__(self, encoder, hidden_dim, proj_dim=64):
+    def __init__(self, encoder, hidden_dim, proj_dim=64, use_subgraph=True):
         super().__init__()
         self.online_encoder = encoder
         self.target_encoder = None
-        self.subgraph_pool = SubgraphPooling()
+        self.use_subgraph = use_subgraph
+        self._subgraph_pool = SubgraphPooling()
 
         # Projection head
         self.projector = nn.Sequential(
@@ -168,33 +218,35 @@ class SubgraphCL(nn.Module):
                            self.online_encoder.parameters()):
             p.data = momentum * p.data + (1 - momentum) * new_p.data
 
-    def _encode_and_pool(self, encoder, x, edge_index):
-        """GNN encoding + subgraph pooling (gradient checkpointing 지원)."""
+    def _encode(self, encoder, x, edge_index):
+        """GNN encoding (gradient checkpointing 지원)."""
         if self.training:
             from torch.utils.checkpoint import checkpoint
-            z = checkpoint(encoder, x, edge_index, use_reentrant=False)
-        else:
-            z = encoder(x, edge_index)
-        s = self.subgraph_pool(z, edge_index)
-        return z, s
+            return checkpoint(encoder, x, edge_index, use_reentrant=False)
+        return encoder(x, edge_index)
 
-    def forward(self, x, edge_index_trans, edge_index_knn):
-        # View 1: Transaction graph
-        z1, s1 = self._encode_and_pool(self.online_encoder, x, edge_index_trans)
-        p1 = self.predictor(self.projector(s1))
+    def _get_repr(self, encoder, x, edge_index):
+        """Encode → optionally subgraph pool → return representation."""
+        z = self._encode(encoder, x, edge_index)
+        if self.use_subgraph:
+            return self._subgraph_pool(z, edge_index)
+        return z
 
-        # View 2: k-NN graph (detach intermediate to save memory)
-        z2, s2 = self._encode_and_pool(self.online_encoder, x, edge_index_knn)
-        p2 = self.predictor(self.projector(s2))
+    def forward(self, x, edge_index_v1, edge_index_v2):
+        # View 1
+        r1 = self._get_repr(self.online_encoder, x, edge_index_v1)
+        p1 = self.predictor(self.projector(r1))
 
-        # Target representations (no gradient)
+        # View 2
+        r2 = self._get_repr(self.online_encoder, x, edge_index_v2)
+        p2 = self.predictor(self.projector(r2))
+
+        # Target
         with torch.no_grad():
-            _, s1_t = self._encode_and_pool(self.get_target_encoder(), x, edge_index_trans)
-            t1 = self.projector(s1_t)
-            _, s2_t = self._encode_and_pool(self.get_target_encoder(), x, edge_index_knn)
-            t2 = self.projector(s2_t)
+            t1 = self.projector(self._get_repr(self.get_target_encoder(), x, edge_index_v1))
+            t2 = self.projector(self._get_repr(self.get_target_encoder(), x, edge_index_v2))
 
-        return z1, z2, s1, s2, p1, p2, t1, t2
+        return r1, r2, p1, p2, t1, t2
 
 
 def bootstrap_loss(p1, p2, t1, t2):
@@ -204,10 +256,10 @@ def bootstrap_loss(p1, p2, t1, t2):
     return loss
 
 
-def train(model, x, edge_index_trans, edge_index_knn, optimizer):
+def train(model, x, edge_index_v1, edge_index_v2, optimizer):
     model.train()
     optimizer.zero_grad()
-    _, _, _, _, p1, p2, t1, t2 = model(x, edge_index_trans, edge_index_knn)
+    _, _, p1, p2, t1, t2 = model(x, edge_index_v1, edge_index_v2)
     loss = bootstrap_loss(p1, p2, t1, t2)
     loss.backward()
     optimizer.step()
@@ -215,18 +267,13 @@ def train(model, x, edge_index_trans, edge_index_knn, optimizer):
     return loss.item()
 
 
-def get_embeddings(model, x, edge_index_trans, edge_index_knn):
-    """추론 시 두 view의 subgraph 표현을 결합."""
+def get_embeddings(model, x, edge_index_v1, edge_index_v2):
+    """추론 시 두 view의 표현을 결합."""
     model.eval()
     with torch.no_grad():
-        z1 = model.online_encoder(x, edge_index_trans)
-        s1 = model.subgraph_pool(z1, edge_index_trans)
-
-        z2 = model.online_encoder(x, edge_index_knn)
-        s2 = model.subgraph_pool(z2, edge_index_knn)
-
-    # 두 subgraph 표현 결합
-    return torch.cat([s1, s2], dim=1)
+        r1 = model._get_repr(model.online_encoder, x, edge_index_v1)
+        r2 = model._get_repr(model.online_encoder, x, edge_index_v2)
+    return torch.cat([r1, r2], dim=1)
 
 
 def main(args):
@@ -237,13 +284,27 @@ def main(args):
     data, _ = load_graph_data(args, device=device)
     print(f'Transaction graph: {data}')
 
-    edge_index_knn = load_knn_graph(args.knn_graph, device=device)
-    print(f'k-NN graph: {args.knn_graph} ({edge_index_knn.size(1)} edges)')
+    # View 설정: k-NN graph 또는 augmented transaction graph
+    use_knn = args.knn_graph is not None
+    use_subgraph = getattr(args, 'subgraph_pool', False)
+
+    if use_knn:
+        edge_index_knn = load_knn_graph(args.knn_graph, device=device)
+        edge_index_v1 = data.edge_index  # transaction graph
+        edge_index_v2 = edge_index_knn   # behavioral k-NN graph
+        print(f'k-NN graph: {args.knn_graph} ({edge_index_knn.size(1)} edges)')
+    else:
+        edge_index_v1 = data.edge_index  # both views use transaction graph
+        edge_index_v2 = data.edge_index  # (augmentation creates diversity)
+
+    setting = {(False, False): '(a)', (True, False): '(b)',
+               (False, True): '(c)', (True, True): '(d)'}[(use_knn, use_subgraph)]
+    print(f'Setting {setting}: knn={use_knn}, subgraph={use_subgraph}')
 
     encoder_type = getattr(args, 'encoder_type', 'bgrl')
     encoder_cls = ENCODERS[encoder_type]
     encoder_kwargs = dict(input_dim=data.x.size(1), hidden_dim=args.hidden_dim, num_layers=args.gconv_nlayers)
-    if encoder_type == 'bgrl':
+    if encoder_type in ('bgrl', 'gbt', 'grace'):
         encoder_kwargs['dropout'] = 0.2
     encoder = encoder_cls(**encoder_kwargs)
     print(f'Encoder: {encoder_type} ({encoder_cls.__name__})')
@@ -251,18 +312,19 @@ def main(args):
     model = SubgraphCL(
         encoder=encoder,
         hidden_dim=args.hidden_dim,
+        use_subgraph=use_subgraph,
     ).to(device)
 
     optimizer = Adam(model.parameters(), lr=args.lr)
 
     with tqdm(total=200, desc='(T)') as pbar:
         for epoch in range(1, 201):
-            loss = train(model, data.x, data.edge_index, edge_index_knn, optimizer)
+            loss = train(model, data.x, edge_index_v1, edge_index_v2, optimizer)
             pbar.set_postfix({'loss': f'{loss:.4f}'})
             pbar.update()
 
     # Evaluation
-    z = get_embeddings(model, data.x, data.edge_index, edge_index_knn)
+    z = get_embeddings(model, data.x, edge_index_v1, edge_index_v2)
     z_cpu = z.detach().cpu()
 
     os.makedirs('./visualize/SubgraphCL', exist_ok=True)
@@ -283,6 +345,5 @@ def main(args):
 
 if __name__ == '__main__':
     args = get_config()
-    assert args.knn_graph is not None, '--knn_graph required'
     print(args)
     main(args)

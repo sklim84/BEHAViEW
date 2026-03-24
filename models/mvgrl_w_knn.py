@@ -99,11 +99,27 @@ class Encoder(torch.nn.Module):
         return z1, z2, g1, g2, z1n, z2n
 
 
+def subgraph_contrastive_loss_dual(z1, z2, g1, g2, z1n, z2n):
+    """Per-node dual-branch subgraph contrastive: cross-view node vs local summary."""
+    # Positive: z1 vs g2 (cross-view), z2 vs g1
+    pos1 = torch.sigmoid((z1 * g2).sum(dim=1))
+    pos2 = torch.sigmoid((z2 * g1).sum(dim=1))
+    # Negative: corrupted z1n vs g2, z2n vs g1
+    neg1 = torch.sigmoid((z1n * g2).sum(dim=1))
+    neg2 = torch.sigmoid((z2n * g1).sum(dim=1))
+    loss = (-torch.log(pos1 + 1e-8).mean() - torch.log(1 - neg1 + 1e-8).mean()
+            - torch.log(pos2 + 1e-8).mean() - torch.log(1 - neg2 + 1e-8).mean())
+    return loss
+
+
 def train(encoder_model, contrast_model, x, edge_index_trans, edge_index_knn, optimizer):
     encoder_model.train()
     optimizer.zero_grad()
     z1, z2, g1, g2, z1n, z2n = encoder_model(x, edge_index_trans, edge_index_knn)
-    loss = contrast_model(h1=z1, h2=z2, g1=g1, g2=g2, h3=z1n, h4=z2n)
+    if encoder_model.use_subgraph_pool:
+        loss = subgraph_contrastive_loss_dual(z1, z2, g1, g2, z1n, z2n)
+    else:
+        loss = contrast_model(h1=z1, h2=z2, g1=g1, g2=g2, h3=z1n, h4=z2n)
     loss.backward()
     optimizer.step()
     return loss.item()

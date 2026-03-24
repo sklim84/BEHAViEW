@@ -68,11 +68,22 @@ class Encoder(torch.nn.Module):
         return z, g, zn
 
 
+def subgraph_contrastive_loss(z, g, zn):
+    """Per-node subgraph contrastive loss."""
+    pos = torch.sigmoid((z * g).sum(dim=1))
+    neg = torch.sigmoid((zn * g).sum(dim=1))
+    loss = -torch.log(pos + 1e-8).mean() - torch.log(1 - neg + 1e-8).mean()
+    return loss
+
+
 def train(encoder_model, contrast_model, data, optimizer):
     encoder_model.train()
     optimizer.zero_grad()
     z, g, zn = encoder_model(data.x, data.edge_index)
-    loss = contrast_model(h=z, g=g, hn=zn)
+    if encoder_model.use_subgraph_pool:
+        loss = subgraph_contrastive_loss(z, g, zn)
+    else:
+        loss = contrast_model(h=z, g=g, hn=zn)
     loss.backward()
     optimizer.step()
     return loss.item()
