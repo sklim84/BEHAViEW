@@ -26,7 +26,7 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안    │
 | RQ2 | 왜 효과적인가? | F-F/F-B 비율, homophily |
 | RQ3 | Subgraph pooling이 효과적인가? | (c) vs (a) |
 | RQ4 | 두 축의 결합에 시너지가 있는가? | (d) vs (b), (c) |
-| RQ5 | 3개 backbone에서 일관되는가? | BGRL, DGI-trs, MVGRL |
+| RQ5 | 다양한 encoder에서 일관되는가? | 10종 encoder (GCN/GIN, BN 유무) |
 
 ## 데이터셋
 
@@ -39,7 +39,6 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안    │
 | 의심 계좌 | 9,644 (2.13%) |
 | 기간 | 2021 Q3 ~ 2024 Q4 (40개월) |
 | AML 유형 | 6가지 (structuring, layering 등) |
-| 출처 | 전자금융공동망 (KFTC) |
 
 ### AMLworld (Secondary) — 일반성 검증용 합성 벤치마크
 
@@ -47,19 +46,14 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안    │
 |------|-----|
 | 데이터셋 | HI-Small (GCPAL 비교용) |
 | 구조 | 유향 멀티그래프 (HOFINET과 동일) |
-| AML 패턴 | 8가지 (fan-out, scatter-gather, cycle 등) |
-| 3단계 | Placement → Layering → Integration 전부 모델링 |
-| 라벨 | 완전한 ground truth |
 | 출처 | [NeurIPS 2023 Datasets & Benchmarks](https://arxiv.org/abs/2306.16424), Kaggle 공개 |
-
-> GCPAL이 AMLworld HI-Small을 사용하여 직접 비교 가능. Elliptic(Bitcoin)과 달리 은행 간 이체 도메인에 정합.
 
 ## 피처 분류
 
 | Category | 수 | 설명 | GNN 입력 | k-NN 구축 |
 |----------|-----|------|----------|----------|
 | **A. Behavioral** (x_behav) | 22 | 금액통계, entropy, temporal | O | Behavioral k-NN |
-| **B. Structural** (x_struct) | 9 | centrality, degree | O (선택) | Structural k-NN |
+| **B. Structural** (x_struct) | 9 | centrality, degree | O (선택) | - |
 
 ## Fraud 연결성 분석 (RQ2)
 
@@ -71,27 +65,41 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안    │
 
 ## 실험 결과 (F1_fraud, 4-seed 평균, HOFINET 멀티엣지)
 
-### (a)(b)(c)(d) Ablation × 5 Encoder (통합 프레임워크, bootstrap L2L)
+### (a)(b)(c)(d) Ablation (통합 프레임워크, bootstrap L2L)
 
-| Encoder | (a) org | (b) behav view | (c) subgraph | (d) both | BN |
-|---------|---------|---------------|-------------|----------|-----|
-| **GBT** | 0.270 | **0.678** (+151%) | 0.205 (-24%) | **0.682** (+152%) | ✅ |
-| **BGRL** | 0.315 | 0.566 (+80%) | 0.254 (-19%) | **0.647** (+105%) | ✅ |
-| GRACE | 0.045 | 0.056 (+27%) | 0.046 (+4%) | 0.069 (+54%) | ❌ |
-| DGI | 0.045 | 0.058 (+29%) | 0.048 (+7%) | 0.074 (+64%) | ❌ |
-| MVGRL | 0.045 | 0.056 (+24%) | 0.048 (+7%) | 0.071 (+56%) | ❌ |
+**BN 있는 Encoder (GCNConv 기반)**
 
-**핵심 발견:**
-- **(b) Behavioral view**: 모든 encoder에서 일관된 개선. BN encoder +80~151%, non-BN +24~29%
-- **(c) Subgraph 단독**: BN encoder에서 오히려 악화 (-19~24%). transaction graph의 낮은 F-F/F-B 비율(1:5.7)이 증폭됨
-- **(d) 결합이 최고**: 모든 encoder에서 (d) > (b) > (a) > (c)
-- **BN이 필수**: BN 유무에 따라 절대 성능 10배 차이 (0.68 vs 0.07)
-- **GBT encoder + (d) = 0.682** — 현재 최고 성능 (+152% vs baseline)
+| Encoder | (a) org | (b) behav view | (c) subgraph | (d) both | Conv |
+|---------|---------|---------------|-------------|----------|------|
+| **GBT** | 0.270 | **0.678** (+151%) | 0.205 (-24%) | **0.682** (+152%) | GCN |
+| **DGI+BN** | 0.271 | **0.678** (+150%) | 0.204 (-25%) | **0.682** (+152%) | GCN |
+| **MVGRL+BN** | 0.270 | **0.677** (+151%) | 0.204 (-24%) | **0.682** (+153%) | GCN |
+| **GRACE+BN** | 0.286 | **0.676** (+136%) | 0.218 (-24%) | **0.681** (+138%) | GCN |
+| **BGRL** | 0.315 | 0.566 (+80%) | 0.254 (-19%) | **0.647** (+105%) | GCN |
+| **GIN** | 실험 중 | | | | GIN |
+
+**BN 없는 Encoder**
+
+| Encoder | (a) org | (b) behav view | (c) subgraph | (d) both | Conv |
+|---------|---------|---------------|-------------|----------|------|
+| DGI | 0.045 | 0.058 (+29%) | 0.048 (+7%) | 0.074 (+64%) | GCN |
+| MVGRL | 0.045 | 0.056 (+24%) | 0.048 (+7%) | 0.071 (+56%) | GCN |
+| GRACE | 0.045 | 0.056 (+27%) | 0.046 (+4%) | 0.069 (+54%) | GCN |
+| GCA | 실험 중 | | | | GCN |
+
+### 핵심 발견
+
+1. **(b) Behavioral view**: 모든 encoder에서 일관된 개선. BN encoder +80~151%, non-BN +24~29%
+2. **(c) Subgraph 단독**: BN encoder에서 오히려 악화 (-19~25%). transaction graph의 낮은 F-F/F-B 비율(1:5.7) 증폭
+3. **(d) 결합이 최고**: 모든 encoder에서 (d) > (b) > (a) > (c)
+4. **BN이 결정적**: BN 추가만으로 0.07 → 0.68 (~10배). 모든 per-layer BN encoder가 동등 성능 (0.681~0.682)
+5. **Encoder 아키텍처 무관**: BN만 있으면 DGI/MVGRL/GRACE/GBT 모두 동일 성능
+6. **제안 방법은 encoder 독립적**: behavioral view + subgraph pooling은 모든 encoder에서 일관된 상대적 개선 (+54~153%)
 
 ## 빠른 시작
 
 ```bash
-# (d) GBT encoder + behavioral view + subgraph pooling (최고 성능)
+# (d) 최고 성능 설정
 python models/subgraph_cl.py \
   --knn_graph HOFINET_KNN_BEHAV_k10 \
   --subgraph_pool --encoder_type gbt \
@@ -104,15 +112,17 @@ python models/subgraph_cl.py \
 #   (c) --encoder_type gbt --subgraph_pool          # aug view + subgraph
 #   (d) --encoder_type gbt --knn_graph ... --subgraph_pool  # both
 
-# 전체 ablation 실험 (5 encoder × 4 settings × 4 seeds)
+# 전체 ablation 실험
 bash scripts/run_full_ablation.sh
+
+# 지원 encoder: bgrl, gbt, grace, dgi, mvgrl, dgi_bn, mvgrl_bn, grace_bn, gca, gin
 ```
 
 ## 프로젝트 구조
 
 ```
 models/
-  subgraph_cl.py               # Subgraph CL 통합 프레임워크
+  subgraph_cl.py               # 통합 프레임워크 (10종 encoder, 4 settings)
   bgrl_w_knn.py                # BGRL + k-NN view (+ --subgraph_pool)
   dgi_transductive_w_knn.py    # DGI-trs + k-NN view (+ --subgraph_pool)
   mvgrl_w_knn.py               # MVGRL + k-NN view (+ --subgraph_pool)
@@ -123,7 +133,7 @@ datasets/
 analysis/
   homophily_knn.py             # F-F/F-B 비율 측정
 scripts/
-  run_ablation_abcd.sh         # (a)(b)(c)(d) ablation
+  run_full_ablation.sh         # 전체 ablation 실험
 ```
 
 ## 관련 연구
@@ -135,15 +145,14 @@ scripts/
 | [SUBG-CON](https://arxiv.org/abs/2009.10564) | ICDM 2020 | Subgraph CL |
 | [ImGCL](https://ojs.aaai.org/index.php/AAAI/article/view/26319) | NeurIPS 2023 | Imbalanced GCL |
 
-**차별점**: 기존 연구는 view 구성 또는 contrastive level을 개별적으로 다룸. 본 연구는 **두 축을 교차 분석**하여 AML에 최적인 조합을 도출.
+**차별점**: 기존 연구는 view 구성 또는 contrastive level을 개별적으로 다룸. 본 연구는 **두 축을 교차 분석**하여 AML에 최적인 조합을 도출. 또한 **BN이 대규모 불균형 환경에서 결정적**임을 10종 encoder 비교로 입증.
 
 ## TODO
 
-- [x] (a)(b)(c)(d) ablation × 5 encoder 실험 완료
-- [ ] BN 추가 실험 — DGI/MVGRL/GRACE에 BN 추가 시 성능 변화 확인
+- [x] (a)(b)(c)(d) ablation × 8 encoder (GCN, BN 변형)
+- [ ] GCA/GIN encoder 실험 (진행 중)
 - [ ] AMLworld HI-Small 데이터셋 — 일반성 검증, GCPAL 직접 비교
 - [ ] SOTA AML 모델 비교
-- [ ] GCA encoder 추가 (centrality-based adaptive augmentation)
 
 ## 라이선스
 

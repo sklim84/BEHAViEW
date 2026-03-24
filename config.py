@@ -25,7 +25,8 @@ parser.add_argument('--proj_dim', type=int, default=32)
 # k-NN graph view
 parser.add_argument('--knn_graph', type=str, default=None,
                     help='k-NN graph file name without .csv (e.g., HOFINET_KNN_BEHAV_k10)')
-parser.add_argument('--encoder_type', type=str, default='bgrl', choices=['bgrl', 'dgi', 'mvgrl', 'gbt', 'grace'],
+parser.add_argument('--encoder_type', type=str, default='bgrl',
+                    choices=['bgrl', 'dgi', 'mvgrl', 'gbt', 'grace', 'dgi_bn', 'mvgrl_bn', 'grace_bn', 'gca', 'gin'],
                     help='GNN encoder type for subgraph_cl (bgrl/dgi/mvgrl)')
 parser.add_argument('--subgraph_pool', action='store_true',
                     help='Use subgraph (neighborhood) pooling instead of global pooling')
