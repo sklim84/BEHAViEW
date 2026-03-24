@@ -22,7 +22,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from torch.optim import Adam
-from torch_geometric.nn import GCNConv
+from torch_geometric.nn import GCNConv, GINConv as torch_geometric_GINConv
 from GCL.eval import get_split
 from tqdm import tqdm
 
@@ -131,12 +131,129 @@ class GNNEncoder_GRACE(nn.Module):
         return x
 
 
+class GNNEncoder_DGI_BN(nn.Module):
+    """DGI + BatchNorm: BN 효과 검증용."""
+    def __init__(self, input_dim, hidden_dim, num_layers, dropout=0.2):
+        super().__init__()
+        self.layers = nn.ModuleList()
+        self.bns = nn.ModuleList()
+        self.activations = nn.ModuleList()
+        self.layers.append(GCNConv(input_dim, hidden_dim))
+        self.bns.append(nn.BatchNorm1d(hidden_dim))
+        self.activations.append(nn.PReLU(hidden_dim))
+        for _ in range(num_layers - 1):
+            self.layers.append(GCNConv(hidden_dim, hidden_dim))
+            self.bns.append(nn.BatchNorm1d(hidden_dim))
+            self.activations.append(nn.PReLU(hidden_dim))
+        self.dropout = dropout
+
+    def forward(self, x, edge_index, edge_weight=None):
+        for conv, bn, act in zip(self.layers, self.bns, self.activations):
+            x = conv(x, edge_index, edge_weight)
+            x = bn(x)
+            x = act(x)
+            x = F.dropout(x, p=self.dropout, training=self.training)
+        return x
+
+
+class GNNEncoder_MVGRL_BN(nn.Module):
+    """MVGRL + BatchNorm: BN 효과 검증용."""
+    def __init__(self, input_dim, hidden_dim, num_layers, dropout=0.2):
+        super().__init__()
+        self.layers = nn.ModuleList()
+        self.bns = nn.ModuleList()
+        self.layers.append(GCNConv(input_dim, hidden_dim))
+        self.bns.append(nn.BatchNorm1d(hidden_dim))
+        for _ in range(num_layers - 1):
+            self.layers.append(GCNConv(hidden_dim, hidden_dim))
+            self.bns.append(nn.BatchNorm1d(hidden_dim))
+        self.activation = nn.PReLU(hidden_dim)
+        self.dropout = dropout
+
+    def forward(self, x, edge_index, edge_weight=None):
+        for conv, bn in zip(self.layers, self.bns):
+            x = conv(x, edge_index, edge_weight)
+            x = bn(x)
+            x = self.activation(x)
+            x = F.dropout(x, p=self.dropout, training=self.training)
+        return x
+
+
+class GNNEncoder_GRACE_BN(nn.Module):
+    """GRACE + BatchNorm: BN 효과 검증용."""
+    def __init__(self, input_dim, hidden_dim, num_layers, dropout=0.2):
+        super().__init__()
+        self.layers = nn.ModuleList()
+        self.bns = nn.ModuleList()
+        self.layers.append(GCNConv(input_dim, hidden_dim))
+        self.bns.append(nn.BatchNorm1d(hidden_dim))
+        for _ in range(num_layers - 1):
+            self.layers.append(GCNConv(hidden_dim, hidden_dim))
+            self.bns.append(nn.BatchNorm1d(hidden_dim))
+        self.activation = nn.ReLU()
+        self.dropout = dropout
+
+    def forward(self, x, edge_index, edge_weight=None):
+        for i, (conv, bn) in enumerate(zip(self.layers, self.bns)):
+            x = conv(x, edge_index, edge_weight)
+            x = bn(x)
+            if i < len(self.layers) - 1:
+                x = self.activation(x)
+                x = F.dropout(x, p=self.dropout, training=self.training)
+        return x
+
+
+class GNNEncoder_GCA(nn.Module):
+    """GCA-style: GCNConv + ReLU, no BN (same as GRACE). GCA's novelty is in augmentation, not encoder."""
+    def __init__(self, input_dim, hidden_dim, num_layers):
+        super().__init__()
+        self.layers = nn.ModuleList()
+        self.layers.append(GCNConv(input_dim, hidden_dim))
+        for _ in range(num_layers - 1):
+            self.layers.append(GCNConv(hidden_dim, hidden_dim))
+        self.activation = nn.ReLU()
+
+    def forward(self, x, edge_index, edge_weight=None):
+        for i, conv in enumerate(self.layers):
+            x = conv(x, edge_index, edge_weight)
+            x = self.activation(x)
+        return x
+
+
+class GNNEncoder_GIN(nn.Module):
+    """GIN-style (PGCL/BGRL_G2L): GINConv + BN + ReLU. Used by PGCL and BGRL_G2L."""
+    def __init__(self, input_dim, hidden_dim, num_layers, dropout=0.2):
+        super().__init__()
+        self.layers = nn.ModuleList()
+        self.bns = nn.ModuleList()
+        for i in range(num_layers):
+            in_dim = input_dim if i == 0 else hidden_dim
+            mlp = nn.Sequential(nn.Linear(in_dim, hidden_dim), nn.ReLU(), nn.Linear(hidden_dim, hidden_dim))
+            self.layers.append(torch_geometric_GINConv(mlp))
+            self.bns.append(nn.BatchNorm1d(hidden_dim))
+        self.activation = nn.ReLU()
+        self.dropout = dropout
+
+    def forward(self, x, edge_index, edge_weight=None):
+        for conv, bn in zip(self.layers, self.bns):
+            x = conv(x, edge_index)
+            x = bn(x)
+            x = self.activation(x)
+            x = F.dropout(x, p=self.dropout, training=self.training)
+        return x
+
+
 ENCODERS = {
     'bgrl': GNNEncoder_BGRL,
     'dgi': GNNEncoder_DGI,
     'mvgrl': GNNEncoder_MVGRL,
     'gbt': GNNEncoder_GBT,
     'grace': GNNEncoder_GRACE,
+    'dgi_bn': GNNEncoder_DGI_BN,
+    'mvgrl_bn': GNNEncoder_MVGRL_BN,
+    'grace_bn': GNNEncoder_GRACE_BN,
+    'gca': GNNEncoder_GCA,
+    'gin': GNNEncoder_GIN,
 }
 
 
@@ -304,7 +421,7 @@ def main(args):
     encoder_type = getattr(args, 'encoder_type', 'bgrl')
     encoder_cls = ENCODERS[encoder_type]
     encoder_kwargs = dict(input_dim=data.x.size(1), hidden_dim=args.hidden_dim, num_layers=args.gconv_nlayers)
-    if encoder_type in ('bgrl', 'gbt', 'grace'):
+    if encoder_type in ('bgrl', 'gbt', 'grace', 'dgi_bn', 'mvgrl_bn', 'grace_bn', 'gin'):
         encoder_kwargs['dropout'] = 0.2
     encoder = encoder_cls(**encoder_kwargs)
     print(f'Encoder: {encoder_type} ({encoder_cls.__name__})')
