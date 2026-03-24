@@ -69,27 +69,43 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안    │
 | Structural k-NN | 1:9.7 | 더 심하게 묻힘 |
 | **Behavioral k-NN** | **1:1.4** | **fraud 신호 보존** |
 
-## 실험 결과
+## 실험 결과 (F1_fraud, 4-seed 평균, HOFINET 멀티엣지)
 
-> (a)(b)(c)(d) ablation × 3 backbone 실험 진행 중. 결과 확정 후 업데이트 예정.
+### (a)(b)(c)(d) Ablation × 5 Encoder (통합 프레임워크, bootstrap L2L)
+
+| Encoder | (a) org | (b) behav view | (c) subgraph | (d) both | BN |
+|---------|---------|---------------|-------------|----------|-----|
+| **GBT** | 0.270 | **0.678** (+151%) | 0.205 (-24%) | **0.682** (+152%) | ✅ |
+| **BGRL** | 0.315 | 0.566 (+80%) | 0.254 (-19%) | **0.647** (+105%) | ✅ |
+| GRACE | 0.045 | 0.056 (+27%) | 0.046 (+4%) | 0.069 (+54%) | ❌ |
+| DGI | 0.045 | 0.058 (+29%) | 0.048 (+7%) | 0.074 (+64%) | ❌ |
+| MVGRL | 0.045 | 0.056 (+24%) | 0.048 (+7%) | 0.071 (+56%) | ❌ |
+
+**핵심 발견:**
+- **(b) Behavioral view**: 모든 encoder에서 일관된 개선. BN encoder +80~151%, non-BN +24~29%
+- **(c) Subgraph 단독**: BN encoder에서 오히려 악화 (-19~24%). transaction graph의 낮은 F-F/F-B 비율(1:5.7)이 증폭됨
+- **(d) 결합이 최고**: 모든 encoder에서 (d) > (b) > (a) > (c)
+- **BN이 필수**: BN 유무에 따라 절대 성능 10배 차이 (0.68 vs 0.07)
+- **GBT encoder + (d) = 0.682** — 현재 최고 성능 (+152% vs baseline)
 
 ## 빠른 시작
 
 ```bash
-# (d) BGRL + behavioral view + subgraph pooling
-python models/bgrl_w_knn.py \
-  --knn_graph HOFINET_KNN_BEHAV_k10 \
-  --subgraph_pool --gpu 0 --seed 2025 \
-  --lr 0.0005 --hidden_dim 256 --gconv_nlayers 2 \
-  --loss BarlowTwins --skip_tsne
-
-# Subgraph CL (통합 프레임워크)
+# (d) GBT encoder + behavioral view + subgraph pooling (최고 성능)
 python models/subgraph_cl.py \
   --knn_graph HOFINET_KNN_BEHAV_k10 \
-  --encoder_type bgrl --gpu 0 --seed 2025
+  --subgraph_pool --encoder_type gbt \
+  --gpu 0 --seed 2025 \
+  --lr 0.0005 --hidden_dim 256 --gconv_nlayers 2
 
-# 전체 ablation 실험
-bash scripts/run_ablation_abcd.sh
+# (a)(b)(c)(d) 설정 선택
+#   (a) --encoder_type gbt                          # aug view + node-level
+#   (b) --encoder_type gbt --knn_graph ...          # behav view + node-level
+#   (c) --encoder_type gbt --subgraph_pool          # aug view + subgraph
+#   (d) --encoder_type gbt --knn_graph ... --subgraph_pool  # both
+
+# 전체 ablation 실험 (5 encoder × 4 settings × 4 seeds)
+bash scripts/run_full_ablation.sh
 ```
 
 ## 프로젝트 구조
@@ -123,9 +139,11 @@ scripts/
 
 ## TODO
 
-- [ ] (a)(b)(c)(d) ablation 결과 정리
+- [x] (a)(b)(c)(d) ablation × 5 encoder 실험 완료
+- [ ] BN 추가 실험 — DGI/MVGRL/GRACE에 BN 추가 시 성능 변화 확인
 - [ ] AMLworld HI-Small 데이터셋 — 일반성 검증, GCPAL 직접 비교
 - [ ] SOTA AML 모델 비교
+- [ ] GCA encoder 추가 (centrality-based adaptive augmentation)
 
 ## 라이선스
 
