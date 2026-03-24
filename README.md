@@ -6,6 +6,8 @@
 
 ## 핵심 아이디어
 
+![Framework](visualize/paper_figures/fig1_framework.png)
+
 | 축 | 질문 | 제안 |
 |----|------|------|
 | **View 구성** | 어떤 그래프를 contrastive view로 쓸 것인가? | Behavioral k-NN graph |
