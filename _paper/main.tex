@@ -10,8 +10,7 @@
 \usepackage{algorithmic}
 \usepackage{bm}
 \usepackage[utf8]{inputenc}
-\usepackage[hangul,nonfrench]{kotex}
-\usepackage{dhucs-nanumfont}
+\usepackage{kotex}
 \usepackage[textsize=small]{todonotes}
 \usepackage{subfigure}
 \usepackage{booktabs}
@@ -116,7 +115,7 @@
 % 제안 프레임워크 \texttt{BECON}의 전체 구조는 Figure~\ref{fig:framework}에 제시한다.
 
 실제 은행간 이체 데이터(HOFINET)와 합성 AML 벤치마크(AMLworld)에서의 실험을 통해 다음의 핵심 발견을 도출한다.
-\begin{itemize}[leftmargin=*]
+\begin{itemize}
     \item 행동적 k-NN view는 의심 계좌 간 연결 비율을 크게 개선하여 저동질성 거래 그래프에서 동질성을 효과적으로 복원한다. 이는 자금세탁 계좌들이 분할거래, 반복이체 등으로 인해 유사한 거래 금액 패턴을 공유하기 때문이다.
     \item 서브그래프 풀링은 행동적 view와 결합할 때만 추가 개선을 가져오며, 거래 그래프에서 단독 적용 시 오히려 성능이 저하된다. 이는 서브그래프 풀링이 그래프의 연결 패턴을 증폭하는 특성에 기인한다.
     \item BatchNorm이 대규모 불균형 환경에서 결정적 역할을 하며, 인코더 아키텍처와 무관하게 성능을 좌우하는 핵심 요인이다.
@@ -124,7 +123,7 @@
 \end{itemize}
 
 본 연구의 기여는 다음과 같다.
-\begin{itemize}[leftmargin=*]
+\begin{itemize}
     \item GCL의 자금세탁 탐지 적용에서 view 구성과 contrastive level의 효과를 교차 분석한 최초의 연구이다.
     \item 행동적 유사도 기반 k-NN view가 저동질성 거래 네트워크에서 동질성을 복원하는 메커니즘을 의심 계좌 간 연결 비율(F-F/F-B ratio) 분석을 통해 규명한다.
     \item 10종 인코더에 대한 비교 실험을 통해 BatchNorm의 결정적 역할을 발견하고, 인코더 설계에 대한 실용적 가이드라인을 제시한다.
@@ -138,7 +137,7 @@
 \section{Experiments}
 
 본 장에서는 제안 프레임워크를 다음의 연구 질문을 통해 평가한다.
-\begin{itemize}[leftmargin=*]
+\begin{itemize}
     \item \textbf{RQ1.} 행동적 k-NN view가 AML 탐지에 효과적인가? 그리고 왜 효과적인가?
     \item \textbf{RQ2.} 서브그래프 풀링이 추가 개선을 가져오는가? 어떤 조건에서 효과적인가?
     \item \textbf{RQ3.} 인코더 설계(BatchNorm)가 대규모 불균형 AML에서 성능에 미치는 영향은?
