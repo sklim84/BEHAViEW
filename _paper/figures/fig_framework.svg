@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="895" height="330" viewBox="0 0 895 330">
+<defs>
+  <marker id="ah" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+    <polygon points="0 0, 7 2.5, 0 5" fill="#546E7A"/>
+  </marker>
+</defs>
+<rect width="895" height="330" fill="white"/>
+
+<!-- ===== COL 1: Input ===== -->
+<rect x="20" y="125" width="120" height="60" rx="8" fill="#E8EAF6" stroke="#455A64" stroke-width="1.3"/>
+<text x="80" y="147" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#212121">Transaction</text>
+<text x="80" y="162" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#212121">Graph</text>
+<text x="80" y="177" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8" font-weight="normal" fill="#616161">G = (V, E, X)</text>
+
+<!-- Elbow arrows: input → views -->
+<path d="M 140,150 L 160,150 L 160,80 L 180,80" fill="none" stroke="#546E7A" stroke-width="1.6" marker-end="url(#ah)"/>
+<path d="M 140,160 L 160,160 L 160,230 L 180,230" fill="none" stroke="#546E7A" stroke-width="1.6" marker-end="url(#ah)"/>
+
+<!-- ===== COL 2: Views ===== -->
+<rect x="180" y="35" width="150" height="90" rx="8" fill="#BBDEFB" stroke="#455A64" stroke-width="1.3"/>
+<text x="255" y="53" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#212121">View 1</text>
+<text x="255" y="69" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="normal" fill="#212121">Augmented Graph</text>
+<text x="255" y="84" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="normal" fill="#616161">EdgeRemoving</text>
+<text x="255" y="96" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="normal" fill="#616161">FeatureMasking</text>
+<text x="255" y="114" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="bold" fill="#C62828">S-S 15% : S-B 85%</text>
+
+<rect x="180" y="185" width="150" height="90" rx="8" fill="#FFE0B2" stroke="#455A64" stroke-width="1.3"/>
+<text x="255" y="203" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#212121">View 2</text>
+<text x="255" y="219" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="normal" fill="#212121">Behavioral k-NN</text>
+<text x="255" y="234" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="normal" fill="#616161">k-NN(x_behav, k=10)</text>
+<text x="255" y="246" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="normal" fill="#616161">cosine similarity</text>
+<text x="255" y="264" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="bold" fill="#2E7D32">S-S 41% : S-B 59%</text>
+
+<!-- Axis 1 label -->
+<text x="255" y="159" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="bold" fill="#1565C0">View Construction ↕</text>
+
+<!-- Arrows: views → encoder -->
+<line x1="330" y1="80" x2="370" y2="80" stroke="#546E7A" stroke-width="1.6" marker-end="url(#ah)"/>
+<line x1="330" y1="230" x2="370" y2="230" stroke="#546E7A" stroke-width="1.6" marker-end="url(#ah)"/>
+
+<!-- ===== COL 3: Encoder ===== -->
+<rect x="370" y="35" width="150" height="90" rx="8" fill="#C8E6C9" stroke="#455A64" stroke-width="1.3"/>
+<text x="445" y="72" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#212121">GNN Encoder</text>
+<text x="445" y="88" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="normal" fill="#616161">GCNConv + BN</text>
+<text x="445" y="100" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="normal" fill="#616161">+ PReLU + Dropout</text>
+
+<rect x="370" y="185" width="150" height="90" rx="8" fill="#C8E6C9" stroke="#455A64" stroke-width="1.3"/>
+<text x="445" y="222" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#212121">GNN Encoder</text>
+<text x="445" y="238" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="normal" fill="#616161">GCNConv + BN</text>
+<text x="445" y="250" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="normal" fill="#616161">+ PReLU + Dropout</text>
+
+<!-- Shared weights bracket (right side of encoder col) -->
+<path d="M 524,43 L 530,43 L 530,150 L 536,155 L 530,160 L 530,267 L 524,267" fill="none" stroke="#1565C0" stroke-width="1"/>
+<text x="542" y="152" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="7.5" font-weight="normal" fill="#1565C0">shared</text>
+<text x="542" y="163" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="7.5" font-weight="normal" fill="#1565C0">weights</text>
+
+<!-- Arrows: encoder → pooling -->
+<line x1="520" y1="80" x2="560" y2="80" stroke="#546E7A" stroke-width="1.6" marker-end="url(#ah)"/>
+<line x1="520" y1="230" x2="560" y2="230" stroke="#546E7A" stroke-width="1.6" marker-end="url(#ah)"/>
+
+<!-- ===== COL 4: Subgraph Pooling ===== -->
+<rect x="560" y="35" width="150" height="90" rx="8" fill="#E1BEE7" stroke="#455A64" stroke-width="1.3"/>
+<text x="635" y="70" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#212121">Subgraph</text>
+<text x="635" y="85" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#212121">Pooling</text>
+<text x="635" y="102" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="normal" fill="#616161">mean(h_i ∪ N(i))</text>
+
+<rect x="560" y="185" width="150" height="90" rx="8" fill="#E1BEE7" stroke="#455A64" stroke-width="1.3"/>
+<text x="635" y="220" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#212121">Subgraph</text>
+<text x="635" y="235" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#212121">Pooling</text>
+<text x="635" y="252" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="normal" fill="#616161">mean(h_i ∪ N(i))</text>
+
+<!-- Axis 2 label -->
+<text x="635" y="159" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="bold" fill="#1565C0">Contrastive Level ↕</text>
+
+<!-- Elbow arrows: both pooling → Loss (converge) -->
+<path d="M 710,80 L 730,80 L 730,137 L 750,137" fill="none" stroke="#546E7A" stroke-width="1.6" marker-end="url(#ah)"/>
+<path d="M 710,230 L 730,230 L 730,157 L 750,157" fill="none" stroke="#546E7A" stroke-width="1.6" marker-end="url(#ah)"/>
+
+<!-- ===== COL 5: Loss + Eval (vertically stacked, centered) ===== -->
+<rect x="750" y="125" width="120" height="48" rx="8" fill="#FFCDD2" stroke="#455A64" stroke-width="1.3"/>
+<text x="810" y="143" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="10" font-weight="bold" fill="#212121">Contrastive</text>
+<text x="810" y="158" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="10" font-weight="bold" fill="#212121">Loss</text>
+
+<!-- Arrow: loss → eval -->
+<line x1="810" y1="173" x2="810" y2="189" stroke="#546E7A" stroke-width="1.6" marker-end="url(#ah)"/>
+
+<rect x="750" y="191" width="120" height="56" rx="8" fill="#FFF9C4" stroke="#455A64" stroke-width="1.3"/>
+<text x="810" y="209" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="10" font-weight="bold" fill="#212121">[h₁ ∥ h₂]</text>
+<text x="810" y="224" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="9" font-weight="normal" fill="#616161">→ LogReg</text>
+<text x="810" y="239" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="normal" fill="#C62828">F1_susp</text>
+
+<!-- ===== Legend ===== -->
+<rect x="150" y="285" width="690" height="34" rx="6" fill="#FAFAFA" stroke="#455A64" stroke-width="0.8"/>
+
+<rect x="165" y="293" width="12" height="16" rx="3" fill="#BBDEFB" stroke="#455A64" stroke-width="0.8"/>
+<text x="185" y="305" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="9" font-weight="bold" fill="#212121">(a)</text>
+<text x="208" y="305" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="8" font-weight="normal" fill="#616161">Aug + Node</text>
+
+<rect x="285" y="293" width="12" height="16" rx="3" fill="#FFE0B2" stroke="#455A64" stroke-width="0.8"/>
+<text x="305" y="305" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="9" font-weight="bold" fill="#212121">(b)</text>
+<text x="328" y="305" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="8" font-weight="normal" fill="#616161">Behav + Node</text>
+
+<rect x="470" y="293" width="12" height="16" rx="3" fill="#E1BEE7" stroke="#455A64" stroke-width="0.8"/>
+<text x="490" y="305" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="9" font-weight="bold" fill="#212121">(c)</text>
+<text x="513" y="305" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="8" font-weight="normal" fill="#616161">Aug + Subgraph</text>
+
+<rect x="660" y="293" width="12" height="16" rx="3" fill="#FFAB91" stroke="#455A64" stroke-width="1.3"/>
+<text x="680" y="305" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="9" font-weight="bold" fill="#212121">(d)</text>
+<text x="703" y="305" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="8" font-weight="bold" fill="#212121">Behav + Subgraph ★</text>
+
+</svg>

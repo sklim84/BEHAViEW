@@ -153,7 +153,111 @@ HOFINET은 개별 금융기관이 운영 환경에서 부여한 의심거래 라
 
 \section{Related Work}
 
-\section{Proposed Method}
+\section{Proposed Method}\label{sec:method}
+
+\begin{figure*}[t!]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figures/fig_framework.pdf}
+    \caption{\texttt{BECON} 프레임워크 개요. 거래 그래프에서 두 가지 view(증강 그래프, 행동적 k-NN)를 구성하고, 공유 GNN 인코더로 표현을 학습한 뒤 서브그래프 풀링을 적용하여 대조 손실로 학습한다. 추론 시에는 두 view의 표현을 결합하여 LogReg으로 평가한다. 하단은 두 축의 교차로 생성되는 4가지 설정을 나타내며, (d)가 제안 설정이다.}
+    \label{fig:framework}
+\end{figure*}
+
+본 장에서는 \texttt{BECON} 프레임워크의 세부 구성을 기술한다. 먼저 문제를 정의한 뒤, 피처 분류 체계와 행동적 k-NN view 구축 방법을 설명하고, 이중 view 대조학습 및 서브그래프 풀링 메커니즘을 소개한다. Figure~\ref{fig:framework}는 전체 파이프라인을 도시한다.
+
+\subsection{Problem Formulation}
+거래 네트워크를 유향 그래프 $\mathcal{G}_{\text{trans}} = (\mathcal{V}, \mathcal{E}, \mathbf{X})$로 정의한다. 
+여기서 $\mathcal{V}$는 계좌(노드) 집합($|\mathcal{V}|=N$), $\mathcal{E} \subseteq \mathcal{V} \times \mathcal{V}$는 이체 거래(엣지) 집합, $\mathbf{X} \in \mathbb{R}^{N \times F}$는 노드 피처 행렬이다. 
+각 노드 $v_i$에는 의심 여부를 나타내는 라벨 $y_i \in \{0, 1\}$이 존재하나, 학습 단계에서는 라벨을 사용하지 않는 자기지도 설정을 따른다. 
+목표는 라벨 없이 그래프 구조와 노드 피처로부터 의심 계좌를 식별할 수 있는 노드 표현 $\mathbf{Z} \in \mathbb{R}^{N \times D}$를 학습하는 것이다.
+
+\subsection{Feature Taxonomy}\label{subsec:feature_taxonomy}
+거래 네트워크에서 추출 가능한 노드 피처를 두 범주로 분류한다. 
+행동적(behavioral) 피처 $\mathbf{x}_i^{\text{behav}} \in \mathbb{R}^{F_b}$는 각 계좌의 거래 패턴을 직접 반영하는 피처로, 거래 금액 통계(평균, 표준편차, 최솟값, 최댓값), 매체/자금 유형별 비율, 엔트로피 등 22개 변수로 구성된다. 
+이 피처들은 자금세탁의 전형적 수법인 분할거래(structuring)나 다단계 이체(layering)의 행동적 흔적을 포착한다.
+구조적(structural) 피처 $\mathbf{x}_i^{\text{struct}} \in \mathbb{R}^{F_s}$는 그래프 위상에서 파생되는 피처로, degree centrality, PageRank, HITS(hub/authority), k-core, triangle count, betweenness centrality 등 9개 변수로 구성된다. 
+이 피처들은 그래프 내 노드의 위치와 역할을 정량화한다.
+\texttt{BECON}은 GNN 인코더의 입력으로 행동적 피처만을 사용한다. 
+구조적 피처는 GNN의 메시지 패싱을 통해 암묵적으로 학습되므로 입력에서 제외한다. 이 분류의 핵심적 역할은 k-NN view 구축에 있다.
+
+\subsection{Behavioral k-NN View Construction}\label{subsec:knn_view}
+\texttt{BECON}의 핵심 구성 요소는 행동적 유사도에 기반한 k-NN 그래프 $\mathcal{G}_{\text{knn}}$의 구축이다. 
+기존 GCL 모델이 동일 그래프에 대한 확률적 증강으로 두 contrastive view를 생성하는 반면, \texttt{BECON}은 거래 그래프 $\mathcal{G}_{\text{trans}}$와 구조적으로 독립된 k-NN 그래프를 보조 view로 활용한다.
+
+k-NN 그래프 구축 과정은 다음과 같다. 
+먼저 행동적 피처 행렬 $\mathbf{X}^{\text{behav}}$에서 거래 건수(count)와 degree centrality를 제외한 순수 행동 변수만을 선별한다. 
+건수와 degree는 구조적 속성과 상관이 높아 행동적 유사도의 순수성을 저해하기 때문이다. 
+선별된 피처에 StandardScaler를 적용하여 정규화한 뒤, L2 정규화를 수행한다.
+\begin{equation}\label{eq:l2norm}
+    \tilde{\mathbf{x}}_i = \frac{\mathbf{x}_i^{\text{behav}}}{\|\mathbf{x}_i^{\text{behav}}\|_2}
+\end{equation}
+L2 정규화된 벡터 간 유클리드 거리는 코사인 거리에 비례하므로, ball tree 알고리즘을 활용하여 효율적으로 k-최근접 이웃을 탐색한다. 
+각 노드 $v_i$에 대해 $k$개의 최근접 이웃을 연결하여 k-NN 그래프 $\mathcal{G}_{\text{knn}} = (\mathcal{V}, \mathcal{E}_{\text{knn}})$를 구축한다.
+\begin{equation}\label{eq:knn_edge}
+    \mathcal{E}_{\text{knn}} = \{(v_i, v_j) \mid v_j \in \text{kNN}(v_i, k)\}
+\end{equation}
+여기서 $\text{kNN}(v_i, k)$는 $\tilde{\mathbf{x}}_i$와의 유클리드 거리가 가장 가까운 $k$개 노드 집합이다. 본 연구에서는 $k=10$을 기본값으로 사용한다.
+
+이 구축 방식의 핵심 통찰은 다음과 같다. 
+자금세탁 계좌들은 분할거래, 반복 이체 등으로 인해 유사한 거래 금액 분포와 엔트로피 패턴을 공유한다. 
+따라서 행동적 유사도 기반으로 k-NN을 구축하면 의심 계좌끼리 자연스럽게 연결되어, 거래 그래프에서 1:5.7이었던 S-S/S-B 비율이 k-NN 그래프에서는 1:1.4로 크게 개선된다 (Figure~\ref{fig:intro_homophily}). 
+이로써 GNN의 이웃 집계가 의심 정보를 효과적으로 포착할 수 있게 된다.
+
+\subsection{Dual-View Contrastive Learning}\label{subsec:dual_view}
+\texttt{BECON}은 거래 그래프 $\mathcal{G}_{\text{trans}}$와 행동적 k-NN 그래프 $\mathcal{G}_{\text{knn}}$를 두 contrastive view로 활용하여 노드 표현을 학습한다.
+각 view에 대해 확률적 증강을 적용한다. 
+View 1은 거래 그래프에 edge removing과 feature masking을 적용한 $\tilde{\mathcal{G}}_{\text{trans}}$이고, view 2는 k-NN 그래프에 동일한 증강을 적용한 $\tilde{\mathcal{G}}_{\text{knn}}$이다. 
+공유 GNN 인코더 $f_\theta$가 두 view를 각각 처리하여 노드 표현을 생성한다.
+\begin{equation}\label{eq:encoding}
+    \mathbf{H}^{(1)} = f_\theta(\mathbf{X}^{\text{behav}}, \tilde{\mathcal{E}}_{\text{trans}}), \quad
+    \mathbf{H}^{(2)} = f_\theta(\mathbf{X}^{\text{behav}}, \tilde{\mathcal{E}}_{\text{knn}})
+\end{equation}
+여기서 $\mathbf{H}^{(1)}, \mathbf{H}^{(2)} \in \mathbb{R}^{N \times D}$는 각 view의 노드 임베딩이다. 
+두 view가 동일한 인코더 파라미터 $\theta$를 공유함으로써, 거래 구조와 행동적 유사도라는 상호 보완적 정보를 통합하는 표현이 학습된다.
+
+GNN 인코더는 $L$-layer GCNConv~\cite{kipf2016semi}를 기본으로 하며, 각 층에 BatchNorm, 활성 함수, dropout을 적용한다.
+\begin{equation}\label{eq:gnn_layer}
+    \mathbf{H}^{(l)} = \text{Dropout}\left(\sigma\left(\text{BN}\left(\hat{\mathbf{A}}\mathbf{H}^{(l-1)}\mathbf{W}^{(l)}\right)\right)\right)
+\end{equation}
+여기서 $\hat{\mathbf{A}}$는 정규화된 인접 행렬, $\mathbf{W}^{(l)}$은 $l$번째 층의 학습 가능한 가중치, $\sigma$는 활성 함수(PReLU 또는 ReLU), BN은 BatchNorm이다. 
+Section~\ref{subsec:rq3}에서 확인하듯이, BatchNorm은 대규모 불균형 환경에서 인코더 아키텍처와 무관하게 성능을 결정하는 핵심 요인이다. 
+\texttt{BECON}은 인코더 아키텍처에 비의존적으로 설계되어, GCNConv 외에도 GINConv 등 다양한 GNN 연산자를 사용할 수 있다.
+
+대조 손실로는 BarlowTwins~\cite{zbontar2021barlow} 기반의 bootstrap loss를 사용한다. 
+온라인 인코더 $f_\theta$와 모멘텀 업데이트되는 타겟 인코더 $f_\xi$를 활용하여, 네거티브 샘플 없이 표현 붕괴를 방지한다. 
+각 view의 표현에 projection head $g$와 predictor $q$를 적용한 뒤, cross-view 코사인 유사도를 최대화한다.
+\begin{equation}\label{eq:loss}
+    \mathcal{L} = \sum_{k \in \{1,2\}} \left(2 - 2 \cdot \frac{1}{N}\sum_{i=1}^{N} \frac{q(g(\mathbf{h}_i^{(k)})) \cdot g_\xi(\mathbf{h}_{\xi,i}^{(3-k)})}{\|q(g(\mathbf{h}_i^{(k)}))\| \cdot \|g_\xi(\mathbf{h}_{\xi,i}^{(3-k)})\|}\right)
+\end{equation}
+여기서 $\mathbf{h}_{\xi,i}^{(\cdot)}$는 타겟 인코더의 출력이다. 타겟 인코더의 파라미터 $\xi$는 exponential moving average로 업데이트된다: $\xi \leftarrow m\xi + (1-m)\theta$, $m=0.99$.
+
+\subsection{Subgraph Pooling}\label{subsec:subgraph_pool}
+노드 수준의 대조에 더하여, \texttt{BECON}은 서브그래프 수준의 이웃 집계를 도입한다. 
+각 노드 $v_i$에 대해, 자기 자신과 이웃 노드의 표현을 평균 풀링하여 서브그래프 표현을 생성한다.
+\begin{equation}\label{eq:subgraph_pool}
+    \mathbf{s}_i = \frac{1}{|\mathcal{N}(v_i)| + 1}\left(\mathbf{h}_i + \sum_{v_j \in \mathcal{N}(v_i)} \mathbf{h}_j\right)
+\end{equation}
+여기서 $\mathcal{N}(v_i)$는 $v_i$의 이웃 노드 집합이다. 이 연산은 scatter\_add를 활용하여 효율적으로 구현된다.
+
+서브그래프 풀링은 k-NN 그래프의 이웃 구조를 기준으로 적용된다. 
+이 설계의 핵심 통찰은 서브그래프 풀링이 그래프의 연결 패턴을 증폭한다는 점이다. 
+행동적 k-NN 그래프에서는 의심 계좌의 이웃 대부분이 의심 계좌(S-S 비율 높음)이므로 의심 정보가 증폭되어 개선으로 이어진다. 
+반면, 원래 거래 그래프에서는 의심 계좌의 이웃 대부분이 정상 계좌(S-B 비율 높음)이므로 benign noise가 증폭되어 오히려 성능이 저하된다. 
+이 현상은 Section~\ref{subsec:rq2}에서 실험적으로 확인한다.
+
+\subsection{Training and Inference}\label{subsec:training}
+\texttt{BECON}의 학습 및 추론 절차를 요약한다.
+
+학습 단계에서는 라벨을 사용하지 않고, 거래 그래프와 행동적 k-NN 그래프의 두 view에 대한 대조 손실(Eq.~\eqref{eq:loss})만으로 인코더를 최적화한다. 
+각 에폭마다 두 view에 확률적 증강을 적용하고, 온라인 인코더와 타겟 인코더를 통해 표현을 생성한 뒤, bootstrap loss를 역전파한다. 타겟 인코더는 그래디언트 없이 모멘텀 업데이트만 수행한다.
+
+추론 단계에서는 학습된 인코더의 파라미터를 고정(freeze)하고, 두 view의 노드 표현을 결합(concatenate)하여 최종 임베딩을 생성한다.
+\begin{equation}\label{eq:concat}
+    \mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]
+\end{equation}
+여기서 $\mathbf{s}_i^{(1)}$과 $\mathbf{s}_i^{(2)}$는 각각 거래 그래프와 k-NN 그래프에서의 서브그래프 표현이며, $\|$는 벡터 결합을 나타낸다. 이 결합 표현에 대해 LogisticRegression 분류기를 적용하여 의심 계좌를 탐지한다.
+
+\texttt{BECON}은 view 구성과 contrastive level의 두 독립 축을 교차하여 4가지 설정을 구성한다: (a) 증강 view + 노드 수준, (b) 행동적 k-NN view + 노드 수준, (c) 증강 view + 서브그래프, (d) 행동적 k-NN view + 서브그래프. 
+정 (d)가 제안 방법의 완전한 구성이며, (a)--(c)는 각 구성 요소의 기여를 분리하여 분석하기 위한 ablation 설정이다.
 
 \section{Experiments}
 
