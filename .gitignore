@@ -16,3 +16,5 @@ program.md
 # Large data files (tracked via Git LFS or excluded)
 datasets/HOFINET.csv
 datasets/HOFINET_KNN_*.csv
+datasets/amlworld/*.csv
+datasets/amlworld/*.txt
