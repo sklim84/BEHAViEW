@@ -25,44 +25,51 @@ plt.rcParams.update({
 
 
 def fig2_ablation_matrix():
-    """Fig.2: (a)(b)(c)(d) 2×2 ablation matrix heatmap."""
-    # GBT encoder results (best BN encoder)
+    """Fig.2: (a)(b)(c)(d) 2×2 ablation matrix heatmap — refined, no title."""
+    # BN encoder average results
     data = np.array([
-        [0.270, 0.678],  # (a), (b)
-        [0.205, 0.682],  # (c), (d)
+        [0.274, 0.677],  # (a), (b) — GCN+BN avg
+        [0.208, 0.682],  # (c), (d)
     ])
     pct = np.array([
-        ['baseline', '+151%'],
-        ['-24%', '+153%'],
+        ['baseline', '+147%'],
+        ['-24%', '+149%'],
     ])
 
-    fig, ax = plt.subplots(figsize=(5, 4))
-    im = ax.imshow(data, cmap='YlOrRd', vmin=0.1, vmax=0.75, aspect='auto')
+    fig, ax = plt.subplots(figsize=(4.5, 3.5))
+    cmap = plt.cm.RdYlGn  # diverging: red(bad) → green(good)
+    im = ax.imshow(data, cmap='YlOrRd', vmin=0.1, vmax=0.75, aspect='equal')
 
     ax.set_xticks([0, 1])
-    ax.set_xticklabels(['Augmentation\nView', 'Behavioral\nk-NN View'], fontsize=11)
+    ax.set_xticklabels(['Augmentation View', 'Behavioral k-NN View'], fontsize=10)
     ax.set_yticks([0, 1])
-    ax.set_yticklabels(['Node-Level\nContrast', 'Subgraph\nPooling'], fontsize=11)
-    ax.set_xlabel('View Construction', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Contrastive Level', fontsize=12, fontweight='bold')
+    ax.set_yticklabels(['Node-Level', 'Subgraph\nPooling'], fontsize=10)
+    ax.set_xlabel('View Construction', fontsize=11, labelpad=8)
+    ax.set_ylabel('Contrastive Level', fontsize=11, labelpad=8)
+
+    ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
 
     for i in range(2):
         for j in range(2):
             setting = [['(a)', '(b)'], ['(c)', '(d)']][i][j]
-            color = 'white' if data[i, j] > 0.5 else 'black'
-            ax.text(j, i, f'{setting}\n{data[i,j]:.3f}\n{pct[i,j]}',
-                    ha='center', va='center', color=color, fontsize=11, fontweight='bold')
+            color = 'white' if data[i, j] > 0.45 else '#333333'
+            star = ' ★' if (i == 1 and j == 1) else ''
+            ax.text(j, i - 0.12, f'{setting}{star}',
+                    ha='center', va='center', color=color, fontsize=12, fontweight='bold')
+            ax.text(j, i + 0.08, f'{data[i,j]:.3f}',
+                    ha='center', va='center', color=color, fontsize=14, fontweight='bold')
+            ax.text(j, i + 0.3, pct[i, j],
+                    ha='center', va='center', color=color, fontsize=9,
+                    fontstyle='italic', alpha=0.85)
 
-    # Star for best
-    ax.text(1, 1, '\n\n\n★', ha='center', va='center', color='white', fontsize=14)
+    cbar = plt.colorbar(im, ax=ax, shrink=0.75, pad=0.04)
+    cbar.set_label('$F1_{susp}$', fontsize=10)
+    cbar.ax.tick_params(labelsize=8)
 
-    cbar = plt.colorbar(im, ax=ax, shrink=0.8)
-    cbar.set_label('F1_susp', fontsize=11)
-    ax.set_title('Two-Axis Ablation (GBT Encoder, HOFINET)', fontsize=13, fontweight='bold')
     plt.tight_layout()
-    path = os.path.join(OUT_DIR, 'fig2_ablation_matrix.png')
+    path = os.path.join(OUT_DIR, 'fig_rq2_ablation.pdf')
     plt.savefig(path, bbox_inches='tight')
-    plt.savefig(path.replace('.png', '.pdf'), bbox_inches='tight')
+    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight')
     plt.close()
     print(f'Saved: {path}')
 
@@ -113,54 +120,65 @@ def fig3_susp_connectivity():
 
 
 def fig4_bn_effect():
-    """Fig.4: BN effect across encoders — grouped bar chart."""
-    encoders_bn = ['GBT', 'DGI+BN', 'MVGRL\n+BN', 'GRACE\n+BN', 'BGRL', 'GIN']
+    """Fig.4: BN effect — refined grouped bar chart, no title."""
+    encoders_bn = ['GBT', 'DGI\n+BN', 'MVGRL\n+BN', 'GRACE\n+BN', 'BGRL', 'GIN']
     encoders_no = ['DGI', 'MVGRL', 'GRACE', 'GCA']
 
-    # Setting (d) results
     d_bn = [0.682, 0.682, 0.682, 0.681, 0.647, 0.570]
     d_no = [0.074, 0.071, 0.069, 0.085]
-
-    # Setting (a) results
     a_bn = [0.270, 0.271, 0.270, 0.286, 0.315, 0.149]
     a_no = [0.045, 0.045, 0.045, 0.048]
-
-    fig, ax = plt.subplots(figsize=(12, 5))
-    x = np.arange(len(encoders_bn) + len(encoders_no))
-    width = 0.35
 
     all_a = a_bn + a_no
     all_d = d_bn + d_no
     all_labels = encoders_bn + encoders_no
+    n = len(all_labels)
 
-    bars_a = ax.bar(x - width/2, all_a, width, label='(a) Baseline', color='#a8d8ea', edgecolor='black', linewidth=0.5)
-    bars_d = ax.bar(x + width/2, all_d, width, label='(d) Proposed', color='#ff6f61', edgecolor='black', linewidth=0.5)
+    fig, ax = plt.subplots(figsize=(8, 3.5))
+    x = np.arange(n)
+    width = 0.34
 
-    ax.set_ylabel('F1_susp', fontsize=12)
+    c_baseline = '#B0C4DE'  # light steel blue
+    c_proposed = '#E74C3C'  # vivid red
+
+    bars_a = ax.bar(x - width/2, all_a, width, label='(a) Baseline',
+                    color=c_baseline, edgecolor='white', linewidth=0.8, zorder=3)
+    bars_d = ax.bar(x + width/2, all_d, width, label='(d) Proposed',
+                    color=c_proposed, edgecolor='white', linewidth=0.8, zorder=3)
+
+    ax.set_ylabel('$F1_{susp}$', fontsize=11)
     ax.set_xticks(x)
-    ax.set_xticklabels(all_labels, fontsize=9)
-    ax.legend(fontsize=10)
-    ax.set_ylim(0, 0.8)
+    ax.set_xticklabels(all_labels, fontsize=8)
+    ax.set_ylim(0, 0.82)
+    ax.grid(axis='y', alpha=0.2, zorder=0)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
 
     # BN / no-BN separator
     sep_x = len(encoders_bn) - 0.5
-    ax.axvline(x=sep_x, color='gray', linestyle='--', alpha=0.7)
-    ax.text(sep_x - 2.5, 0.75, 'With BatchNorm', ha='center', fontsize=11,
-            fontweight='bold', color='#2c3e50')
-    ax.text(sep_x + 2, 0.75, 'Without BatchNorm', ha='center', fontsize=11,
-            fontweight='bold', color='#c0392b')
+    ax.axvline(x=sep_x, color='#BDBDBD', linestyle='-', linewidth=1.2, zorder=1)
 
-    # Add value labels on (d) bars
+    # Region labels with background
+    ax.text(sep_x/2, 0.78, 'With BatchNorm', ha='center', fontsize=9,
+            fontweight='bold', color='#2C3E50',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='#E8F5E9', edgecolor='none', alpha=0.8))
+    ax.text(sep_x + (n - sep_x)/2, 0.78, 'Without BatchNorm', ha='center', fontsize=9,
+            fontweight='bold', color='#C62828',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='#FFEBEE', edgecolor='none', alpha=0.8))
+
+    # Value labels on (d) bars only
     for bar, val in zip(bars_d, all_d):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
-                f'{val:.3f}', ha='center', va='bottom', fontsize=8, fontweight='bold')
+                f'{val:.3f}', ha='center', va='bottom', fontsize=7, fontweight='bold',
+                color='#333333')
 
-    ax.set_title('Impact of BatchNorm: (a) Baseline vs (d) Proposed across 10 Encoders',
-                 fontsize=13, fontweight='bold')
+    ax.legend(fontsize=8.5, loc='upper right', framealpha=0.9,
+              edgecolor='#CCCCCC', bbox_to_anchor=(0.99, 0.72))
+
     plt.tight_layout()
-    path = os.path.join(OUT_DIR, 'fig4_bn_effect.png')
+    path = os.path.join(OUT_DIR, 'fig_rq3_bn_effect.pdf')
     plt.savefig(path, bbox_inches='tight')
-    plt.savefig(path.replace('.png', '.pdf'), bbox_inches='tight')
+    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight')
     plt.close()
     print(f'Saved: {path}')
 
