@@ -104,6 +104,33 @@
 
 \section{Introduction}
 
+자금세탁은 범죄 수익의 출처를 은폐하여 합법적 자금으로 위장하는 행위로, UN은 전 세계 GDP의 2--5\%에 해당하는 규모가 매년 세탁되는 것으로 추정한다~\cite{}. 금융기관은 의심거래보고(STR) 의무를 부담하고 있으나, 자금세탁 수법이 점차 정교해지면서 기존의 규칙 기반 탐지 시스템만으로는 대응에 한계가 있다~\cite{}. 이에 따라 거래 네트워크의 구조적 패턴을 학습하여 의심 계좌를 식별하는 그래프 신경망(GNN) 기반 접근법이 주목받고 있다~\cite{}.
+
+그러나 금융 거래 네트워크는 일반적인 그래프와 구별되는 두 가지 본질적 특성을 갖는다. 첫째, \textbf{저동질성(low-homophily)}이다. 자금세탁 계좌는 정상 계좌와 주로 연결되어 있어, 이웃 노드의 라벨이 유사하다는 GNN의 기본 가정이 성립하지 않는다. 둘째, \textbf{극심한 클래스 불균형}이다. 의심 계좌는 전체의 2\% 미만에 불과하여, 지도학습 모델은 다수 클래스에 편향되기 쉽고 라벨 획득 자체도 수사 및 신고 결과에 의존하여 부족하고 불완전하다.
+
+이러한 환경에서 그래프 대조학습(GCL)은 라벨 없이 그래프 구조로부터 표현을 학습할 수 있어 유망한 대안으로 부상하고 있다. BGRL~\cite{}, GRACE~\cite{}, DGI~\cite{}, GBT~\cite{} 등 다양한 GCL 모델이 제안되었으며, 최근에는 k-NN 유사도 그래프를 contrastive view로 활용하는 MLGCL~\cite{}과 자금세탁 탐지에 이를 적용한 GCPAL~\cite{}이 등장하였다. 그러나 기존 연구들은 두 가지 핵심 질문에 답하지 못한다. \textit{어떤 피처로 k-NN view를 구축해야 하는가?} 그리고 \textit{어떤 수준에서 표현을 대조해야 하는가?}
+
+본 연구는 GCL의 자금세탁 탐지 성능을 결정하는 \textbf{두 독립 축}을 체계적으로 분석한다. 첫 번째 축은 \textbf{View 구성}으로, 어떤 그래프를 contrastive view로 사용할 것인가에 관한 것이다. 노드 피처를 행동적(behavioral) 피처와 구조적(structural) 피처로 분류하고, 각 피처 유형으로 구축한 k-NN 그래프의 효과를 비교한다. 두 번째 축은 \textbf{Contrastive Level}로, 노드 수준의 대조와 서브그래프 수준의 이웃 집계 중 어떤 것이 효과적인지를 분석한다. 이 두 축을 교차하여 4가지 설정을 구성하고, 10종의 인코더에 대해 체계적 ablation 실험을 수행한다.
+
+% TODO: Figure 1 참조
+% 제안 프레임워크 \texttt{BECON}의 전체 구조는 Figure~\ref{fig:framework}에 제시한다.
+
+실제 은행간 이체 데이터(HOFINET)와 합성 AML 벤치마크(AMLworld)에서의 실험을 통해 다음의 핵심 발견을 도출한다.
+\begin{itemize}[leftmargin=*]
+    \item 행동적 k-NN view는 의심 계좌 간 연결 비율을 크게 개선하여 저동질성 거래 그래프에서 동질성을 효과적으로 복원한다. 이는 자금세탁 계좌들이 분할거래, 반복이체 등으로 인해 유사한 거래 금액 패턴을 공유하기 때문이다.
+    \item 서브그래프 풀링은 행동적 view와 결합할 때만 추가 개선을 가져오며, 거래 그래프에서 단독 적용 시 오히려 성능이 저하된다. 이는 서브그래프 풀링이 그래프의 연결 패턴을 증폭하는 특성에 기인한다.
+    \item BatchNorm이 대규모 불균형 환경에서 결정적 역할을 하며, 인코더 아키텍처와 무관하게 성능을 좌우하는 핵심 요인이다.
+    \item 제안 방법 \texttt{BECON}은 라벨 없이 학습한 자기지도 표현만으로 다수의 지도학습 모델과 동등한 탐지 성능을 달성한다.
+\end{itemize}
+
+본 연구의 기여는 다음과 같다.
+\begin{itemize}[leftmargin=*]
+    \item GCL의 자금세탁 탐지 적용에서 view 구성과 contrastive level의 효과를 교차 분석한 최초의 연구이다.
+    \item 행동적 유사도 기반 k-NN view가 저동질성 거래 네트워크에서 동질성을 복원하는 메커니즘을 의심 계좌 간 연결 비율(F-F/F-B ratio) 분석을 통해 규명한다.
+    \item 10종 인코더에 대한 비교 실험을 통해 BatchNorm의 결정적 역할을 발견하고, 인코더 설계에 대한 실용적 가이드라인을 제시한다.
+    \item 실제 및 합성 AML 데이터셋에서 일반성을 검증하고, 지도학습 모델 대비 경쟁력을 입증한다.
+\end{itemize}
+
 \section{Related Work}
 
 \section{Proposed Method}
@@ -119,11 +146,11 @@
     \item \textbf{RQ5.} 지도학습 모델 대비 라벨 없는 자기지도학습이 경쟁력 있는가?
 \end{itemize}
 
-\subsection{실험 환경}
+\subsection{Experimental Setting}
 
 모든 실험은 Python 3.12, PyTorch 2.10, CUDA 12.8 환경에서 NVIDIA A100 80GB GPU 위에서 수행하였다.
 
-\subsubsection{데이터셋}
+\subsubsection{Datasets}
 
 본 연구에서는 실제 및 합성 AML 데이터셋 두 가지를 사용한다.
 
@@ -131,41 +158,41 @@
 
 \textbf{AMLworld HI-Small.} NeurIPS 2023 Datasets \& Benchmarks Track에서 공개된 합성 AML 벤치마크로, 515,088개 계좌와 5,078,345건의 유향 멀티엣지로 구성된다. Laundering 비율은 0.10\%로 HOFINET보다 20배 더 불균형하며, fan-out, scatter-gather, cycle 등 8가지 AML 패턴을 모델링한다. GCPAL 논문에서도 동일 데이터셋을 사용하여 직접 비교가 가능하다.
 
-\subsubsection{베이스라인}
+\subsubsection{Baselines}
 
 \textbf{자기지도(Self-supervised).} 통합 프레임워크(subgraph\_cl.py)를 통해 10종의 인코더를 실험한다: BGRL, GBT, DGI, MVGRL, GRACE, GCA (BN 미포함) 및 DGI+BN, MVGRL+BN, GRACE+BN, GIN (BN 포함). 각 인코더에 대해 (a) augmentation view, (b) behavioral view, (c) subgraph pooling, (d) behavioral view + subgraph pooling의 4가지 설정을 교차 실험한다.
 
 \textbf{지도학습(Supervised).} GNN 기반(GCN, GAT, GraphSAGE), 신경망(MLP), 트리 기반(LightGBM, XGBoost) 총 6종의 지도학습 모델을 비교 대상으로 사용한다. 모든 지도학습 모델에는 클래스 가중치(class weight) 기반 불균형 보정을 적용한다.
 
-\subsubsection{평가 지표}
+\subsubsection{Evaluation Metrics}
 
 주요 지표로 의심 클래스(positive class)의 F1-score(F1\_fraud)를 사용한다. 보조 지표로 AUROC와 AUPRC를 함께 보고한다. 모든 실험은 4개 시드(2024, 2025, 2026, 2027)의 평균으로 보고하며, 10\%/80\% train/test 분할을 사용한다. 자기지도 모델은 frozen embedding에 대해 LogisticRegression으로 평가한다.
 
-\subsection{행동적 k-NN View의 효과와 메커니즘 (\textbf{RQ1})}
+\subsection{Effectiveness and Mechanism of Behavioral k-NN View (\textbf{RQ1})}
 
 행동적 k-NN view의 효과를 검증하기 위해 설정 (b)와 (a)를 비교한다. BN을 포함한 인코더에서 +80\%$\sim$151\%의 F1\_fraud 개선을 달성하였으며, BN이 없는 인코더에서도 +24\%$\sim$31\%의 일관된 개선을 보인다.
 
 이러한 효과의 메커니즘을 분석하기 위해 각 그래프의 Fraud-Fraud/Fraud-Benign(F-F/F-B) 연결 비율을 측정하였다. 원래 거래 그래프에서는 F-F/F-B = 1:5.7로 의심 계좌가 정상 계좌에 묻혀 있으나, 행동적 k-NN 그래프에서는 1:1.4로 크게 개선된다. 이는 자금세탁 계좌들이 분할거래(structuring), 반복이체(layering) 등으로 인해 유사한 거래 금액 패턴을 공유하기 때문이며, 행동적 유사도 기반 k-NN 구축 시 의심 계좌끼리 자연스럽게 연결되어 GNN의 이웃 집계(neighborhood aggregation)가 fraud 정보를 효과적으로 수집할 수 있게 된다.
 
-\subsection{서브그래프 풀링: 언제 도움이 되는가? (\textbf{RQ2})}
+\subsection{Subgraph Pooling: When Does It Help? (\textbf{RQ2})}
 
 서브그래프 풀링의 효과는 결합 조건에 따라 상반된 결과를 보인다. 행동적 k-NN view 위에 서브그래프 풀링을 추가한 설정 (d)는 (b) 대비 소폭 추가 개선을 달성한다. 반면, 원래 거래 그래프에서 서브그래프 풀링만 적용한 설정 (c)는 (a) 대비 오히려 -19\%$\sim$25\% 성능이 저하된다.
 
 이는 서브그래프 풀링이 이웃 정보를 명시적으로 집계하여 그래프의 연결 패턴을 증폭하는 특성에 기인한다. 행동적 k-NN 그래프(F-F/F-B 1:1.4)에서는 fraud 이웃 정보가 증폭되어 개선으로 이어지지만, 원래 거래 그래프(F-F/F-B 1:5.7)에서는 benign 이웃의 noise가 증폭되어 오히려 악화된다. 이 결과는 view 구성이 선행되어야 서브그래프 풀링이 효과적임을 시사한다.
 
-\subsection{BatchNorm의 결정적 역할 (\textbf{RQ3})}
+\subsection{The Decisive Role of BatchNorm (\textbf{RQ3})}
 
 10종 인코더에 대한 비교 실험 결과, BatchNorm(BN)의 유무가 성능을 결정하는 가장 핵심적인 요인임을 발견하였다. BN을 포함한 인코더(GBT, DGI+BN, MVGRL+BN, GRACE+BN)는 F1\_fraud 0.681$\sim$0.682를 달성한 반면, BN이 없는 인코더(DGI, MVGRL, GRACE, GCA)는 0.069$\sim$0.085에 그쳤다. BN 추가만으로 약 10배의 성능 향상을 얻을 수 있다.
 
 세부적으로, per-layer BN(GBT 등, 0.682)이 final-only BN(BGRL, 0.647)보다 우수하며, GCNConv(0.682)가 GINConv(0.570)보다 효과적이다. 반면 활성함수(PReLU vs ReLU)나 Dropout 유무는 부차적이다. 이는 452K 노드, 2\% fraud의 대규모 불균형 환경에서 BN이 학습 안정화에 필수적이며, BN 없이는 표현이 다수 클래스(benign)에 collapse됨을 의미한다.
 
-\subsection{AML 데이터셋 간 일반성 검증 (\textbf{RQ4})}
+\subsection{Generalizability Across AML Datasets (\textbf{RQ4})}
 
 AMLworld HI-Small 데이터셋에서도 (d) $>$ (b) $>$ (a) $>$ (c)의 패턴이 동일하게 재현된다. BGRL 인코더 기준 설정 (d)에서 F1\_fraud 0.068을 달성하여 baseline (a) 대비 +81\%의 개선을 보인다.
 
 HOFINET 대비 절대 성능이 낮은 원인은 AMLworld의 laundering 비율이 0.10\%로 HOFINET(2.13\%)보다 20배 더 불균형하고, F-F/F-B 비율이 1:15.8로 HOFINET(1:5.7)보다 3배 더 희석되어 있기 때문이다. 행동적 k-NN이 F-F/F-B를 1:9.4로 개선하지만 HOFINET(1:1.4)만큼 효과적이지는 않다. 그러나 상대적 개선 패턴은 데이터셋에 독립적으로 일관되게 나타나, 제안 방법의 일반성을 확인할 수 있다.
 
-\subsection{지도학습 모델과의 비교 (\textbf{RQ5})}
+\subsection{Comparison with Supervised Models (\textbf{RQ5})}
 
 HOFINET에서 제안 방법의 설정 (d)는 F1\_fraud 0.682를 달성하여, 라벨을 사용한 지도학습 모델인 MLP(0.678), GraphSAGE(0.677), XGBoost(0.675), LightGBM(0.674)과 동등한 성능을 보인다. 반면 GCN(0.250)과 GAT(0.469)는 상대적으로 낮은 성능을 기록하였다.
 
