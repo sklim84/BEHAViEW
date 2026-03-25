@@ -140,7 +140,7 @@ def main(args):
     split = get_split(num_samples=z.size(0), train_ratio=0.1, test_ratio=0.8)
     test_result = evaluate_with_metrics(z, data.y, split)
     print(test_result)
-    print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}, F1_fraud={test_result["f1_1"]:.4f}')
+    print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}, F1_susp={test_result["f1_1"]:.4f}')
 
     result = build_result_dict('GBT_w_cen', args, test_result, ari_score, sil_score, use_cen=True)
     save_results_to_csv([result], args.metric_save_path)

@@ -93,7 +93,7 @@ def main(args):
     vis_save_path = f'./visualize/GBT/tsne_GBT_w_org_{args.node_data_name}.png'
     test_result, ari_score, sil_score = test(args.seed, encoder_model, data, vis_save_path, args.skip_tsne)
     print(test_result)
-    print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}, F1_fraud={test_result["f1_1"]:.4f}')
+    print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, F1Ma={test_result["macro_f1"]:.4f}, F1_susp={test_result["f1_1"]:.4f}')
 
     result = build_result_dict('GBT_w_org', args, test_result, ari_score, sil_score, use_cen=False)
     save_results_to_csv([result], args.metric_save_path)

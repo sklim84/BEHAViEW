@@ -58,13 +58,13 @@ COMMON_ARGS = {
 # 피처 통계 유틸리티
 # ============================================================
 def compute_feature_stats(feat_dict, n_nodes, labels):
-    """피처 dict에서 nz, fraud_mean, benign_mean, ratio 계산"""
+    """피처 dict에서 nz, susp_mean, benign_mean, ratio 계산"""
     vals = np.array([feat_dict.get(i, 0) for i in range(n_nodes)], dtype=float)
     nz = int((vals != 0).sum())
-    fraud_mean = float(vals[labels == 1].mean())
+    susp_mean = float(vals[labels == 1].mean())
     benign_mean = float(vals[labels == 0].mean())
-    ratio = fraud_mean / benign_mean if benign_mean > 0 else float('inf')
-    return nz, fraud_mean, benign_mean, ratio
+    ratio = susp_mean / benign_mean if benign_mean > 0 else float('inf')
+    return nz, susp_mean, benign_mean, ratio
 
 
 def save_feature_progress(features, n_nodes, labels):
@@ -73,7 +73,7 @@ def save_feature_progress(features, n_nodes, labels):
     for k, v in features.items():
         nz, fm, bm, _ = compute_feature_stats(v, n_nodes, labels)
         progress[k] = {'count': len(v), 'nz': nz,
-                        'fraud_mean': fm, 'benign_mean': bm}
+                        'susp_mean': fm, 'benign_mean': bm}
     with open(PROGRESS_JSON, 'w') as f:
         json.dump(progress, f, indent=2)
 
@@ -189,7 +189,7 @@ def discover_features(gpu_id=0):
     for feat_name, feat_dict in new_features.items():
         nz, fm, bm, ratio = compute_feature_stats(feat_dict, n_nodes, labels)
         print(f'  {feat_name:16s}: nz={nz:>7,}/{n_nodes:,}  '
-              f'fraud/benign={ratio:.2f}x')
+              f'susp/benign={ratio:.2f}x')
 
     return new_features, n_nodes, node_df
 

@@ -129,7 +129,7 @@ def evaluate_with_metrics(z, y, split):
 
     print(f"F1-micro: {f1_micro:.4f}")
     print(f"F1-macro: {f1_macro:.4f}")
-    print(f"F1-by-class [Normal, Fraud]: {f1_by_class}")
+    print(f"F1-by-class [Normal, Suspicious]: {f1_by_class}")
 
     print("\n AUROC & AUPRC")
     try:
@@ -184,7 +184,7 @@ def visualize_tsne(seed, embeddings, labels, save_path=None, max_samples=50000, 
 
     plt.figure(figsize=(4, 4))
     plt.scatter(z_2d[y_sub == 0, 0], z_2d[y_sub == 0, 1], c='#2166ac', label='Benign', alpha=1, s=5)
-    plt.scatter(z_2d[y_sub == 1, 0], z_2d[y_sub == 1, 1], c='#ef4136', label='Fraud', alpha=1, s=5)
+    plt.scatter(z_2d[y_sub == 1, 0], z_2d[y_sub == 1, 1], c='#ef4136', label='Suspicious', alpha=1, s=5)
     plt.axis('off')
     plt.tight_layout()
     plt.margins(0)

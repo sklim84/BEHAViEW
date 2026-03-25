@@ -84,20 +84,20 @@ def main():
     node_features.reset_index(drop=True).to_csv(node_path, index=False)
     edge_df.to_csv(edge_path, index=False)
 
-    n_fraud = (node_features['label'] == 1).sum()
+    n_susp = (node_features['label'] == 1).sum()
     n_total = len(node_features)
-    print(f'[INFO] Saved {node_path}: {n_total:,} nodes (laundering: {n_fraud:,}, {n_fraud*100/n_total:.2f}%)')
+    print(f'[INFO] Saved {node_path}: {n_total:,} nodes (laundering: {n_susp:,}, {n_susp*100/n_total:.2f}%)')
     print(f'[INFO] Saved {edge_path}: {len(edge_df):,} edges')
 
     # Feature summary
     behav_cols = [c for c in node_features.columns if c not in ('account', 'label')]
-    fraud = node_features[node_features['label'] == 1]
+    susp = node_features[node_features['label'] == 1]
     benign = node_features[node_features['label'] == 0]
-    print(f'\n[INFO] Feature statistics (fraud/benign ratio):')
+    print(f'\n[INFO] Feature statistics (suspicious/benign ratio):')
     for c in behav_cols:
-        fm, bm = fraud[c].mean(), benign[c].mean()
-        ratio = fm / bm if bm > 0 else float('inf')
-        print(f'  {c:20s}: fraud={fm:.4f}, benign={bm:.4f}, ratio={ratio:.2f}x')
+        sm, bm = susp[c].mean(), benign[c].mean()
+        ratio = sm / bm if bm > 0 else float('inf')
+        print(f'  {c:20s}: suspicious={sm:.4f}, benign={bm:.4f}, ratio={ratio:.2f}x')
 
 if __name__ == '__main__':
     main()

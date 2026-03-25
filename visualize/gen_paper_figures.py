@@ -57,7 +57,7 @@ def fig2_ablation_matrix():
     ax.text(1, 1, '\n\n\n★', ha='center', va='center', color='white', fontsize=14)
 
     cbar = plt.colorbar(im, ax=ax, shrink=0.8)
-    cbar.set_label('F1_fraud', fontsize=11)
+    cbar.set_label('F1_susp', fontsize=11)
     ax.set_title('Two-Axis Ablation (GBT Encoder, HOFINET)', fontsize=13, fontweight='bold')
     plt.tight_layout()
     path = os.path.join(OUT_DIR, 'fig2_ablation_matrix.png')
@@ -67,22 +67,22 @@ def fig2_ablation_matrix():
     print(f'Saved: {path}')
 
 
-def fig3_fraud_connectivity():
-    """Fig.3: Fraud connectivity comparison (F-F/F-B ratio)."""
+def fig3_susp_connectivity():
+    """Fig.3: Suspicious connectivity comparison (S-S/S-B ratio)."""
     graphs = ['Transaction\nGraph', 'Structural\nk-NN', 'Behavioral\nk-NN']
-    ff = [257384, 16416, 61987]
-    fb = [1468962, 158973, 87555]
-    ratio = [fb[i]/ff[i] for i in range(3)]
+    ss = [257384, 16416, 61987]
+    sb = [1468962, 158973, 87555]
+    ratio = [sb[i]/ss[i] for i in range(3)]
     homophily = [0.690, 0.965, 0.981]
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
-    # Left: F-F/F-B ratio (lower is better for fraud detection)
+    # Left: S-S/S-B ratio (lower is better for suspicious detection)
     ax = axes[0]
     colors = ['#d9534f', '#f0ad4e', '#5cb85c']
     bars = ax.bar(graphs, ratio, color=colors, edgecolor='black', linewidth=0.5)
-    ax.set_ylabel('Fraud-Benign / Fraud-Fraud Ratio', fontsize=11)
-    ax.set_title('(a) Fraud Neighbor Dilution', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Susp-Benign / Susp-Susp Ratio', fontsize=11)
+    ax.set_title('(a) Suspicious Neighbor Dilution', fontsize=12, fontweight='bold')
     for bar, r in zip(bars, ratio):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.2,
                 f'1:{r:.1f}', ha='center', va='bottom', fontsize=10, fontweight='bold')
@@ -90,7 +90,7 @@ def fig3_fraud_connectivity():
     ax.axhline(y=1, color='gray', linestyle='--', alpha=0.5, label='Balanced (1:1)')
     ax.legend()
 
-    # Right: Homophily vs F1_fraud
+    # Right: Homophily vs F1_susp
     ax = axes[1]
     f1 = [0.351, 0.333, 0.567]  # BGRL results for each graph type
     scatter_colors = colors
@@ -99,7 +99,7 @@ def fig3_fraud_connectivity():
         ax.annotate(g.replace('\n', ' '), (h, f), textcoords="offset points",
                     xytext=(10, 5), fontsize=9)
     ax.set_xlabel('Edge Homophily', fontsize=11)
-    ax.set_ylabel('F1_fraud', fontsize=11)
+    ax.set_ylabel('F1_susp', fontsize=11)
     ax.set_title('(b) Homophily vs Detection Performance', fontsize=12, fontweight='bold')
     ax.set_xlim(0.65, 1.0)
     ax.set_ylim(0.2, 0.7)
@@ -136,7 +136,7 @@ def fig4_bn_effect():
     bars_a = ax.bar(x - width/2, all_a, width, label='(a) Baseline', color='#a8d8ea', edgecolor='black', linewidth=0.5)
     bars_d = ax.bar(x + width/2, all_d, width, label='(d) Proposed', color='#ff6f61', edgecolor='black', linewidth=0.5)
 
-    ax.set_ylabel('F1_fraud', fontsize=12)
+    ax.set_ylabel('F1_susp', fontsize=12)
     ax.set_xticks(x)
     ax.set_xticklabels(all_labels, fontsize=9)
     ax.legend(fontsize=10)
@@ -191,7 +191,7 @@ def fig5_setting_comparison():
 
     ax.set_xticks(range(4))
     ax.set_xticklabels(settings, fontsize=11)
-    ax.set_ylabel('F1_fraud', fontsize=12)
+    ax.set_ylabel('F1_susp', fontsize=12)
     ax.set_xlabel('Setting', fontsize=12)
     ax.set_ylim(0, 0.8)
     ax.legend(loc='upper left', fontsize=9)
@@ -202,11 +202,55 @@ def fig5_setting_comparison():
                 fontsize=10, fontweight='bold', color='#e74c3c',
                 arrowprops=dict(arrowstyle='->', color='#e74c3c'))
 
-    ax.set_title('F1_fraud across Settings and Encoder Types', fontsize=13, fontweight='bold')
+    ax.set_title('F1_susp across Settings and Encoder Types', fontsize=13, fontweight='bold')
     plt.tight_layout()
     path = os.path.join(OUT_DIR, 'fig5_setting_comparison.png')
     plt.savefig(path, bbox_inches='tight')
     plt.savefig(path.replace('.png', '.pdf'), bbox_inches='tight')
+    plt.close()
+    print(f'Saved: {path}')
+
+
+def fig_intro_homophily():
+    """Intro Figure: S-S/S-B ratio comparison — Transaction vs Behavioral k-NN."""
+    categories = ['S-S', 'S-B']
+    trans_vals = [257384, 1468962]  # Transaction graph
+    knn_vals = [61987, 87555]       # Behavioral k-NN
+
+    # Normalize to percentage for clearer comparison
+    trans_pct = [v / sum(trans_vals) * 100 for v in trans_vals]
+    knn_pct = [v / sum(knn_vals) * 100 for v in knn_vals]
+
+    fig, axes = plt.subplots(1, 2, figsize=(3.4, 2.4), sharey=True)
+
+    colors = ['#e74c3c', '#3498db']  # red for S-S, blue for S-B
+    bar_width = 0.55
+
+    for ax, pcts, vals, title, ratio in [
+        (axes[0], trans_pct, trans_vals, 'Transaction Graph', '1 : 5.7'),
+        (axes[1], knn_pct, knn_vals, 'Behavioral k-NN', '1 : 1.4'),
+    ]:
+        bars = ax.bar(categories, pcts, color=colors, width=bar_width,
+                      edgecolor='black', linewidth=0.6)
+        ax.set_title(title, fontsize=8, fontweight='bold', pad=4)
+        ax.set_ylim(0, 105)
+        ax.tick_params(axis='both', labelsize=7)
+
+        # Value labels
+        for bar, pct in zip(bars, pcts):
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1.5,
+                    f'{pct:.0f}%', ha='center', va='bottom', fontsize=7, fontweight='bold')
+
+        # Ratio annotation
+        ax.text(0.5, -0.22, f'S-S : S-B = {ratio}', transform=ax.transAxes,
+                ha='center', fontsize=7, style='italic', color='#555555')
+
+    axes[0].set_ylabel('Edge Proportion (%)', fontsize=8)
+
+    plt.tight_layout(w_pad=1.0)
+    path = os.path.join(OUT_DIR, 'fig_intro_homophily.pdf')
+    plt.savefig(path, bbox_inches='tight')
+    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight')
     plt.close()
     print(f'Saved: {path}')
 
@@ -237,14 +281,14 @@ def fig1_framework():
                                     facecolor='#a8d8ea', edgecolor='black', linewidth=1.5)
     ax.add_patch(box1)
     ax.text(2.75, 7.95, 'View 1: Transaction Graph', ha='center', fontsize=9, fontweight='bold')
-    ax.text(2.75, 7.7, 'F-F/F-B = 1:5.7', ha='center', fontsize=8, color='#c0392b')
+    ax.text(2.75, 7.7, 'S-S/S-B =1:5.7', ha='center', fontsize=8, color='#c0392b')
 
     # View 2: Behavioral k-NN
     box2 = mpatches.FancyBboxPatch((5.5, 7.5), 3.5, 0.7, boxstyle="round,pad=0.1",
                                     facecolor='#ffd6a5', edgecolor='black', linewidth=1.5)
     ax.add_patch(box2)
     ax.text(7.25, 7.95, 'View 2: Behavioral k-NN', ha='center', fontsize=9, fontweight='bold')
-    ax.text(7.25, 7.7, 'F-F/F-B = 1:1.4', ha='center', fontsize=8, color='#27ae60')
+    ax.text(7.25, 7.7, 'S-S/S-B =1:1.4', ha='center', fontsize=8, color='#27ae60')
 
     # k-NN build annotation
     ax.text(8.5, 8.5, 'cosine sim\n→ top-k', ha='center', fontsize=8, style='italic', color='#7f8c8d')
@@ -296,7 +340,7 @@ def fig1_framework():
                                     facecolor='#fff9c4', edgecolor='black', linewidth=1.5)
     ax.add_patch(box6)
     ax.text(5, 1.75, 'Frozen [s₁ ∥ s₂] → LogReg Evaluation', ha='center', fontsize=9, fontweight='bold')
-    ax.text(5, 1.5, 'F1_fraud = 0.682 (GBT encoder, HOFINET)', ha='center', fontsize=8, color='#e74c3c')
+    ax.text(5, 1.5, 'F1_susp = 0.682 (GBT encoder, HOFINET)', ha='center', fontsize=8, color='#e74c3c')
 
     # Axis labels for two dimensions
     ax.annotate('', xy=(0.3, 4.65), xytext=(0.3, 6.15),
@@ -318,9 +362,10 @@ def fig1_framework():
 
 if __name__ == '__main__':
     print('Generating paper figures...')
+    fig_intro_homophily()
     fig1_framework()
     fig2_ablation_matrix()
-    fig3_fraud_connectivity()
+    fig3_susp_connectivity()
     fig4_bn_effect()
     fig5_setting_comparison()
     print(f'\nAll figures saved to {OUT_DIR}/')

@@ -4,7 +4,7 @@ Supervised baseline models for AML comparison.
 - LightGBM, XGBoost (tabular)
 - MLP (neural network)
 
-동일 10%/80% train/test split, F1_fraud metric.
+동일 10%/80% train/test split, F1_susp metric.
 
 사용법:
     python models/supervised_baselines.py --gpu 0 --seed 2025
@@ -253,7 +253,7 @@ def main():
 
     data, x_struct = load_graph_data(fake_args, device=device)
     print(f'Dataset: {args.dataset}, Nodes: {data.num_nodes}, Edges: {data.edge_index.size(1)}')
-    print(f'Fraud: {(data.y==1).sum().item()} ({(data.y==1).float().mean().item()*100:.2f}%)')
+    print(f'Suspicious: {(data.y==1).sum().item()} ({(data.y==1).float().mean().item()*100:.2f}%)')
 
     # Feature matrix for tabular models (behavioral + structural)
     X_all = torch.cat([data.x.cpu(), x_struct], dim=1).numpy()
@@ -273,7 +273,7 @@ def main():
                 f1_1, pre_1, rec_1, auroc, auprc = run_gnn_model(
                     model_name, data, device, seed, hidden_dim=256, num_layers=2)
 
-            print(f'F1_fraud={f1_1:.4f}, AUROC={auroc:.4f}')
+            print(f'F1_susp={f1_1:.4f}, AUROC={auroc:.4f}')
             results.append({
                 'dataset': args.dataset, 'model': model_name, 'seed': seed,
                 'f1_1': f1_1, 'pre_1': pre_1, 'rec_1': rec_1,
@@ -286,7 +286,7 @@ def main():
     print(f'\nSaved: {args.result_file}')
 
     # Summary
-    print(f'\n{"Model":6s} | {"F1_fraud":>10s} | {"AUROC":>8s} | {"AUPRC":>8s}')
+    print(f'\n{"Model":6s} | {"F1_susp":>10s} | {"AUROC":>8s} | {"AUPRC":>8s}')
     print('-' * 40)
     for m in all_models:
         sub = df[df['model'] == m]

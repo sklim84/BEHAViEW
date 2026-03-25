@@ -20,9 +20,9 @@ def main():
     # Load labels
     node_df = pd.read_csv(os.path.join(base, 'datasets/HOFINET_NODE_FEAT.csv'))
     labels = node_df['label'].values
-    n_fraud = (labels == 1).sum()
+    n_susp = (labels == 1).sum()
     n_total = len(labels)
-    print(f'Nodes: {n_total:,} (fraud: {n_fraud:,}, {n_fraud/n_total*100:.2f}%)')
+    print(f'Nodes: {n_total:,} (suspicious: {n_susp:,}, {n_susp/n_total*100:.2f}%)')
     print()
 
     # Graphs to measure
@@ -35,7 +35,7 @@ def main():
         ('Hybrid k-NN (A+B, 19 feats)', 'datasets/HOFINET_KNN_HYBRID_k10.csv', False),
     ]
 
-    print(f'{"Graph":<35s} {"Edges":>12s} {"Homophily":>10s} {"Fraud-Fraud":>12s} {"Fraud-Benign":>13s}')
+    print(f'{"Graph":<35s} {"Edges":>12s} {"Homophily":>10s} {"S-S":>12s} {"S-B":>13s}')
     print('-' * 85)
 
     for name, path, is_directed in graphs:
@@ -64,13 +64,13 @@ def main():
         same_label = np.sum(labels[src_idx] == labels[tgt_idx])
         homophily = same_label / total
 
-        # Fraud-fraud and fraud-benign edges
-        src_fraud = labels[src_idx] == 1
-        tgt_fraud = labels[tgt_idx] == 1
-        ff = np.sum(src_fraud & tgt_fraud)
-        fb = np.sum(src_fraud ^ tgt_fraud)  # XOR = one fraud, one benign
+        # Suspicious-suspicious and suspicious-benign edges
+        src_susp = labels[src_idx] == 1
+        tgt_susp = labels[tgt_idx] == 1
+        ss = np.sum(src_susp & tgt_susp)
+        sb = np.sum(src_susp ^ tgt_susp)  # XOR = one suspicious, one benign
 
-        print(f'{name:<35s} {total:>12,} {homophily:>10.4f} {ff:>12,} {fb:>13,}')
+        print(f'{name:<35s} {total:>12,} {homophily:>10.4f} {ss:>12,} {sb:>13,}')
 
     print()
     print('Homophily = proportion of edges connecting same-label nodes')

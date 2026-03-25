@@ -454,7 +454,7 @@ def main(args):
     print(test_result)
     print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, '
           f'F1Ma={test_result["macro_f1"]:.4f}, '
-          f'F1_fraud={test_result["f1_1"]:.4f}')
+          f'F1_susp={test_result["f1_1"]:.4f}')
 
     result = build_result_dict(args.model_name, args, test_result, ari_score, sil_score, use_cen=False)
     save_results_to_csv([result], args.metric_save_path)

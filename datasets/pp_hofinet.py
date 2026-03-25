@@ -39,8 +39,8 @@ COLUMN_MAP = {
     '매체구분': 'md_type',
     '거래금액': 'tran_amt',
     '이상거래여부': 'label',
-    '이상거래유형': 'fraud_type',
-    '이상거래설명': 'fraud_desc',
+    '이상거래유형': 'susp_type',
+    '이상거래설명': 'susp_desc',
 }
 
 GRAPH_FEATURE_NAMES = [
@@ -320,7 +320,7 @@ def build_node_features(df, seed=2025, cpu_only=False, gpu_only=False,
     node_features.fillna(0, inplace=True)
     df.drop(columns=['tran_date'], inplace=True)
 
-    # 사기 레이블
+    # 이상거래 레이블
     src_label = df.groupby('source')['label'].max()
     tgt_label = df.groupby('target')['label'].max()
     labels = src_label.combine(tgt_label, func=lambda s, t: max(s, t)).fillna(
@@ -377,11 +377,11 @@ def build_node_features(df, seed=2025, cpu_only=False, gpu_only=False,
         if feat in node_features.columns:
             col = node_features[feat]
             n_nz = (col > 0).sum()
-            fraud_mean = col[node_features['label'] == 1].mean()
+            susp_mean = col[node_features['label'] == 1].mean()
             benign_mean = col[node_features['label'] == 0].mean()
-            ratio = fraud_mean / benign_mean if benign_mean > 0 else float('inf')
+            ratio = susp_mean / benign_mean if benign_mean > 0 else float('inf')
             print(f'  {feat:18s}: non-zero={n_nz:>7,}/{len(col):,} ({n_nz*100/len(col):5.1f}%), '
-                  f'fraud={fraud_mean:.6f}, benign={benign_mean:.6f}, ratio={ratio:.2f}x')
+                  f'suspicious={susp_mean:.6f}, benign={benign_mean:.6f}, ratio={ratio:.2f}x')
 
     node_features['account'] = node_features.index
 
@@ -397,9 +397,9 @@ def save_outputs(node_features, edge_df, output_name, output_dir='./datasets'):
     node_features.reset_index(drop=True).to_csv(node_path, index=False)
     edge_df.to_csv(edge_path, index=False)
 
-    n_fraud = (node_features['label'] == 1).sum()
+    n_susp = (node_features['label'] == 1).sum()
     n_total = len(node_features)
-    print(f'[INFO] Saved {node_path}: {n_total:,} nodes (fraud: {n_fraud:,}, {n_fraud*100/n_total:.2f}%)')
+    print(f'[INFO] Saved {node_path}: {n_total:,} nodes (suspicious: {n_susp:,}, {n_susp*100/n_total:.2f}%)')
     print(f'[INFO] Saved {edge_path}: {len(edge_df):,} edges')
 
 

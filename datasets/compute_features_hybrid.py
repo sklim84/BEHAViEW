@@ -296,7 +296,7 @@ def main():
 
     # 최종 통계
     print(f'\n{"="*60}')
-    print('Feature Statistics (fraud vs benign)')
+    print('Feature Statistics (suspicious vs benign)')
     print(f'{"="*60}')
     print_feature_summary(all_results, n_nodes, labels)
 

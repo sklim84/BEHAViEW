@@ -71,8 +71,8 @@ python3 -c "
 import pandas as pd, numpy as np
 nf = pd.read_csv('datasets/amlworld/AMLWORLD_NODE_FEAT.csv')
 labels = nf['label'].values
-n_fraud = (labels==1).sum()
-print(f'Nodes: {len(nf):,} (laundering: {n_fraud:,}, {n_fraud*100/len(nf):.2f}%)')
+n_susp = (labels==1).sum()
+print(f'Nodes: {len(nf):,} (laundering: {n_susp:,}, {n_susp*100/len(nf):.2f}%)')
 for name, path in [('Transaction', 'datasets/amlworld/AMLWORLD_EDGES.csv'),
                     ('Behavioral k-NN', 'datasets/amlworld/AMLWORLD_KNN_BEHAV_k10.csv')]:
     df = pd.read_csv(path)
@@ -82,10 +82,10 @@ for name, path in [('Transaction', 'datasets/amlworld/AMLWORLD_EDGES.csv'),
         src = np.array([ni.get(s,-1) for s in src])
         tgt = np.array([ni.get(t,-1) for t in tgt])
         valid = (src>=0)&(tgt>=0); src=src[valid]; tgt=tgt[valid]
-    ff = np.sum((labels[src]==1)&(labels[tgt]==1))
-    fb = np.sum((labels[src]==1)^(labels[tgt]==1))
+    ss = np.sum((labels[src]==1)&(labels[tgt]==1))
+    sb = np.sum((labels[src]==1)^(labels[tgt]==1))
     homo = np.sum(labels[src]==labels[tgt])/len(src)
-    print(f'{name:20s}: homo={homo:.4f}, F-F={ff:,}, F-B={fb:,}, ratio=1:{fb/max(ff,1):.1f}')
+    print(f'{name:20s}: homo={homo:.4f}, S-S={ss:,}, S-B={sb:,}, ratio=1:{sb/max(ss,1):.1f}')
 " 2>&1
 
 echo ""
