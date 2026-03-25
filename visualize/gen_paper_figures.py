@@ -120,60 +120,75 @@ def fig3_susp_connectivity():
 
 
 def fig4_bn_effect():
-    """Fig.4: BN effect — refined grouped bar chart, no title."""
-    encoders_bn = ['GBT', 'DGI\n+BN', 'MVGRL\n+BN', 'GRACE\n+BN', 'BGRL', 'GIN']
-    encoders_no = ['DGI', 'MVGRL', 'GRACE', 'GCA']
-
-    d_bn = [0.682, 0.682, 0.682, 0.681, 0.647, 0.570]
-    d_no = [0.074, 0.071, 0.069, 0.085]
-    a_bn = [0.270, 0.271, 0.270, 0.286, 0.315, 0.149]
-    a_no = [0.045, 0.045, 0.045, 0.048]
-
-    all_a = a_bn + a_no
-    all_d = d_bn + d_no
-    all_labels = encoders_bn + encoders_no
-    n = len(all_labels)
-
-    fig, ax = plt.subplots(figsize=(8, 3.5))
-    x = np.arange(n)
+    """Fig.4: BN effect — two-panel split by BN presence, independent y-scales."""
+    c_baseline = '#B0C4DE'
+    c_proposed = '#E74C3C'
     width = 0.34
 
-    c_baseline = '#B0C4DE'  # light steel blue
-    c_proposed = '#E74C3C'  # vivid red
+    fig, (ax_bn, ax_no) = plt.subplots(1, 2, figsize=(7, 3.2),
+                                        gridspec_kw={'width_ratios': [6, 4], 'wspace': 0.35})
 
-    bars_a = ax.bar(x - width/2, all_a, width, label='(a) Baseline',
-                    color=c_baseline, edgecolor='white', linewidth=0.8, zorder=3)
-    bars_d = ax.bar(x + width/2, all_d, width, label='(d) Proposed',
-                    color=c_proposed, edgecolor='white', linewidth=0.8, zorder=3)
+    # === Left panel: With BatchNorm ===
+    enc_bn = ['GBT', 'DGI\n+BN', 'MVGRL\n+BN', 'GRACE\n+BN', 'BGRL', 'GIN']
+    a_bn = [0.270, 0.271, 0.270, 0.286, 0.315, 0.149]
+    d_bn = [0.682, 0.682, 0.682, 0.681, 0.647, 0.570]
 
-    ax.set_ylabel('$F1_{susp}$', fontsize=11)
-    ax.set_xticks(x)
-    ax.set_xticklabels(all_labels, fontsize=8)
-    ax.set_ylim(0, 0.82)
-    ax.grid(axis='y', alpha=0.2, zorder=0)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
+    x_bn = np.arange(len(enc_bn))
+    ax_bn.bar(x_bn - width/2, a_bn, width, label='(a) Baseline',
+              color=c_baseline, edgecolor='white', linewidth=0.8, zorder=3)
+    bars_d_bn = ax_bn.bar(x_bn + width/2, d_bn, width, label='(d) Proposed',
+              color=c_proposed, edgecolor='white', linewidth=0.8, zorder=3)
 
-    # BN / no-BN separator
-    sep_x = len(encoders_bn) - 0.5
-    ax.axvline(x=sep_x, color='#BDBDBD', linestyle='-', linewidth=1.2, zorder=1)
+    for bar, val in zip(bars_d_bn, d_bn):
+        ax_bn.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+                   f'{val:.3f}', ha='center', va='bottom', fontsize=7,
+                   fontweight='bold', color='#333333')
 
-    # Region labels with background
-    ax.text(sep_x/2, 0.78, 'With BatchNorm', ha='center', fontsize=9,
-            fontweight='bold', color='#2C3E50',
-            bbox=dict(boxstyle='round,pad=0.3', facecolor='#E8F5E9', edgecolor='none', alpha=0.8))
-    ax.text(sep_x + (n - sep_x)/2, 0.78, 'Without BatchNorm', ha='center', fontsize=9,
-            fontweight='bold', color='#C62828',
-            bbox=dict(boxstyle='round,pad=0.3', facecolor='#FFEBEE', edgecolor='none', alpha=0.8))
+    ax_bn.set_ylabel('$F1_{susp}$', fontsize=11)
+    ax_bn.set_xticks(x_bn)
+    ax_bn.set_xticklabels(enc_bn, fontsize=8)
+    ax_bn.set_ylim(0, 0.79)
+    ax_bn.grid(axis='y', alpha=0.2, zorder=0)
+    ax_bn.spines['top'].set_visible(False)
+    ax_bn.spines['right'].set_visible(False)
+    ax_bn.legend(fontsize=7.5, loc='center left', framealpha=0.9, edgecolor='#CCCCCC',
+                 bbox_to_anchor=(0.0, 0.55))
+    ax_bn.set_title('With BatchNorm', fontsize=10, fontweight='bold', color='#2C3E50', pad=8)
 
-    # Value labels on (d) bars only
-    for bar, val in zip(bars_d, all_d):
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
-                f'{val:.3f}', ha='center', va='bottom', fontsize=7, fontweight='bold',
-                color='#333333')
+    # Subgroup separators
+    ax_bn.axvline(x=3.5, color='#E0E0E0', linestyle='--', linewidth=0.8, zorder=1)
+    ax_bn.text(1.5, 0.75, 'per-layer BN', ha='center', fontsize=7, color='#666666', fontstyle='italic')
+    ax_bn.text(4, 0.75, 'final', ha='center', fontsize=7, color='#666666', fontstyle='italic')
+    ax_bn.text(5, 0.75, 'GIN', ha='center', fontsize=7, color='#666666', fontstyle='italic')
 
-    ax.legend(fontsize=8.5, loc='upper right', framealpha=0.9,
-              edgecolor='#CCCCCC', bbox_to_anchor=(0.99, 0.72))
+    # === Right panel: Without BatchNorm ===
+    enc_no = ['DGI', 'MVGRL', 'GRACE', 'GCA']
+    a_no = [0.045, 0.045, 0.045, 0.048]
+    d_no = [0.074, 0.071, 0.069, 0.085]
+
+    x_no = np.arange(len(enc_no))
+    ax_no.bar(x_no - width/2, a_no, width, label='(a) Baseline',
+              color=c_baseline, edgecolor='white', linewidth=0.8, zorder=3)
+    bars_d_no = ax_no.bar(x_no + width/2, d_no, width, label='(d) Proposed',
+              color=c_proposed, edgecolor='white', linewidth=0.8, zorder=3)
+
+    for bar, val in zip(bars_d_no, d_no):
+        ax_no.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.002,
+                   f'{val:.3f}', ha='center', va='bottom', fontsize=7,
+                   fontweight='bold', color='#333333')
+
+    ax_no.set_xticks(x_no)
+    ax_no.set_xticklabels(enc_no, fontsize=8)
+    ax_no.set_ylim(0, 0.12)
+    ax_no.grid(axis='y', alpha=0.2, zorder=0)
+    ax_no.spines['top'].set_visible(False)
+    ax_no.spines['right'].set_visible(False)
+    ax_no.set_title('Without BatchNorm', fontsize=10, fontweight='bold', color='#C62828', pad=8)
+
+    # Scale difference annotation
+    ax_no.text(0.5, 0.95, 'Note: y-axis scale\n differs from left panel',
+               transform=ax_no.transAxes, ha='center', va='top',
+               fontsize=6.5, color='#999999', fontstyle='italic')
 
     plt.tight_layout()
     path = os.path.join(OUT_DIR, 'fig_rq3_bn_effect.pdf')

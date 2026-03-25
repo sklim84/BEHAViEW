@@ -263,7 +263,7 @@ Section~\ref{subsec:rq3}에서 확인하듯이, BatchNorm은 대규모 불균형
 
 \subsection{Experimental Setting}
 
-모든 실험은 Python 3.12, PyTorch 2.10, CUDA 12.8 환경에서 NVIDIA A100 80GB GPU 위에서 수행하였다.
+모든 실험은 Python 3.12, PyTorch 2.10, CUDA 12.8 환경에서 NVIDIA H100 80GB GPU 위에서 수행하였다.
 
 \subsubsection{Datasets}
 
@@ -271,7 +271,7 @@ Section~\ref{subsec:rq3}에서 확인하듯이, BatchNorm은 대규모 불균형
 
 \textbf{HOFINET.} Housing Finance Information Network(HOFINET)은 금융결제원(Korea Financial Telecommunications \& Clearings Institute, KFTC)이 운영하는 전자금융공동망의 실제 은행간 이체 데이터이다. 452,816개 계좌(노드)와 4,732,130건의 유향 멀티엣지로 구성되며, 의심 계좌 비율은 2.13\%이다. 의심거래 라벨은 개별 금융기관이 운영 환경에서 부여한 것으로, 분할거래(structuring), 신규수신처(layering) 등 6가지 AML 유형을 포함한다. 데이터 기간은 2021년 3분기부터 2024년 4분기까지 40개월이다.
 
-\textbf{AMLworld HI-Small.} NeurIPS 2023 Datasets \& Benchmarks Track에서 공개된 합성 AML 벤치마크로, 515,088개 계좌와 5,078,345건의 유향 멀티엣지로 구성된다. Laundering 비율은 0.10\%로 HOFINET보다 20배 더 불균형하며, fan-out, scatter-gather, cycle 등 8가지 AML 패턴을 모델링한다. GCPAL 논문에서도 동일 데이터셋을 사용하여 직접 비교가 가능하다.
+\textbf{AMLworld HI-Small.} NeurIPS 2023 Datasets \& Benchmarks Track에서 공개된 합성 AML 벤치마크로, 515,088개 계좌와 5,078,345건의 유향 멀티엣지로 구성된다. 거래 수준의 laundering 비율은 0.10\%이며, 계좌 수준의 의심 비율은 1.23\%로 HOFINET(2.13\%)보다 낮다. fan-out, scatter-gather, cycle 등 8가지 AML 패턴을 모델링한다.
 
 \subsubsection{Ablation Settings}
 
@@ -335,7 +335,7 @@ Behavioral k-NN   & \textbf{0.981} & \textbf{62K}  & \textbf{88K} & \textbf{1:1.
 
 이는 자금세탁 계좌들이 분할거래(structuring), 반복이체(layering) 등으로 인해 유사한 거래 금액 패턴과 시간적 행동 패턴을 공유하기 때문이다. 행동적 유사도 기반으로 k-NN을 구축하면 의심 계좌끼리 자연스럽게 연결되어, GNN의 message passing이 의심 정보를 효과적으로 수집할 수 있다. 비교 대상인 구조적(structural) k-NN 그래프는 오히려 S-S/S-B가 1:9.7로 거래 그래프보다 더 악화되는데, 이는 degree나 centrality와 같은 구조적 특성이 의심 여부보다는 계좌의 네트워크 위치를 반영하기 때문이다.
 
-\subsection{Subgraph Pooling: When Does It Help? (RQ2)}\label{subsec:rq2}
+\subsection{Effectiveness of Subgraph Pooling (RQ2)}\label{subsec:rq2}
 
 서브그래프 풀링의 효과는 결합되는 view에 따라 상반된 결과를 보인다. Figure~\ref{fig:rq2_ablation}은 per-layer BN 인코더 4종의 평균에 대한 2$\times$2 ablation 결과를 보여준다. 행동적 k-NN view 위에 서브그래프 풀링을 추가한 설정 (d)는 0.682로 최고 성능을 달성하며, (b) 대비 +0.005의 추가 개선을 보인다. 반면, 원래 거래 그래프에서 서브그래프 풀링만 적용한 설정 (c)는 baseline (a) 대비 오히려 $-$24\% 성능이 저하된다.
 
@@ -400,7 +400,29 @@ DGI       &            & 0.034 & \underline{0.048} & 0.031 & \textbf{0.052} \\
 
 AMLworld에서도 HOFINET과 동일한 (d) $>$ (b) $>$ (a) $>$ (c) 순서가 모든 인코더에서 재현된다. BGRL 인코더 기준 설정 (d)에서 F1\_susp 0.068을 달성하여 baseline (a) 대비 +81\%의 상대적 개선을 보인다. 서브그래프 풀링 단독 적용(c)은 BGRL에서 $-$7\%, DGI에서 $-$9\% 악화되어, 행동적 view 없이는 풀링이 역효과를 낳는다는 HOFINET의 관찰이 재확인된다.
 
-HOFINET 대비 절대 성능이 현저히 낮은 원인은 두 데이터셋의 구조적 차이에 기인한다. AMLworld의 laundering 비율은 0.10\%로 HOFINET(2.13\%)보다 20배 더 불균형하다. 이에 따라 거래 그래프의 S-S/S-B 비율이 1:15.8로 HOFINET(1:5.7)보다 3배 더 희석되어 있다. 행동적 k-NN을 통해 S-S/S-B가 1:9.4로 개선되지만, HOFINET의 1:1.4만큼 효과적이지는 않다. 이는 극심한 불균형 하에서 행동적 유사도만으로는 laundering 계좌의 밀도를 충분히 복원하기 어려움을 시사한다.
+HOFINET 대비 절대 성능이 현저히 낮은 원인은 두 데이터셋의 구조적 차이에 기인한다. Table~\ref{tab:rq4_homophily}는 두 데이터셋의 S-S/S-B 비율을 비교한다.
+
+\begin{table}[t]
+\centering
+\caption{HOFINET과 AMLworld의 그래프 유형별 S-S/S-B 연결 비율 비교. 행동적 k-NN은 두 데이터셋 모두에서 S-S 비율을 개선하지만, AMLworld에서는 개선 폭이 제한적이다.}
+\label{tab:rq4_homophily}
+\small
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Dataset} & \textbf{Graph} & \textbf{Homophily} & \textbf{S-S} & \textbf{S-B} & \textbf{S-S/S-B} \\
+\midrule
+\multirow{2}{*}{HOFINET (2.13\%)}
+  & Transaction    & 0.690 & 257K & 1,469K & 1:5.7 \\
+  & Behavioral k-NN & \textbf{0.981} & 62K  & 88K    & \textbf{1:1.4} \\
+\midrule
+\multirow{2}{*}{AMLworld (1.23\%)}
+  & Transaction    & 0.886 & 37K  & 580K   & 1:15.8 \\
+  & Behavioral k-NN & \textbf{0.980} & 11K  & 103K   & \textbf{1:9.4} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+AMLworld의 의심 계좌 비율은 1.23\%로 HOFINET(2.13\%)보다 낮으며, 거래 그래프의 S-S/S-B 비율이 1:15.8로 HOFINET(1:5.7)보다 3배 더 희석되어 있다. 행동적 k-NN을 통해 S-S/S-B가 1:9.4로 개선되지만(1.7$\times$), HOFINET의 4.1$\times$ 개선(1:5.7$\rightarrow$1:1.4)에는 미치지 못한다. 이는 의심 계좌의 절대 밀도가 낮을수록 행동적 유사도만으로는 의심 계좌의 연결 밀도를 충분히 복원하기 어려움을 시사한다.
 
 그럼에도 불구하고, 상대적 개선 패턴이 두 데이터셋에서 일관되게 나타난다는 점이 핵심이다. 행동적 k-NN view가 S-S/S-B 비율을 개선하는 메커니즘은 데이터셋에 독립적으로 작동하며, 서브그래프 풀링과의 시너지 또한 재현된다. 이는 \texttt{BECON}의 설계 원리가 특정 데이터셋에 과적합된 것이 아니라, AML 도메인의 일반적 구조에 기반한 것임을 확인시켜 준다.
 
@@ -427,7 +449,7 @@ LightGBM  & Tabular        & 0.674 & \textbf{0.992} & \underline{0.662} \\
 GAT       & Supervised GNN & 0.469 & 0.984 & 0.531 \\
 GCN       & Supervised GNN & 0.250 & 0.954 & 0.363 \\
 \midrule
-\multicolumn{5}{l}{\textit{AMLworld HI-Small (laundering ratio: 0.10\%)}} \\
+\multicolumn{5}{l}{\textit{AMLworld HI-Small (suspicious ratio: 1.23\%)}} \\
 \midrule
 XGBoost   & Tabular        & \textbf{0.073} & \underline{0.742} & \textbf{0.036} \\
 LightGBM  & Tabular        & \underline{0.070} & \textbf{0.742} & \underline{0.037} \\
@@ -442,7 +464,7 @@ GCN       & Supervised GNN & 0.045 & 0.705 & 0.022 \\
 
 HOFINET에서 \texttt{BECON} 설정 (d)는 F1\_susp 0.682로 전체 모델 중 최고 성능을 기록한다. 라벨을 사용한 MLP(0.678), GraphSAGE(0.677), XGBoost(0.675), LightGBM(0.674)과 동등하거나 소폭 우수한 수준이다. 반면 GCN(0.250)과 GAT(0.469)는 상대적으로 낮은 성능을 보이는데, 이는 GCN의 over-smoothing 및 GAT의 학습 불안정성이 대규모 불균형 그래프에서 심화되기 때문이다.
 
-AMLworld에서는 트리 기반 모델(XGBoost 0.073, LightGBM 0.070)이 최고 성능을 기록하며, \texttt{BECON} (d)는 0.068로 근접한 3위를 달성한다. 주목할 점은 \texttt{BECON}이 GNN 기반 지도학습(GraphSAGE 0.051, GAT 0.048, GCN 0.045)을 크게 상회한다는 것이다. 이는 0.10\%의 극심한 불균형 하에서 GNN 지도학습이 라벨의 sparsity로 인해 효과적으로 학습되지 못하는 반면, \texttt{BECON}의 자기지도 사전학습은 라벨에 의존하지 않으므로 불균형에 강건함을 시사한다.
+AMLworld에서는 트리 기반 모델(XGBoost 0.073, LightGBM 0.070)이 최고 성능을 기록하며, \texttt{BECON} (d)는 0.068로 근접한 3위를 달성한다. 주목할 점은 \texttt{BECON}이 GNN 기반 지도학습(GraphSAGE 0.051, GAT 0.048, GCN 0.045)을 크게 상회한다는 것이다. 이는 1.23\%의 극심한 불균형 하에서 GNN 지도학습이 라벨의 sparsity로 인해 효과적으로 학습되지 못하는 반면, \texttt{BECON}의 자기지도 사전학습은 라벨에 의존하지 않으므로 불균형에 강건함을 시사한다.
 
 종합하면, 이 결과는 라벨 없이 학습한 자기지도 표현만으로도 완전 지도학습과 동등한 AML 탐지 성능을 달성할 수 있음을 보여준다. AML 도메인에서 라벨 획득은 수사기관의 확인 및 금융기관의 의심거래보고(STR)에 의존하여, 라벨이 부족하고 불완전한(incomplete labeling) 경우가 대부분이다. 따라서 라벨 없이 거래 행동 패턴만으로 의심 계좌를 탐지할 수 있는 자기지도 방법의 실용적 가치가 높다.
 
