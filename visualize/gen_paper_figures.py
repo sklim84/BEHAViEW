@@ -41,13 +41,13 @@ def fig2_ablation_matrix():
     im = ax.imshow(data, cmap='YlOrRd', vmin=0.1, vmax=0.75, aspect='equal')
 
     ax.set_xticks([0, 1])
-    ax.set_xticklabels(['Augmentation View', 'Behavioral k-NN View'], fontsize=10)
+    ax.set_xticklabels(['Augmentation\nView', 'Behavioral\nk-NN View'], fontsize=9.5, ha='center')
     ax.set_yticks([0, 1])
-    ax.set_yticklabels(['Node-Level', 'Subgraph\nPooling'], fontsize=10)
+    ax.set_yticklabels(['Node-Level', 'Subgraph\nPooling'], fontsize=9.5)
     ax.set_xlabel('View Construction', fontsize=11, labelpad=8)
     ax.set_ylabel('Contrastive Level', fontsize=11, labelpad=8)
 
-    ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
+    ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False, pad=6)
 
     for i in range(2):
         for j in range(2):
@@ -143,7 +143,7 @@ def fig4_bn_effect():
         ax.grid(axis='y', alpha=0.2, zorder=0)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        ax.legend(fontsize=8, loc='upper left', framealpha=0.9, edgecolor='#CCCCCC')
+        ax.legend(fontsize=8, loc='lower right', framealpha=0.9, edgecolor='#CCCCCC')
         plt.tight_layout()
         path = os.path.join(OUT_DIR, outname)
         fig.savefig(path, bbox_inches='tight')
