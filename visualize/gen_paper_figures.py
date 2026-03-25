@@ -120,82 +120,50 @@ def fig3_susp_connectivity():
 
 
 def fig4_bn_effect():
-    """Fig.4: BN effect — two-panel split by BN presence, independent y-scales."""
+    """Fig.4: BN effect — two separate PDF files for LaTeX subfigure."""
     c_baseline = '#B0C4DE'
     c_proposed = '#E74C3C'
     width = 0.34
 
-    fig, (ax_bn, ax_no) = plt.subplots(1, 2, figsize=(7, 3.2),
-                                        gridspec_kw={'width_ratios': [6, 4], 'wspace': 0.35})
+    def _make_panel(encoders, a_vals, d_vals, ylim, val_offset, figsize, outname):
+        fig, ax = plt.subplots(figsize=figsize)
+        x = np.arange(len(encoders))
+        ax.bar(x - width/2, a_vals, width, label='(a) Baseline',
+               color=c_baseline, edgecolor='white', linewidth=0.8, zorder=3)
+        bars_d = ax.bar(x + width/2, d_vals, width, label='(d) Proposed',
+               color=c_proposed, edgecolor='white', linewidth=0.8, zorder=3)
+        for bar, val in zip(bars_d, d_vals):
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + val_offset,
+                    f'{val:.3f}', ha='center', va='bottom', fontsize=7.5,
+                    fontweight='bold', color='#333333')
+        ax.set_ylabel('$F1_{susp}$', fontsize=11)
+        ax.set_xticks(x)
+        ax.set_xticklabels(encoders, fontsize=8.5)
+        ax.set_ylim(ylim)
+        ax.grid(axis='y', alpha=0.2, zorder=0)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.legend(fontsize=8, loc='upper left', framealpha=0.9, edgecolor='#CCCCCC')
+        plt.tight_layout()
+        path = os.path.join(OUT_DIR, outname)
+        fig.savefig(path, bbox_inches='tight')
+        fig.savefig(path.replace('.pdf', '.png'), bbox_inches='tight')
+        plt.close(fig)
+        print(f'Saved: {path}')
 
-    # === Left panel: With BatchNorm ===
+    # (a) With BatchNorm
     enc_bn = ['GBT', 'DGI\n+BN', 'MVGRL\n+BN', 'GRACE\n+BN', 'BGRL', 'GIN']
-    a_bn = [0.270, 0.271, 0.270, 0.286, 0.315, 0.149]
-    d_bn = [0.682, 0.682, 0.682, 0.681, 0.647, 0.570]
+    _make_panel(enc_bn,
+                [0.270, 0.271, 0.270, 0.286, 0.315, 0.149],
+                [0.682, 0.682, 0.682, 0.681, 0.647, 0.570],
+                (0, 0.79), 0.01, (4.0, 2.6), 'fig_rq3_bn_with.pdf')
 
-    x_bn = np.arange(len(enc_bn))
-    ax_bn.bar(x_bn - width/2, a_bn, width, label='(a) Baseline',
-              color=c_baseline, edgecolor='white', linewidth=0.8, zorder=3)
-    bars_d_bn = ax_bn.bar(x_bn + width/2, d_bn, width, label='(d) Proposed',
-              color=c_proposed, edgecolor='white', linewidth=0.8, zorder=3)
-
-    for bar, val in zip(bars_d_bn, d_bn):
-        ax_bn.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
-                   f'{val:.3f}', ha='center', va='bottom', fontsize=7,
-                   fontweight='bold', color='#333333')
-
-    ax_bn.set_ylabel('$F1_{susp}$', fontsize=11)
-    ax_bn.set_xticks(x_bn)
-    ax_bn.set_xticklabels(enc_bn, fontsize=8)
-    ax_bn.set_ylim(0, 0.79)
-    ax_bn.grid(axis='y', alpha=0.2, zorder=0)
-    ax_bn.spines['top'].set_visible(False)
-    ax_bn.spines['right'].set_visible(False)
-    ax_bn.legend(fontsize=7.5, loc='center left', framealpha=0.9, edgecolor='#CCCCCC',
-                 bbox_to_anchor=(0.0, 0.55))
-    ax_bn.set_title('With BatchNorm', fontsize=10, fontweight='bold', color='#2C3E50', pad=8)
-
-    # Subgroup separators
-    ax_bn.axvline(x=3.5, color='#E0E0E0', linestyle='--', linewidth=0.8, zorder=1)
-    ax_bn.text(1.5, 0.75, 'per-layer BN', ha='center', fontsize=7, color='#666666', fontstyle='italic')
-    ax_bn.text(4, 0.75, 'final', ha='center', fontsize=7, color='#666666', fontstyle='italic')
-    ax_bn.text(5, 0.75, 'GIN', ha='center', fontsize=7, color='#666666', fontstyle='italic')
-
-    # === Right panel: Without BatchNorm ===
+    # (b) Without BatchNorm
     enc_no = ['DGI', 'MVGRL', 'GRACE', 'GCA']
-    a_no = [0.045, 0.045, 0.045, 0.048]
-    d_no = [0.074, 0.071, 0.069, 0.085]
-
-    x_no = np.arange(len(enc_no))
-    ax_no.bar(x_no - width/2, a_no, width, label='(a) Baseline',
-              color=c_baseline, edgecolor='white', linewidth=0.8, zorder=3)
-    bars_d_no = ax_no.bar(x_no + width/2, d_no, width, label='(d) Proposed',
-              color=c_proposed, edgecolor='white', linewidth=0.8, zorder=3)
-
-    for bar, val in zip(bars_d_no, d_no):
-        ax_no.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.002,
-                   f'{val:.3f}', ha='center', va='bottom', fontsize=7,
-                   fontweight='bold', color='#333333')
-
-    ax_no.set_xticks(x_no)
-    ax_no.set_xticklabels(enc_no, fontsize=8)
-    ax_no.set_ylim(0, 0.12)
-    ax_no.grid(axis='y', alpha=0.2, zorder=0)
-    ax_no.spines['top'].set_visible(False)
-    ax_no.spines['right'].set_visible(False)
-    ax_no.set_title('Without BatchNorm', fontsize=10, fontweight='bold', color='#C62828', pad=8)
-
-    # Scale difference annotation
-    ax_no.text(0.5, 0.95, 'Note: y-axis scale\n differs from left panel',
-               transform=ax_no.transAxes, ha='center', va='top',
-               fontsize=6.5, color='#999999', fontstyle='italic')
-
-    plt.tight_layout()
-    path = os.path.join(OUT_DIR, 'fig_rq3_bn_effect.pdf')
-    plt.savefig(path, bbox_inches='tight')
-    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight')
-    plt.close()
-    print(f'Saved: {path}')
+    _make_panel(enc_no,
+                [0.045, 0.045, 0.045, 0.048],
+                [0.074, 0.071, 0.069, 0.085],
+                (0, 0.12), 0.002, (3.2, 2.6), 'fig_rq3_bn_without.pdf')
 
 
 def fig5_setting_comparison():
