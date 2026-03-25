@@ -30,14 +30,13 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안  ★ │
 
 ## 연구 질문
 
-| RQ | 질문 | 핵심 발견 |
-|----|------|----------|
-| **RQ1** | Behavioral k-NN view가 효과적인가? | (b) vs (a): BN encoder +80~151%, non-BN +24~31% |
-| **RQ2** | 왜 효과적인가? | F-F/F-B 비율 — Transaction 1:5.7 → Behavioral k-NN **1:1.4** |
-| **RQ3** | Subgraph pooling이 추가 개선을 가져오는가? | (d)>(b) 시너지, **(c)<(a) 단독 악화** — view가 선행 필수 |
-| **RQ4** | Encoder 설계가 성능에 미치는 영향은? | **BN 하나로 0.07→0.68** (~10배). 아키텍처 무관 |
-| **RQ5** | 다른 AML 데이터셋에서도 일반화되는가? | HOFINET + AMLworld 동일 패턴 재현 |
-| **RQ6** | Supervised 모델 대비 경쟁력은? | **라벨 없이 supervised 수준 도달** (0.682 vs 0.678) |
+| RQ | 질문 | 비교 | 핵심 발견 |
+|----|------|------|----------|
+| **RQ1** | Behavioral k-NN view가 AML 탐지에 효과적인가? 그리고 왜 효과적인가? | (b) vs (a), F-F/F-B 비율 분석 | +80~151% 개선. F-F/F-B가 1:5.7→1:1.4로 fraud 신호 복원 |
+| **RQ2** | Subgraph pooling이 추가 개선을 가져오는가? 어떤 조건에서 효과적인가? | (d) vs (b), (c) vs (a) | behavioral view와 결합 시에만 효과. 단독(c)은 오히려 악화 |
+| **RQ3** | Encoder 설계(BatchNorm)가 대규모 불균형 AML에서 성능에 미치는 영향은? | 10종 encoder (BN 유무) | BN만으로 0.07→0.68 (~10배). 아키텍처는 무관 |
+| **RQ4** | 다른 AML 데이터셋에서도 동일한 패턴이 재현되는가? | HOFINET + AMLworld | 두 데이터셋 모두 (d)>(b)>(a)>(c) 일관 |
+| **RQ5** | Supervised 모델 대비 라벨 없는 self-supervised가 경쟁력 있는가? | GCN/GAT/SAGE/MLP/LightGBM/XGBoost | SSL 0.682 ≈ Supervised 0.678, 라벨 없이 동등 |
 
 ---
 
@@ -64,7 +63,7 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안  ★ │
 
 ## 실험 결과
 
-### RQ1-3: 두 축 Ablation (HOFINET, F1_fraud, 4-seed 평균)
+### RQ1-2: 두 축 Ablation (HOFINET, F1_fraud, 4-seed 평균)
 
 | Encoder | (a) org | (b) behav view | (c) subgraph | (d) both ★ | BN | Conv |
 |---------|---------|---------------|-------------|------------|-----|------|
@@ -79,7 +78,7 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안  ★ │
 | MVGRL | 0.045 | 0.056 (+24%) | 0.048 (+7%) | 0.071 (+56%) | ❌ | GCN |
 | GRACE | 0.045 | 0.056 (+27%) | 0.046 (+4%) | 0.069 (+54%) | ❌ | GCN |
 
-### RQ2: Fraud 연결성 분석
+### RQ1: Fraud 연결성 분석 (왜 효과적인가)
 
 | 그래프 | Homophily | F-F | F-B | F-F/F-B | 의미 |
 |--------|-----------|-----|-----|---------|------|
@@ -87,7 +86,7 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안  ★ │
 | Structural k-NN | 0.965 | 16K | 159K | **1:9.7** | 더 심하게 묻힘 |
 | **Behavioral k-NN** | **0.981** | **62K** | **88K** | **1:1.4** | fraud 신호 보존 |
 
-### RQ5: AMLworld 일반성 검증
+### RQ4: AMLworld 일반성 검증
 
 | Encoder | (a) org | (b) behav | (c) sub | (d) both | BN |
 |---------|---------|----------|---------|----------|-----|
@@ -99,7 +98,7 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안  ★ │
 - **동일 패턴 재현**: (d) > (b) > (a) > (c) — 두 데이터셋에서 일관
 - 절대 성능 차이는 불균형도 차이 (HOFINET 2.13% vs AMLworld 0.10%)에 기인
 
-### RQ6: Supervised 모델 비교 (HOFINET)
+### RQ5: Supervised 모델 비교 (HOFINET)
 
 | 모델 | F1_fraud | AUROC | 타입 |
 |------|----------|-------|------|

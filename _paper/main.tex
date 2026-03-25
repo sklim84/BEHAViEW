@@ -1,0 +1,179 @@
+% \documentclass[sigconf,nonacm]{acmart}
+\documentclass[sigconf,review]{acmart}
+
+% \usepackage{multirow}
+\usepackage{multirow, multicol, caption}
+\captionsetup[table]{skip=2pt}
+\usepackage{adjustbox}
+\usepackage[ruled,noend]{algorithm2e} 
+\DontPrintSemicolon
+\usepackage{algorithmic}
+\usepackage{bm}
+\usepackage[utf8]{inputenc}
+\usepackage[cjk]{kotex}
+\usepackage[textsize=small]{todonotes}
+\usepackage{subfigure}
+\usepackage{booktabs}
+\usepackage{lipsum}
+\usepackage[switch]{lineno}
+\usepackage{bm}
+\usepackage{adjustbox}
+\usepackage{subfigure}
+\urlstyle{same}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{multicol}
+% \usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{rotating}
+\usepackage{colortbl}
+\usepackage{enumitem}
+% \usepackage{pgfplots}
+\usepackage{makecell}
+\usepackage{amsmath}
+\usepackage{tablefootnote}
+\usepackage{graphicx}
+\usepackage{placeins}
+\usepackage{xurl}   % 또는 \usepackage{url}
+\newcommand{\model}[1]{\texttt{\small\nolinkurl{#1}}}
+%%%%%%%%%%%%%%%%%%%%   CUSTOM COMMAND    %%%%%%%%%%%%%%%%%%%%%
+% \newcommand{\TODO}{\textcolor{red}{TODO}}
+% \newcommand{\FIXME}{\textcolor{red}{FIXME}}
+\newcommand{\RED}[1]{\textcolor{black}{#1}}
+\newcommand{\BLUE}[1]{\textcolor{black}{#1}}
+\newcommand{\kt}[1]{\textcolor{black}{#1}}
+% \newcommand{\MG}[1]{\textcolor{magenta}{#1}}
+% \newenvironment{thisnote}{\par\color{blue}}{\par}
+% \usepackage[textsize=small]{todonotes}
+% \usepackage{marginnote}
+%  \let\marginpar\marginnote
+% \setlength{\marginparwidth}{1.5cm}
+% \newcommand{\insertref}[1]{\todo[color=green!40]{#1}}
+% \newcommand{\explainindetail}[1]{\todo[color=red!40]{#1}}
+% \newcommand{\insertcomment}[1]{\todo[]{#1}}
+% \newcommand{\insertdone}[1]{\todo[fancyline,color=red!20!white]{#1}}
+% \newcommand{\inserttag}[1]{\todo[fancyline,color=red!20!white]{#1}}
+% \newcommand{\inserttodo}[1]{\todo[inline, inlinewidth=6cm]{#1}}
+% \newcommand{\fancytodo}[1]{\todo[fancyline]{#1}}
+\newcommand{\method}{BECON\xspace}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}} % check mark
+\newcommand{\xmark}{\ding{55}} % x mark
+%%%%%%%%%%%%%%%%%%%%   CUSTOM COMMAND    %%%%%%%%%%%%%%%%%%%%%
+
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+\settopmatter{printacmref=false}
+% \renewcommand{\footnotetextcopyrightpermission}[1]{}
+% \pagestyle{plain}
+
+%% Conference information
+% \acmConference[KDD'26]{ACM SIGKDD Conference on Knowledge Discovery and Data Mining}{August 9--13, 2026}{Jeju, Republic of Korea}
+% \acmYear{2026}
+% \copyrightyear{2026}
+
+\begin{document}
+
+% 한글 제목: BECON: 저동질성 거래 네트워크에서의 자금세탁 탐지를 위한
+%           행동 서브그래프 대조학습
+% BECON = BEhavioral CONtrast
+\title{BECON: Behavioral Subgraph Contrast for Anti-Money Laundering in Low-Homophily Transaction Networks}
+
+% \author{Seonkyu Lim}
+% \email{{sklim}@kftc.or.kr}
+% \affiliation{%
+%   \institution{KFTC}
+%   \city{Seoul}
+%   \country{South Korea}
+% }
+
+
+\renewcommand{\shortauthors}{\method}
+
+
+\begin{abstract}
+자금세탁 탐지는 금융 시스템의 건전성을 위해 필수적이나, 거래 네트워크의 저동질성과 극심한 클래스 불균형으로 인해 기존 접근법은 한계를 보인다. 최근 그래프 대조학습이 라벨 부족 환경에서 유망한 대안으로 부상하고 있으나, 기존 모델은 동일 그래프에 대한 확률적 증강으로 contrastive view를 생성하여 거래 네트워크 고유의 특성을 충분히 활용하지 못한다. 본 연구는 그래프 대조학습의 자금세탁 탐지 성능을 결정하는 두 독립 축을 분석한다. 첫째, 어떤 그래프를 contrastive view로 사용할 것인가에 관한 View 구성이며, 둘째, 어떤 수준에서 표현을 대조할 것인가에 관한 Contrastive Level이다. 이를 위해 거래 금액과 매체 및 자금 유형 등 행동적 유사도에 기반한 k-NN 그래프를 보조 view로 구축하고, 서브그래프 수준의 이웃 집계를 적용하는 통합 프레임워크 \texttt{BECON}을 제안한다. 실제 은행간 이체 데이터인 HOFINET과 NeurIPS 2023에서 공개된 합성 벤치마크 AMLworld에서의 실험을 통해 다음을 밝힌다. 행동적 k-NN view는 의심 계좌 간 연결 비율을 크게 개선하여 저동질성 거래 그래프에서 동질성을 효과적으로 복원한다. 서브그래프 풀링은 행동적 view와 결합할 때만 효과적이며, 단독 적용 시 오히려 성능이 저하된다. 또한, BatchNorm이 대규모 불균형 환경에서 결정적 역할을 하며, 다양한 인코더 아키텍처에 대한 비교 실험을 통해 BatchNorm의 유무가 성능을 결정하는 핵심 요인임을 밝힌다. 나아가, 제안 방법은 라벨 없이 학습한 자기지도 표현만으로 다수의 지도학습 모델과 동등한 탐지 성능을 달성하여, 라벨 획득이 어려운 자금세탁 탐지 도메인에서의 실용적 가치를 입증한다.
+\end{abstract}
+
+\keywords{anti-money laundering, graph contrastive learning, k-NN graph view, subgraph pooling, low-homophily, transaction networks}
+
+\maketitle
+
+\section{Introduction}
+
+\section{Related Work}
+
+\section{Proposed Method}
+
+\section{Experiments}
+
+본 장에서는 제안 프레임워크를 다음의 연구 질문을 통해 평가한다.
+\begin{itemize}[leftmargin=*]
+    \item \textbf{RQ1.} 행동적 k-NN view가 AML 탐지에 효과적인가? 그리고 왜 효과적인가?
+    \item \textbf{RQ2.} 서브그래프 풀링이 추가 개선을 가져오는가? 어떤 조건에서 효과적인가?
+    \item \textbf{RQ3.} 인코더 설계(BatchNorm)가 대규모 불균형 AML에서 성능에 미치는 영향은?
+    \item \textbf{RQ4.} 다른 AML 데이터셋에서도 동일한 패턴이 재현되는가?
+    \item \textbf{RQ5.} 지도학습 모델 대비 라벨 없는 자기지도학습이 경쟁력 있는가?
+\end{itemize}
+
+\subsection{실험 환경}
+
+모든 실험은 Python 3.12, PyTorch 2.10, CUDA 12.8 환경에서 NVIDIA A100 80GB GPU 위에서 수행하였다.
+
+\subsubsection{데이터셋}
+
+본 연구에서는 실제 및 합성 AML 데이터셋 두 가지를 사용한다.
+
+\textbf{HOFINET.} 전자금융공동망(KFTC)의 실제 은행간 이체 데이터로, 452,816개 계좌(노드)와 4,732,130건의 유향 멀티엣지로 구성된다. 의심 계좌 비율은 2.13\%이며, 분할거래(structuring), 신규수신처(layering) 등 6가지 AML 유형을 포함한다. 데이터 기간은 2021년 3분기부터 2024년 4분기까지 40개월이다.
+
+\textbf{AMLworld HI-Small.} NeurIPS 2023 Datasets \& Benchmarks Track에서 공개된 합성 AML 벤치마크로, 515,088개 계좌와 5,078,345건의 유향 멀티엣지로 구성된다. Laundering 비율은 0.10\%로 HOFINET보다 20배 더 불균형하며, fan-out, scatter-gather, cycle 등 8가지 AML 패턴을 모델링한다. GCPAL 논문에서도 동일 데이터셋을 사용하여 직접 비교가 가능하다.
+
+\subsubsection{베이스라인}
+
+\textbf{자기지도(Self-supervised).} 통합 프레임워크(subgraph\_cl.py)를 통해 10종의 인코더를 실험한다: BGRL, GBT, DGI, MVGRL, GRACE, GCA (BN 미포함) 및 DGI+BN, MVGRL+BN, GRACE+BN, GIN (BN 포함). 각 인코더에 대해 (a) augmentation view, (b) behavioral view, (c) subgraph pooling, (d) behavioral view + subgraph pooling의 4가지 설정을 교차 실험한다.
+
+\textbf{지도학습(Supervised).} GNN 기반(GCN, GAT, GraphSAGE), 신경망(MLP), 트리 기반(LightGBM, XGBoost) 총 6종의 지도학습 모델을 비교 대상으로 사용한다. 모든 지도학습 모델에는 클래스 가중치(class weight) 기반 불균형 보정을 적용한다.
+
+\subsubsection{평가 지표}
+
+주요 지표로 의심 클래스(positive class)의 F1-score(F1\_fraud)를 사용한다. 보조 지표로 AUROC와 AUPRC를 함께 보고한다. 모든 실험은 4개 시드(2024, 2025, 2026, 2027)의 평균으로 보고하며, 10\%/80\% train/test 분할을 사용한다. 자기지도 모델은 frozen embedding에 대해 LogisticRegression으로 평가한다.
+
+\subsection{행동적 k-NN View의 효과와 메커니즘 (\textbf{RQ1})}
+
+행동적 k-NN view의 효과를 검증하기 위해 설정 (b)와 (a)를 비교한다. BN을 포함한 인코더에서 +80\%$\sim$151\%의 F1\_fraud 개선을 달성하였으며, BN이 없는 인코더에서도 +24\%$\sim$31\%의 일관된 개선을 보인다.
+
+이러한 효과의 메커니즘을 분석하기 위해 각 그래프의 Fraud-Fraud/Fraud-Benign(F-F/F-B) 연결 비율을 측정하였다. 원래 거래 그래프에서는 F-F/F-B = 1:5.7로 의심 계좌가 정상 계좌에 묻혀 있으나, 행동적 k-NN 그래프에서는 1:1.4로 크게 개선된다. 이는 자금세탁 계좌들이 분할거래(structuring), 반복이체(layering) 등으로 인해 유사한 거래 금액 패턴을 공유하기 때문이며, 행동적 유사도 기반 k-NN 구축 시 의심 계좌끼리 자연스럽게 연결되어 GNN의 이웃 집계(neighborhood aggregation)가 fraud 정보를 효과적으로 수집할 수 있게 된다.
+
+\subsection{서브그래프 풀링: 언제 도움이 되는가? (\textbf{RQ2})}
+
+서브그래프 풀링의 효과는 결합 조건에 따라 상반된 결과를 보인다. 행동적 k-NN view 위에 서브그래프 풀링을 추가한 설정 (d)는 (b) 대비 소폭 추가 개선을 달성한다. 반면, 원래 거래 그래프에서 서브그래프 풀링만 적용한 설정 (c)는 (a) 대비 오히려 -19\%$\sim$25\% 성능이 저하된다.
+
+이는 서브그래프 풀링이 이웃 정보를 명시적으로 집계하여 그래프의 연결 패턴을 증폭하는 특성에 기인한다. 행동적 k-NN 그래프(F-F/F-B 1:1.4)에서는 fraud 이웃 정보가 증폭되어 개선으로 이어지지만, 원래 거래 그래프(F-F/F-B 1:5.7)에서는 benign 이웃의 noise가 증폭되어 오히려 악화된다. 이 결과는 view 구성이 선행되어야 서브그래프 풀링이 효과적임을 시사한다.
+
+\subsection{BatchNorm의 결정적 역할 (\textbf{RQ3})}
+
+10종 인코더에 대한 비교 실험 결과, BatchNorm(BN)의 유무가 성능을 결정하는 가장 핵심적인 요인임을 발견하였다. BN을 포함한 인코더(GBT, DGI+BN, MVGRL+BN, GRACE+BN)는 F1\_fraud 0.681$\sim$0.682를 달성한 반면, BN이 없는 인코더(DGI, MVGRL, GRACE, GCA)는 0.069$\sim$0.085에 그쳤다. BN 추가만으로 약 10배의 성능 향상을 얻을 수 있다.
+
+세부적으로, per-layer BN(GBT 등, 0.682)이 final-only BN(BGRL, 0.647)보다 우수하며, GCNConv(0.682)가 GINConv(0.570)보다 효과적이다. 반면 활성함수(PReLU vs ReLU)나 Dropout 유무는 부차적이다. 이는 452K 노드, 2\% fraud의 대규모 불균형 환경에서 BN이 학습 안정화에 필수적이며, BN 없이는 표현이 다수 클래스(benign)에 collapse됨을 의미한다.
+
+\subsection{AML 데이터셋 간 일반성 검증 (\textbf{RQ4})}
+
+AMLworld HI-Small 데이터셋에서도 (d) $>$ (b) $>$ (a) $>$ (c)의 패턴이 동일하게 재현된다. BGRL 인코더 기준 설정 (d)에서 F1\_fraud 0.068을 달성하여 baseline (a) 대비 +81\%의 개선을 보인다.
+
+HOFINET 대비 절대 성능이 낮은 원인은 AMLworld의 laundering 비율이 0.10\%로 HOFINET(2.13\%)보다 20배 더 불균형하고, F-F/F-B 비율이 1:15.8로 HOFINET(1:5.7)보다 3배 더 희석되어 있기 때문이다. 행동적 k-NN이 F-F/F-B를 1:9.4로 개선하지만 HOFINET(1:1.4)만큼 효과적이지는 않다. 그러나 상대적 개선 패턴은 데이터셋에 독립적으로 일관되게 나타나, 제안 방법의 일반성을 확인할 수 있다.
+
+\subsection{지도학습 모델과의 비교 (\textbf{RQ5})}
+
+HOFINET에서 제안 방법의 설정 (d)는 F1\_fraud 0.682를 달성하여, 라벨을 사용한 지도학습 모델인 MLP(0.678), GraphSAGE(0.677), XGBoost(0.675), LightGBM(0.674)과 동등한 성능을 보인다. 반면 GCN(0.250)과 GAT(0.469)는 상대적으로 낮은 성능을 기록하였다.
+
+이 결과는 라벨 없이 학습한 자기지도 표현만으로도 완전 지도학습과 동등한 AML 탐지 성능을 달성할 수 있음을 보여준다. AML 도메인에서 라벨 획득은 수사 및 신고 결과에 의존하여 부족하고 불완전한 경우가 대부분이므로, 자기지도 방법의 실용적 가치가 높다.
+
+\section{Conclusion and Future Work}
+
+\clearpage
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{aml}
+
+\end{document}
