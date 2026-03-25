@@ -1,0 +1,6 @@
+[Wed Mar 25 20:28:55 KST 2026] === HOFINET (a)/(b) Multi-seed ===
+
+===== gbt =====
+[Wed Mar 25 20:28:55 KST 2026] gbt s2024 (a)
+(E): Best test F1Mi=0.9001, F1Ma=0.6088, F1_susp=0.2712
+[Wed Mar 25 20:30:25 KST 2026] gbt s2024 (b)
