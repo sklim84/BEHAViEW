@@ -17,12 +17,10 @@
 
 **4가지 설정 (ablation):**
 
-```
-                        View 구성
-                   Augmentation    Behavioral k-NN
-Contrastive  Node │ (a) baseline  │ (b) view 변경    │
-Level        Sub  │ (c) level 변경│ (d) 최종 제안  ★ │
-```
+| | Augmentation View | Behavioral k-NN View |
+|---|:---:|:---:|
+| **Node-Level** | (a) baseline | (b) +view |
+| **Subgraph Pooling** | (c) +level | **(d) proposed ★** |
 
 ---
 
