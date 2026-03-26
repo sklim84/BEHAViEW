@@ -37,8 +37,7 @@ def fig2_ablation_matrix():
     ])
 
     fig, ax = plt.subplots(figsize=(4.5, 3.5))
-    cmap = plt.cm.RdYlGn  # diverging: red(bad) → green(good)
-    im = ax.imshow(data, cmap='YlOrRd', vmin=0.1, vmax=0.75, aspect='equal')
+    im = ax.imshow(data, cmap='GnBu', vmin=0.1, vmax=0.75, aspect='equal')
 
     ax.set_xticks([0, 1])
     ax.set_xticklabels(['Augmentation\nView', 'Behavioral\nk-NN View'], fontsize=9.5, ha='center')

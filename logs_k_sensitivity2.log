@@ -1,0 +1,23 @@
+[Thu Mar 26 13:08:53 KST 2026] === k-sensitivity experiments ===
+===== k=5 =====
+  skip b k=5 s=2024
+  skip b k=5 s=2025
+  skip b k=5 s=2026
+  skip b k=5 s=2027
+===== k=10 =====
+  skip b k=10 s=2024
+  skip b k=10 s=2025
+  skip b k=10 s=2026
+  skip b k=10 s=2027
+===== k=20 =====
+  skip b k=20 s=2024
+  skip b k=20 s=2025
+  skip b k=20 s=2026
+  skip b k=20 s=2027
+===== k=50 =====
+  skip b k=50 s=2024
+  skip b k=50 s=2025
+  skip b k=50 s=2026
+  skip b k=50 s=2027
+[Thu Mar 26 13:08:53 KST 2026] === Done ===
+33 ./results/exp_results_k_sensitivity.csv
