@@ -60,20 +60,29 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안  ★ │
 | Structural k-NN | 0.965 | 16K | 159K | 1:9.7 |
 | **Behavioral k-NN** | **0.981** | **62K** | **88K** | **1:1.4** |
 
-### 두 축 Ablation (HOFINET, F1_susp, 4-seed 평균)
+### 두 축 Ablation (HOFINET, F1_susp, 4-seed mean±std)
 
 | Encoder | (a) org | (b) behav view | (c) subgraph | (d) both ★ | BN |
 |---------|---------|---------------|-------------|------------|-----|
-| GBT | 0.270 | **0.678** | 0.205 | **0.682** | Per-layer |
-| DGI+BN | 0.271 | **0.678** | 0.204 | **0.682** | Per-layer |
-| MVGRL+BN | 0.270 | 0.677 | 0.204 | **0.682** | Per-layer |
-| GRACE+BN | 0.286 | 0.676 | 0.218 | **0.681** | Per-layer |
-| BGRL | 0.315 | 0.566 | 0.254 | **0.647** | Final |
-| GIN | 0.149 | 0.545 | 0.121 | **0.570** | GINConv |
-| GCA | 0.048 | 0.064 | 0.049 | 0.085 | None |
-| DGI | 0.045 | 0.058 | 0.048 | 0.074 | None |
-| MVGRL | 0.045 | 0.056 | 0.048 | 0.071 | None |
-| GRACE | 0.045 | 0.056 | 0.046 | 0.069 | None |
+| GBT | 0.271±.004 | **0.678±.008** | 0.205 | **0.682** | Per-layer |
+| DGI+BN | 0.270±.002 | **0.678±.008** | 0.204 | **0.682** | Per-layer |
+| MVGRL+BN | 0.272±.005 | 0.677±.008 | 0.204 | **0.682** | Per-layer |
+| GRACE+BN | 0.286±.006 | 0.676±.008 | 0.218 | **0.681** | Per-layer |
+| BGRL | 0.313±.001 | 0.565±.008 | 0.254 | **0.647** | Final |
+| GIN | 0.153±.021 | 0.548±.019 | 0.121 | **0.570** | GINConv |
+| GCA | 0.047±.002 | 0.064±.004 | 0.049 | 0.085 | None |
+| DGI | 0.045±.001 | 0.057±.007 | 0.048 | 0.074 | None |
+| MVGRL | 0.045±.001 | 0.057±.002 | 0.048 | 0.071 | None |
+| GRACE | 0.045±.000 | 0.057±.001 | 0.046 | 0.069 | None |
+
+### k-NN 이웃 수 민감도 (GBT, HOFINET)
+
+| k | (b) F1_susp | (d) F1_susp |
+|---|-------------|-------------|
+| 5 | 0.672±.009 | 0.676±.006 |
+| **10** | **0.678±.008** | **0.682±.008** |
+| 20 | 0.668±.008 | 0.671±.008 |
+| 50 | 0.662±.008 | 0.661±.007 |
 
 ### Supervised 모델 비교 (HOFINET)
 
@@ -90,10 +99,11 @@ Level        Sub  │ (c) level 변경│ (d) 최종 제안  ★ │
 ### 핵심 발견
 
 1. **Behavioral view가 핵심**: 모든 encoder에서 일관된 개선, S-S/S-B 비율 4배 개선
-2. **Subgraph pooling은 view와 결합 시에만 효과적**: 단독 적용 시 noise 증폭으로 악화
+2. **Subgraph pooling은 조건부 증폭기**: 행동적 view 결합 시에만 효과, 단독 시 noise 증폭
 3. **BatchNorm이 결정적**: ~10배 성능 격차, per-layer BN encoder 4종 모두 0.681~0.682 수렴
-4. **일반성 확인**: HOFINET + AMLworld 두 데이터셋에서 동일 (d)>(b)>(a)>(c) 패턴
-5. **라벨 없이 Supervised와 동등**: Self-supervised 0.682 ≈ MLP 0.678
+4. **k=10 최적, 강건**: k=5~50 범위에서 안정적 (0.661~0.682)
+5. **일반성 확인**: HOFINET + AMLworld 두 데이터셋에서 동일 패턴
+6. **라벨 없이 Supervised와 동등**: Self-supervised 0.682 ≈ MLP 0.678
 
 ---
 
@@ -117,9 +127,11 @@ python models/subgraph_cl.py \
 # Supervised baseline 비교
 python models/supervised_baselines.py --gpu 0 --dataset hofinet
 
-# 전체 ablation (HOFINET / AMLworld)
-bash scripts/run_ablation_abcd.sh
-bash scripts/run_amlworld.sh
+# 실험 스크립트
+bash scripts/run_ablation_abcd.sh              # HOFINET 4-setting ablation
+bash scripts/run_amlworld.sh                    # AMLworld 실험
+bash scripts/run_hofinet_ab_multiseed.sh        # HOFINET (a)/(b) multi-seed
+bash scripts/run_k_sensitivity_exp_only.sh      # k 민감도 실험
 ```
 
 ---
@@ -128,6 +140,8 @@ bash scripts/run_amlworld.sh
 
 ```
 _paper/                          # 논문 소스 (LaTeX)
+  figures/                       # 논문 figure (PDF/SVG/PNG)
+  reviews/                       # 리뷰어 피드백
 models/
   subgraph_cl.py                 # 통합 프레임워크 (10종 encoder, 4 settings)
   supervised_baselines.py        # Supervised 비교 (6종)
@@ -140,6 +154,8 @@ analysis/
 scripts/
   run_ablation_abcd.sh           # HOFINET ablation 실험
   run_amlworld.sh                # AMLworld 실험
+  run_hofinet_ab_multiseed.sh    # HOFINET multi-seed (a)/(b)
+  run_k_sensitivity_exp_only.sh  # k 민감도 실험
 visualize/
   gen_paper_figures.py           # 논문 figure 생성
   gen_intro_variants.py          # Intro figure 변형
@@ -147,6 +163,7 @@ visualize/
 config.py                       # 공통 argparse
 data_loader.py                   # 데이터 로딩
 utils.py                         # 공통 유틸리티
+results/                         # 실험 결과 CSV
 ```
 
 ---
