@@ -337,11 +337,11 @@ $\mathbf{Z} \leftarrow [\mathbf{S}^{(1)} \| \mathbf{S}^{(2)}]$\;
 
 \subsubsection{Evaluation Metrics}
 
-주요 지표로 의심 클래스(positive class)의 F1-score(F1\_susp)를 사용한다. 보조 지표로 AUROC와 AUPRC를 함께 보고한다. 모든 실험은 4개 시드(2024, 2025, 2026, 2027)의 평균±표준편차로 보고하며, 10\%/10\%/80\% train/validation/test 분할을 사용한다. 자기지도 모델은 학습된 인코더의 파라미터를 고정하고, 두 view의 표현을 결합한 임베딩 $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$ (Eq.~\eqref{eq:concat})에 대해 LogisticRegression 분류기로 평가한다.
+주요 지표로 의심 클래스(positive class)의 F1-score(F1\_susp)를 사용한다. 보조 지표로 AUROC와 AUPRC를 함께 보고한다. 모든 실험은 4개 시드(2024, 2025, 2026, 2027)의 평균±표준편차로 보고하며, 10\%/10\%/80\% train/validation/test 분할을 사용한다. 각 시드에서 동일한 분할이 모든 모델과 설정에 적용되어 완전한 paired 비교를 보장하며, 주요 비교에 대해 seed-level paired t-test로 통계적 유의성을 검증한다. 자기지도 모델은 학습된 인코더의 파라미터를 고정하고, 두 view의 표현을 결합한 임베딩 $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$ (Eq.~\eqref{eq:concat})에 대해 LogisticRegression 분류기로 평가한다.
 
 \subsection{Effectiveness and Mechanism of Behavioral k-NN View (RQ1)}\label{subsec:rq1}
 
-행동적 k-NN view의 효과를 검증하기 위해 설정 (b)와 baseline (a)를 10종 인코더에 걸쳐 비교한다. Table~\ref{tab:rq1}은 두 설정의 F1\_susp를 보여준다. BN을 포함한 인코더에서 +80\%$\sim$151\%의 개선을 달성하였으며, BN이 없는 인코더에서도 +24\%$\sim$31\%의 일관된 개선을 보인다. 특히 per-layer BN 인코더(GBT, DGI+BN, MVGRL+BN, GRACE+BN)는 행동적 k-NN view 적용만으로 baseline 0.270$\sim$0.286에서 0.676$\sim$0.678로 약 2.5배의 성능 향상을 달성하였다. BGRL(final-only BN)은 0.313에서 0.565로, GIN(GINConv+BN)은 0.153에서 0.548로 각각 +81\%, +258\% 개선되었다.
+행동적 k-NN view의 효과를 검증하기 위해 설정 (b)와 baseline (a)를 10종 인코더에 걸쳐 비교한다. Table~\ref{tab:rq1}은 두 설정의 F1\_susp를 보여준다. BN을 포함한 인코더에서 +80\%$\sim$151\%의 개선을 달성하였으며, BN이 없는 인코더에서도 +27\%$\sim$36\%의 일관된 개선을 보인다. 특히 per-layer BN 인코더(GBT, DGI+BN, MVGRL+BN, GRACE+BN)는 행동적 k-NN view 적용만으로 baseline 0.270$\sim$0.286에서 0.676$\sim$0.678로 약 2.5배의 성능 향상을 달성하였다. BGRL(final-only BN)은 0.313에서 0.565로, GIN(GINConv+BN)은 0.153에서 0.548로 각각 +81\%, +258\% 개선되었다. 모든 BN 인코더에 대해 4-seed paired t-test를 수행한 결과, (a)에서 (b)로의 개선이 모두 통계적으로 유의하였다 ($p<0.001$; 동일 seed에서 동일 train/validation/test 분할을 사용한 paired 비교).
 
 \begin{table}[t]
 \centering
@@ -535,11 +535,11 @@ GCN       & Supervised GNN & 0.045{\scriptsize±.000} & 0.705{\scriptsize±.001}
 HOFINET에서 \method 설정 (d)는 F1\_susp 0.682로 전체 모델 중 최고 성능을 기록한다. 라벨을 사용한 MLP(0.678), GraphSAGE(0.677), XGBoost(0.675), LightGBM(0.674)과 동등하거나 소폭 우수한 수준이다. 반면 GCN(0.250)과 GAT(0.469)는 상대적으로 낮은 성능을 보이는데, 이는 GCN의 over-smoothing 및 GAT의 학습 불안정성이 대규모 불균형 그래프에서 심화되기 때문이다.
 
 AMLworld에서는 트리 기반 모델(XGBoost 0.073, LightGBM 0.070)이 최고 성능을 기록하며, \method (d)는 0.068로 근접한 3위를 달성한다. 주목할 점은 \method이 GNN 기반 지도학습(GraphSAGE 0.051, GAT 0.048, GCN 0.045)을 크게 상회한다는 것이다. 이는 1.23\%의 극심한 불균형 하에서 GNN 지도학습이 라벨의 sparsity로 인해 효과적으로 학습되지 못하는 반면, \method의 자기지도 사전학습은 라벨에 의존하지 않으므로 불균형에 강건함을 시사한다.
-종합하면, 라벨 없이 학습한 자기지도 표현만으로도 완전 지도학습과 동등한 AML 탐지 성능을 달성할 수 있다. AML 도메인에서 라벨 획득은 수사기관의 확인 및 금융기관의 의심거래보고(STR)에 의존하여 부족하고 불완전한 경우가 대부분이므로, 라벨 없이 거래 행동 패턴만으로 의심 계좌를 탐지할 수 있는 자기지도 방법의 실용적 가치가 높다.
+종합하면, HOFINET에서는 라벨 없이 학습한 자기지도 표현만으로 완전 지도학습과 동등한 탐지 성능을 달성하였다. AMLworld에서는 트리 기반 모델에 소폭 미달하나 GNN 지도학습을 상회하여, 라벨이 극히 희소한 환경에서 자기지도 접근의 강건성을 확인하였다. AML 도메인에서 라벨 획득은 수사기관의 확인 및 금융기관의 의심거래보고(STR)에 의존하여 부족하고 불완전한 경우가 대부분이므로, 라벨 없이 거래 행동 패턴만으로 의심 계좌를 탐지할 수 있는 자기지도 방법의 실용적 가치가 높다.
 
 \section{Conclusion and Future Work}
 
-본 연구에서는 저동질성 거래 네트워크에서의 자금세탁 탐지를 위한 그래프 대조학습 프레임워크 \method 을 제안하였다. view 구성과 contrastive level의 두 독립 축에 대한 체계적 분석을 통해, 행동적 k-NN view가 S-S/S-B 비율을 1:5.7에서 1:1.4로 개선하여 동질성을 효과적으로 복원하고, 서브그래프 풀링은 S-S 연결 밀도가 높은 환경에서만 조건부로 효과적임을 규명하였다. 또한 10종 인코더에 대한 비교를 통해 BatchNorm이 contrastive paradigm보다 결정적인 성능 요인임을 밝혔으며, 라벨 없이 학습한 자기지도 표현만으로 지도학습 모델과 동등한 탐지 성능을 달성하여 실용적 가치를 입증하였다.
+본 연구에서는 저동질성 거래 네트워크에서의 자금세탁 탐지를 위한 그래프 대조학습 프레임워크 \method 을 제안하였다. view 구성과 contrastive level의 두 독립 축에 대한 체계적 분석을 통해, 행동적 k-NN view가 S-S/S-B 비율을 1:5.7에서 1:1.4로 개선하여 동질성을 효과적으로 복원하고, 서브그래프 풀링은 S-S 연결 밀도가 높은 환경에서만 조건부로 효과적임을 규명하였다. 또한 10종 인코더에 대한 비교를 통해 BatchNorm이 contrastive paradigm보다 결정적인 성능 요인임을 밝혔으며, HOFINET에서는 라벨 없이 학습한 자기지도 표현만으로 지도학습 모델과 동등한 탐지 성능을 달성하였고, AMLworld에서는 GNN 지도학습을 상회하여 라벨 희소 환경에서의 실용적 가치를 입증하였다.
 
 본 연구는 전이적(transductive) 설정에서만 검증되었고, 서브그래프 풀링의 개선 폭이 제한적(+0.005)이며, 행동적 피처 분류의 유효성이 모든 AML 데이터셋에서 확인되지 않았다는 한계가 있다. 향후 동적/시간적 그래프로의 확장, 학습 가능한 피처 선택 메커니즘의 개발, 귀납적(inductive) 설정 지원, 추가 공개 데이터셋에서의 일반성 검증을 계획한다.
 
