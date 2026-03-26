@@ -1,6 +1,8 @@
 # BECON: Behavioral Subgraph Contrast for Anti-Money Laundering in Low-Homophily Transaction Networks
 
-자금세탁(AML) 탐지를 위한 그래프 대조학습(GCL) 프레임워크. GCL의 성능을 결정하는 **두 독립 축**(View Construction × Contrastive Level)을 체계적으로 분석하고, 최적 조합을 도출합니다.
+거래 네트워크의 **저동질성**(low-homophily)과 **극심한 클래스 불균형**(~2% 의심 비율)으로 인해 기존 GNN 및 그래프 대조학습(GCL) 기반 자금세탁(AML) 탐지는 한계를 보입니다.
+**BECON**은 행동적 유사도 기반 k-NN 그래프를 contrastive view로 구축하여 의심 계좌 간 연결 비율(S-S/S-B)을 1:5.7에서 1:1.4로 크게 개선하고, 서브그래프 풀링과의 결합을 통해 GCL 성능을 극대화합니다.
+실제 은행간 이체 데이터(HOFINET)에서 **라벨 없이** 학습한 자기지도 표현만으로 지도학습 모델(MLP, XGBoost)과 동등한 탐지 성능(F1_susp 0.682)을 달성합니다.
 
 ---
 
