@@ -449,7 +449,9 @@ def main(args):
     ari_score, sil_score = visualize_tsne(
         args.seed, z_cpu.numpy(), data.y, save_path=vis_save_path, skip=args.skip_tsne)
 
-    split = get_split(num_samples=z_cpu.size(0), train_ratio=0.1, test_ratio=0.8)
+    train_ratio = getattr(args, 'train_ratio', 0.1)
+    test_ratio = 1.0 - train_ratio * 2
+    split = get_split(num_samples=z_cpu.size(0), train_ratio=train_ratio, test_ratio=test_ratio)
     test_result = evaluate_with_metrics(z_cpu, data.y, split)
     print(test_result)
     print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, '

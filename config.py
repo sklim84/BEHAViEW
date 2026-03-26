@@ -33,6 +33,7 @@ parser.add_argument('--subgraph_pool', action='store_true',
 
 # Evaluation
 parser.add_argument('--skip_tsne', action='store_true', help='Skip t-SNE visualization (for HP search)')
+parser.add_argument('--train_ratio', type=float, default=0.1, help='Train split ratio (val=same, test=1-2*train)')
 
 
 def get_config():
