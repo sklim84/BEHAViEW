@@ -4,151 +4,138 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-FraudCenGCL: Graph Contrastive Learning for financial fraud detection using network centrality features as an auxiliary contrastive view.
+BECON: Behavioral Subgraph Contrast for Anti-Money Laundering in Low-Homophily Transaction Networks.
 
-Core idea: Instead of standard graph augmentation for both contrastive views, use **node aggregate features** (x_agg) as one view and **graph centrality features** (x_cen) as the other view. This replaces traditional augmentations like edge removal/feature masking.
+Core idea: Construct a **behavioral k-NN graph** as a contrastive view (instead of standard graph augmentation) and apply **subgraph-level pooling** to amplify suspicious signals. Two independent axes — view construction and contrastive level — are systematically analyzed across 10 GCL encoders.
 
-Dataset: HOFINET — 452K nodes, 2.56M directed edges, 2.13% fraud rate.
+Datasets: HOFINET (452K nodes, 4.7M edges, 2.13% suspicious) and AMLworld HI-Small (515K nodes, 5.1M edges, 1.23% suspicious).
 
 ## Running Experiments
 
 All commands run from the project root.
 
 ```bash
-# Single model (with centrality / baseline)
-python models/grace_w_cen.py --node_data_name HOFINET_NODE_FEAT --edge_data_name HOFINET_EDGES --gpu 0
-python models/grace_w_org.py --node_data_name HOFINET_NODE_FEAT --edge_data_name HOFINET_EDGES --gpu 0
+# (d) Proposed: behavioral k-NN view + subgraph pooling
+python models/subgraph_cl.py \
+  --encoder_type gbt --knn_graph HOFINET_KNN_BEHAV_k10 --subgraph_pool \
+  --gpu 0 --seed 2025 --lr 0.0005 --hidden_dim 256 --gconv_nlayers 2
 
-# All 12 models comparison (fixed HP)
-bash scripts/ALL_MODEL_rq5.sh
+# 4 settings via flags:
+#   (a) baseline:        --encoder_type gbt
+#   (b) +view:           --encoder_type gbt --knn_graph HOFINET_KNN_BEHAV_k10
+#   (c) +level:          --encoder_type gbt --subgraph_pool
+#   (d) +both (proposed): --encoder_type gbt --knn_graph ... --subgraph_pool
 
-# Hyperparameter search (3 presets)
-python scripts/hp_search.py --preset baseline           # 7 features, 6 GPU, 432 jobs
-python scripts/hp_search.py --preset 17feat             # 17 features, 1 GPU, 216 jobs
-python scripts/hp_search.py --preset v2 --wait_gpu_idle # 3 feature sets, 6 GPU, 1296 jobs
+# Supervised baselines
+python models/supervised_baselines.py --gpu 0 --dataset hofinet
 
-# Custom HP search
-python scripts/hp_search.py --cen_feats dc cc pagerank --num_gpus 2 --lr 1e-4 5e-4
+# Experiment scripts
+bash scripts/run_ablation_abcd.sh              # HOFINET 4-setting ablation
+bash scripts/run_amlworld.sh                    # AMLworld experiments
+bash scripts/run_hofinet_ab_multiseed.sh        # HOFINET (a)/(b) multi-seed
+bash scripts/run_k_sensitivity_exp_only.sh      # k sensitivity (k=5,10,20,50)
+bash scripts/run_all_additional_exp.sh          # Label fraction + feature ablation + cost
 
-# Data preprocessing (from raw HOFINET.csv)
-python datasets/pp_hofinet.py                   # hybrid: cuGraph(GPU) + Memgraph
-python datasets/pp_hofinet.py --gpu_only        # cuGraph only (9 features)
-python datasets/pp_hofinet.py --cpu_only        # NetworkX only (no GPU/Memgraph)
+# k-NN graph construction
+python datasets/build_knn_graph.py --k 10       # builds BEHAV/STRUCT/FEAT k-NN graphs
 
-# Standalone feature computation
-python datasets/compute_features_hybrid.py --gpu 0              # all phases
-python datasets/compute_features_hybrid.py --memgraph_only      # Memgraph only
-python datasets/compute_features_hybrid.py --skip_memgraph      # cuGraph + NetworkX
-
-# Orchestration: feature discovery → GPU idle → HP search
-nohup python -u scripts/run_features_and_hp.py --gpu 5 > logs/run_all.log 2>&1 &
+# Data preprocessing
+python datasets/pp_hofinet.py                   # HOFINET raw → NODE_FEAT + EDGES
+python datasets/pp_amlworld.py                  # AMLworld raw → NODE_FEAT + EDGES
 ```
 
 Key arguments (defined in `config.py`):
-- `--model_name`: identifier for result tracking
-- `--node_data_name` / `--edge_data_name`: CSV filenames (without .csv) in `datasets/`
-- `--cen_feats`: centrality features list (default: dc cc pagerank hits_hub hits_auth kcore triangle)
-- `--loss`: contrastive loss (`InfoNCE`, `JSD`, `BarlowTwins`, `BootstrapLatent`)
-- `--input_dim` (16), `--hidden_dim` (256), `--proj_dim` (32), `--gconv_nlayers` (3), `--lr` (0.001)
-- `--skip_tsne`: skip t-SNE visualization (for HP search)
+- `--encoder_type`: gbt, bgrl, dgi, mvgrl, grace, gca, dgi_bn, mvgrl_bn, grace_bn, gin
+- `--knn_graph`: k-NN graph name (e.g., HOFINET_KNN_BEHAV_k10)
+- `--subgraph_pool`: enable subgraph pooling
+- `--train_ratio`: train split ratio (default 0.1; val=same, test=1-2*train)
+- `--hidden_dim` (256), `--gconv_nlayers` (2), `--lr` (0.0005)
+- `--loss`: contrastive loss (BarlowTwins default, also InfoNCE, JSD, BootstrapLatent)
+- `--skip_tsne`: skip t-SNE visualization
 
 ## Architecture
 
-### Dual-View Contrastive Learning Pipeline
+### BECON Pipeline
 
-Every `_w_cen` model:
-1. **Data loading** (`data_loader.py`): CSV → `x_agg` (out_\*, in_\*, md_\*, fnd_\*, entropy\*) + `x_cen` (centrality features from `--cen_feats`) + edge_index
-2. **Projection**: `proj_agg` / `proj_cen` linear layers → `input_dim`
-3. **Augmentation**: GCL augmentors (EdgeRemoving, FeatureMasking) per view
-4. **Encoding**: Shared GNN encoder on both projected views
-5. **Contrastive loss**: Between the two view embeddings
-6. **Evaluation**: Frozen embeddings → LogisticRegression (10% train, 80% test) → F1, AUROC, AUPRC + t-SNE with ARI/Silhouette
+1. **Data loading** (`data_loader.py`): CSV → behavioral features (x_behav, 22 vars) + edge_index + optional k-NN graph
+2. **k-NN view**: Behavioral features → StandardScaler → L2-norm → ball_tree k-NN → G_knn
+3. **Dual-view encoding**: Shared GNN encoder (GCNConv + BN + PReLU + Dropout) processes both transaction graph and k-NN graph
+4. **Subgraph pooling**: Mean pooling over ego-neighborhood on each view's graph
+5. **Contrastive loss**: BYOL-style bootstrap loss with momentum target encoder
+6. **Evaluation**: Frozen [h_trans ∥ h_knn] → LogisticRegression → F1_susp, AUROC, AUPRC
 
-The `_w_org` models are baselines using only node features with standard dual-augmentation.
+### 10 Encoder Variants
 
-### Model Variants (6 architectures × 2 variants = 12 models)
+| Encoder | BN Type | Conv | Origin |
+|---------|---------|------|--------|
+| GBT | Per-layer | GCNConv | BarlowTwins |
+| DGI+BN | Per-layer | GCNConv | DGI |
+| MVGRL+BN | Per-layer | GCNConv | MVGRL |
+| GRACE+BN | Per-layer | GCNConv | GRACE |
+| BGRL | Final-only | GCNConv | BYOL |
+| GIN | Per-layer | GINConv | GIN |
+| DGI | None | GCNConv | DGI |
+| MVGRL | None | GCNConv | MVGRL |
+| GRACE | None | GCNConv | GRACE |
+| GCA | None | GCNConv | GCA |
 
-| Model | Contrast Type | GNN | Epochs | Loss | Key Difference |
-|-------|--------------|-----|--------|------|----------------|
-| GRACE | DualBranch L2L | GCNConv | 1000 | InfoNCE | NeighborLoader, projection head |
-| GBT | WithinEmbed | GCNConv (2-layer BN+PReLU) | 4000 | BarlowTwins | No projection head |
-| BGRL | Bootstrap L2L | GCNConv + dropout/BN | 100 | BarlowTwins | Momentum target encoder |
-| DGI-TRS | SingleBranch G2L | GCNConv + PReLU | 300 | JSD | Corruption-based, averages dual projections |
-| DGI-IND | SingleBranch G2L | SAGEConv | 30 | JSD | Inductive NeighborSampler |
-| MVGRL | DualBranch G2L | GCNConv | 200 | BootstrapLatent | Two separate encoders, EdgeRemoving(0.3) |
+All encoders use the same BYOL-style bootstrap loss for fair comparison.
 
-### Shared Modules
+### Project Structure
 
-| File | Purpose |
-|------|---------|
-| `config.py` | Centralized argparse for all models |
-| `data_loader.py` | `load_graph_data(args, device)` → `(Data, x_cen)` |
-| `utils.py` | `set_seed()`, `create_loss()`, `evaluate_with_metrics()`, `save_results_to_csv()`, `visualize_tsne()` |
-| `scripts/hp_common.py` | `MODELS` config, `run_parallel()`, `build_command()`, `load_completed_jobs()`, GPU idle monitoring |
-| `datasets/feature_utils.py` | `run_feature()`, `compute_feature_stats()`, `save_feature_progress()` |
+```
+_paper/                          # Paper source (LaTeX)
+  figures/                       # Paper figures (PDF/SVG/PNG)
+  reviews/                       # Reviewer feedback
+models/
+  subgraph_cl.py                 # Unified framework (10 encoders × 4 settings)
+  supervised_baselines.py        # Supervised comparison (6 models)
+datasets/
+  build_knn_graph.py             # k-NN graph construction
+  pp_hofinet.py                  # HOFINET preprocessing
+  pp_amlworld.py                 # AMLworld preprocessing
+analysis/
+  homophily_knn.py               # S-S/S-B ratio measurement
+scripts/
+  run_ablation_abcd.sh           # HOFINET ablation
+  run_amlworld.sh                # AMLworld experiments
+  run_hofinet_ab_multiseed.sh    # Multi-seed (a)/(b)
+  run_k_sensitivity_exp_only.sh  # k sensitivity
+  run_all_additional_exp.sh      # Additional experiments
+visualize/
+  gen_paper_figures.py           # Paper figures (matplotlib)
+  gen_intro_variants.py          # Intro figure variants
+  gen_framework_svg.py           # Framework SVG figure
+config.py                       # Shared argparse
+data_loader.py                   # Data loading
+utils.py                         # Shared utilities
+results/                         # Experiment result CSVs
+```
 
-### Data Pipeline
+### Feature Taxonomy
 
-**`datasets/pp_hofinet.py`**: HOFINET.csv (Korean columns) → English mapping → node feature aggregation → graph centrality computation → `HOFINET_NODE_FEAT.csv` + `HOFINET_EDGES.csv`
-
-3 execution modes: hybrid (cuGraph GPU + Memgraph), `--gpu_only` (cuGraph), `--cpu_only` (NetworkX)
-
-**`datasets/compute_features_hybrid.py`**: Standalone 3-phase feature computation:
-- Phase 1 (cuGraph GPU, seconds): dc, in_dc, out_dc, pagerank, hits, katz, eigenvector, kcore, triangle, betweenness, louvain
-- Phase 2 (Memgraph CPU, minutes): clustering, sq_clustering, avg_neigh_deg, greedy_color
-- Phase 3 (NetworkX CPU, slow): cc, harmonic, load_cen, voterank, constraint, eff_size
-
-Flags: `--skip_cugraph`, `--skip_memgraph`, `--skip_networkx`, `--memgraph_only`
-
-HOFINET.csv column mapping: 거래일자→tran_dt, 출금금융회사일련번호→wd_fc_sn, 출금계좌일련번호→wd_ac_sn, 입금금융회사일련번호→dps_fc_sn, 입금계좌일련번호→dps_ac_sn, 자금구분→fnd_type, 매체구분→md_type, 거래금액→tran_amt, 이상거래여부→label(0/1)
-
-### HP Search Architecture
-
-`scripts/hp_search.py` uses 3 presets defined in `PRESETS` dict. Each preset specifies `cen_feats_sets`, `search_space`, `result_file`, `num_gpus`. All settings can be overridden via CLI.
-
-Job execution via `hp_common.run_parallel()`: deque-based GPU scheduling, subprocess per job, incremental CSV results, `load_completed_jobs()` for resume support. Model names are normalized to lowercase for resume matching.
-
-Results CSV schema: timestamp, Model, Data, Seed, cen_feats, lr, input_dim, hidden_dim, proj_dim, gconv_nlayers, loss, pre_0/1, rec_0/1, f1_0/1, F1Mi, F1Ma, auroc, auprc, ari_score, sil_score
-
-### Other Directories
-
-- `benchmarks/`: GCL library reference implementations (Planetoid, WikiCS, TUDataset) — not used
-- `analysis/`: Network statistics, centrality distributions, homophily analysis
-- `results/`: Experiment result CSVs
-- `visualize/`: t-SNE plots per model
+| Category | Count | Features | GNN Input | k-NN |
+|----------|-------|----------|:---------:|:----:|
+| Amount stats | 6 | out/in_mean, _max, _std | ✓ | ✓ |
+| Temporal | 12 | out/in_{3,6,12}m_mean, _count | ✓ | ✓ |
+| Entropy | 2 | md_type_entropy, fnd_type_entropy | ✓ | ✓ |
+| Count | 2 | out_count, in_count | ✓ | |
+| Degree | 2 | in_dc, out_dc | ✓ | |
+| Structural | 9 | dc, pagerank, betweenness, hits_*, kcore, triangle | | |
 
 ## Known Issues
 
-- **cuGraph eigenvector_centrality**: Fails to converge on HOFINET graph. Use Memgraph's `eigenvector_centrality_numpy` instead.
-- **CUDA_VISIBLE_DEVICES**: Must be restored after cuGraph usage (handled in code via `os.environ.pop`), otherwise GPU 1-5 become invisible.
-- **Memgraph query.timeout**: Default 600s is insufficient. Set to 7200s: `SET DATABASE SETTING "query.timeout" TO "7200"`
-- **Memgraph module reload**: Fails if active transactions exist. Run `TERMINATE TRANSACTIONS` first.
-- **PyGCL patch**: `GCL/utils.py` has `import dgl` changed to lazy import to avoid dependency conflicts.
+- **PyGCL patches**: `GCL/utils.py` has lazy `import dgl`; `GCL/augmentors/functional.py` has try/except for torch_sparse/torch_scatter
+- **Git LFS**: Large CSV files (HOFINET_*.csv) use Git LFS. Run `git lfs install && git lfs pull` after cloning
+- **PYTORCH_CUDA_ALLOC_CONF**: Use `expandable_segments:True` for large graphs
 
-## Memgraph Setup
+## Paper
 
-Memgraph v3.8.1 installed via .deb extraction (no sudo).
-
-- **Binary**: `/home/work/kftc_sklim/memgraph/extracted/usr/lib/memgraph/memgraph`
-- **Data**: `/home/work/kftc_sklim/memgraph/data`
-- **Query modules**: `.../query_modules/` — custom `graph_features.py` (15 procedures) + built-in `nxalg.py`
-
-```bash
-# Start Memgraph
-export LD_LIBRARY_PATH=/home/work/kftc_sklim/memgraph/extracted/usr/lib/memgraph:$LD_LIBRARY_PATH
-nohup /home/work/kftc_sklim/memgraph/extracted/usr/lib/memgraph/memgraph \
-  --bolt-port 7687 \
-  --data-directory /home/work/kftc_sklim/memgraph/data \
-  --log-file /home/work/kftc_sklim/memgraph/log/memgraph.log \
-  --query-modules-directory /home/work/kftc_sklim/memgraph/extracted/usr/lib/memgraph/query_modules \
-  --storage-properties-on-edges=true --log-level WARNING --telemetry-enabled=false \
-  > /home/work/kftc_sklim/memgraph/log/stdout.log 2>&1 &
-
-# Reproduce on another server
-mkdir -p ~/memgraph && cd ~/memgraph
-curl -L -o memgraph.deb https://download.memgraph.com/memgraph/v3.8.1/ubuntu-24.04/memgraph_3.8.1-1_amd64.deb
-dpkg-deb -x memgraph.deb ./extracted && pip install neo4j
-```
+- Title: BECON: Behavioral Subgraph Contrast for Anti-Money Laundering in Low-Homophily Transaction Networks
+- Framework name: `\method` (BECON\xspace) in LaTeX
+- Style: Korean draft body, English section names and captions
+- No `\textbf` in body text; `\texttt` only for framework name
+- Terminology: suspicious (not fraud), F1_susp (not F1_fraud), S-S/S-B (not F-F/F-B)
 
 ## Git
 

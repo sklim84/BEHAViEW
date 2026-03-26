@@ -132,6 +132,7 @@ bash scripts/run_ablation_abcd.sh              # HOFINET 4-setting ablation
 bash scripts/run_amlworld.sh                    # AMLworld 실험
 bash scripts/run_hofinet_ab_multiseed.sh        # HOFINET (a)/(b) multi-seed
 bash scripts/run_k_sensitivity_exp_only.sh      # k 민감도 실험
+bash scripts/run_all_additional_exp.sh          # Label fraction + Feature ablation + Cost
 ```
 
 ---
