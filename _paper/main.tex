@@ -24,6 +24,7 @@
 \usepackage{graphicx}
 \usepackage{placeins}
 \usepackage{xurl}
+\usepackage{xspace}
 \newcommand{\model}[1]{\texttt{\small\nolinkurl{#1}}}
 %%%%%%%%%%%%%%%%%%%%   CUSTOM COMMAND    %%%%%%%%%%%%%%%%%%%%%
 \newcommand{\method}{BECON\xspace}
@@ -337,7 +338,7 @@ $\mathbf{Z} \leftarrow [\mathbf{S}^{(1)} \| \mathbf{S}^{(2)}]$\;
 
 \subsubsection{Evaluation Metrics}
 
-주요 지표로 의심 클래스(positive class)의 F1-score(F1\_susp)를 사용한다. 보조 지표로 AUROC와 AUPRC를 함께 보고한다. 모든 실험은 4개 시드(2024, 2025, 2026, 2027)의 평균±표준편차로 보고하며, 10\%/10\%/80\% train/validation/test 분할을 사용한다. 각 시드에서 동일한 분할이 모든 모델과 설정에 적용되어 완전한 paired 비교를 보장하며, 주요 비교에 대해 seed-level paired t-test로 통계적 유의성을 검증한다. 자기지도 모델은 학습된 인코더의 파라미터를 고정하고, 두 view의 표현을 결합한 임베딩 $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$ (Eq.~\eqref{eq:concat})에 대해 LogisticRegression 분류기로 평가한다.
+주요 지표로 의심 클래스(positive class)의 F1-score(F1\_susp)를 사용한다. 보조 지표로 AUROC와 AUPRC를 함께 보고한다. 모든 실험은 4개 시드(2024, 2025, 2026, 2027)의 평균±표준편차로 보고하며, 10\%/10\%/80\% train/validation/test 분할을 사용한다. 각 시드에서 동일한 분할이 모든 모델과 설정에 적용되어 완전한 paired 비교를 보장한다. 통계적 유의성은 4-seed paired t-test로 검증하며, 다음 두 비교쌍에 적용한다: (i) 행동적 k-NN view의 효과 ((a) vs (b), 6종 BN 인코더 각각), (ii) 서브그래프 풀링의 추가 효과 ((b) vs (d), GBT 인코더). 4 시드에서의 검정이므로 다중비교 보정(Bonferroni 등)은 적용하지 않으며, 각 검정의 $t$ 통계량과 $p$ 값을 본문에 직접 보고한다. 자기지도 모델은 학습된 인코더의 파라미터를 고정하고, 두 view의 표현을 결합한 임베딩 $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$ (Eq.~\eqref{eq:concat})에 대해 LogisticRegression 분류기로 평가한다.
 
 \subsection{Effectiveness and Mechanism of Behavioral k-NN View (RQ1)}\label{subsec:rq1}
 
