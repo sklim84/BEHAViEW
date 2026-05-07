@@ -603,7 +603,8 @@ j
 k∈
 
 Pi ∪Ni
- exp
+
+ exp
 
 sim
 
@@ -631,7 +632,8 @@ j
 k∈
 
 Pi ∪Ni
- exp
+
+ exp
 
 sim
 
