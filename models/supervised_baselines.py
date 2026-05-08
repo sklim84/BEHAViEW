@@ -29,7 +29,7 @@ warnings.filterwarnings('ignore')
 
 from config import get_config
 from data_loader import load_graph_data
-from utils import set_seed
+from utils import set_seed, make_split
 
 
 # ============================================================
@@ -151,12 +151,12 @@ def eval_supervised(model, data, test_mask):
 def run_gnn_model(model_name, data, device, seed, hidden_dim=256, num_layers=2, lr=0.001, epochs=200):
     set_seed(seed)
     N = data.num_nodes
-    indices = np.arange(N)
     y = data.y.cpu().numpy()
 
-    # 10% train, 80% test (same as GCL eval)
-    train_idx, test_idx = train_test_split(indices, train_size=0.1, test_size=0.8,
-                                            stratify=y, random_state=seed)
+    # 10/10/80 train/val/test split via make_split (paired with BECON SSL evaluation)
+    split = make_split(N, train_ratio=0.1, val_ratio=0.1, seed=seed)
+    train_idx = split['train'].numpy()
+    test_idx = split['test'].numpy()
     train_mask = torch.zeros(N, dtype=torch.bool)
     test_mask = torch.zeros(N, dtype=torch.bool)
     train_mask[train_idx] = True
@@ -190,10 +190,12 @@ def run_gnn_model(model_name, data, device, seed, hidden_dim=256, num_layers=2, 
 # Tabular Baselines (LightGBM, XGBoost)
 # ============================================================
 def run_tabular_model(model_name, X, y, seed):
-    from sklearn.model_selection import train_test_split as sk_split
-
-    X_train, X_test, y_train, y_test = sk_split(X, y, train_size=0.1, test_size=0.8,
-                                                  stratify=y, random_state=seed)
+    # 10/10/80 split via make_split — same accounts as GNN supervised and BECON SSL
+    split = make_split(len(y), train_ratio=0.1, val_ratio=0.1, seed=seed)
+    train_idx = split['train'].numpy()
+    test_idx = split['test'].numpy()
+    X_train, X_test = X[train_idx], X[test_idx]
+    y_train, y_test = y[train_idx], y[test_idx]
     if model_name == 'lgbm':
         import lightgbm as lgb
         n_pos = y_train.sum()
