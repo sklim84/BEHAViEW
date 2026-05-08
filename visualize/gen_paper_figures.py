@@ -119,50 +119,90 @@ def fig3_susp_connectivity():
 
 
 def fig4_bn_effect():
-    """Fig.4: BN effect — two separate PDF files for LaTeX subfigure."""
-    c_baseline = '#B0C4DE'
-    c_proposed = '#E74C3C'
-    width = 0.34
+    """Fig.4: F1_susp trajectory across (a/b/c/d) settings, faceted by BN family.
 
-    def _make_panel(encoders, a_vals, d_vals, ylim, val_offset, figsize, outname):
-        fig, ax = plt.subplots(figsize=figsize)
-        x = np.arange(len(encoders))
-        ax.bar(x - width/2, a_vals, width, label='(a) Baseline',
-               color=c_baseline, edgecolor='white', linewidth=0.8, zorder=3)
-        bars_d = ax.bar(x + width/2, d_vals, width, label='(d) Proposed',
-               color=c_proposed, edgecolor='white', linewidth=0.8, zorder=3)
-        for bar, val in zip(bars_d, d_vals):
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + val_offset,
-                    f'{val:.3f}', ha='center', va='bottom', fontsize=7.5,
-                    fontweight='bold', color='#333333')
-        ax.set_ylabel('$F1_{susp}$', fontsize=11)
+    Replaces the prior 2-panel bar chart with a faceted line plot that exposes
+    the encoder-conditional pattern: per-layer BN encoders saturate the (b)->(d)
+    transition (subgraph pool marginal), final-only BN (BGRL) shows substantial
+    amplification, and BN-free encoders gain in absolute floor terms.
+
+    Reads from corrected sweep results (Gate 1):
+        results/exp_results_hofinet_ab.csv
+    """
+    import pandas as pd
+
+    csv_path = 'results/exp_results_hofinet_ab.csv'
+    df = pd.read_csv(csv_path)
+    parsed = []
+    for name in df['Model']:
+        parts = name.split('_')
+        seed = int(parts[-1].lstrip('s'))
+        setting = parts[-2]
+        enc = '_'.join(parts[1:-2])
+        parsed.append((enc, setting, seed))
+    df['encoder'] = [p[0] for p in parsed]
+    df['setting'] = [p[1] for p in parsed]
+
+    enc_labels = {
+        'gbt': 'GBT', 'dgi_bn': 'DGI+BN', 'mvgrl_bn': 'MVGRL+BN',
+        'grace_bn': 'GRACE+BN', 'gin': 'GIN', 'bgrl': 'BGRL',
+        'dgi': 'DGI', 'mvgrl': 'MVGRL', 'grace': 'GRACE', 'gca': 'GCA',
+    }
+    bn_aug_styles = {
+        'gbt':       ('#1f4e79', 'o'),
+        'dgi_bn':    ('#2e6da4', 's'),
+        'mvgrl_bn':  ('#3978b3', 'D'),
+        'grace_bn':  ('#5b9bd5', '^'),
+        'gin':       ('#9bbedc', 'v'),
+        'bgrl':      ('#2ca02c', 'P'),  # green: final-only BN (distinct from per-layer family)
+    }
+    bn_aug_order = ['gbt', 'dgi_bn', 'mvgrl_bn', 'grace_bn', 'gin', 'bgrl']
+    bn_free_order = ['dgi', 'mvgrl', 'grace', 'gca']
+    bn_free_colors = ['#d62728', '#ff7f0e', '#bcbd22', '#9467bd']
+
+    settings = ['a', 'b', 'c', 'd']
+    setting_labels = ['(a)\nbaseline', '(b)\n+view', '(c)\n+level', '(d)\n+both']
+    x = np.arange(len(settings))
+
+    fig, axes = plt.subplots(1, 2, figsize=(9.0, 3.2),
+                              gridspec_kw={'width_ratios': [6, 4], 'wspace': 0.20})
+
+    def _plot_panel(ax, encoders, style_map, ylim, title, legend_loc, legend_ncol):
+        for enc in encoders:
+            ys = [df[(df['encoder'] == enc) & (df['setting'] == s)]['f1_1'].mean()
+                  for s in settings]
+            errs = [df[(df['encoder'] == enc) & (df['setting'] == s)]['f1_1'].std()
+                    for s in settings]
+            color, marker = style_map[enc] if isinstance(style_map, dict) else style_map[encoders.index(enc)]
+            ax.errorbar(x, ys, yerr=errs, marker=marker if isinstance(style_map, dict) else 'o',
+                        markersize=6, linewidth=1.6, capsize=2.2, color=color,
+                        label=enc_labels[enc])
         ax.set_xticks(x)
-        ax.set_xticklabels(encoders, fontsize=8.5)
+        ax.set_xticklabels(setting_labels, fontsize=9.5)
         ax.set_ylim(ylim)
-        ax.grid(axis='y', alpha=0.2, zorder=0)
+        ax.set_title(title, fontsize=11)
+        ax.grid(axis='y', alpha=0.25, zorder=0)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        ax.legend(fontsize=8, loc='lower right', framealpha=0.9, edgecolor='#CCCCCC')
-        plt.tight_layout()
-        path = os.path.join(OUT_DIR, outname)
-        fig.savefig(path, bbox_inches='tight')
-        fig.savefig(path.replace('.pdf', '.png'), bbox_inches='tight')
-        plt.close(fig)
-        print(f'Saved: {path}')
+        ax.legend(fontsize=8, loc=legend_loc, framealpha=0.9, edgecolor='#CCCCCC',
+                  ncol=legend_ncol)
 
-    # (a) With BatchNorm
-    enc_bn = ['GBT', 'DGI\n+BN', 'MVGRL\n+BN', 'GRACE\n+BN', 'BGRL', 'GIN']
-    _make_panel(enc_bn,
-                [0.270, 0.271, 0.270, 0.286, 0.315, 0.149],
-                [0.682, 0.682, 0.682, 0.681, 0.647, 0.570],
-                (0, 0.79), 0.01, (4.0, 2.6), 'fig_rq3_bn_with.pdf')
+    _plot_panel(axes[0], bn_aug_order, bn_aug_styles,
+                (0.0, 0.75), '(a) BN-augmented encoders',
+                'lower right', 2)
+    axes[0].set_ylabel('$F1_{susp}$', fontsize=11)
 
-    # (b) Without BatchNorm
-    enc_no = ['DGI', 'MVGRL', 'GRACE', 'GCA']
-    _make_panel(enc_no,
-                [0.045, 0.045, 0.045, 0.048],
-                [0.074, 0.071, 0.069, 0.085],
-                (0, 0.12), 0.002, (3.2, 2.6), 'fig_rq3_bn_without.pdf')
+    bn_free_styles = {enc: (col, 'o') for enc, col in zip(bn_free_order, bn_free_colors)}
+    _plot_panel(axes[1], bn_free_order, bn_free_styles,
+                (0.0, 0.10), '(b) BN-free encoders',
+                'upper left', 1)
+
+    plt.tight_layout()
+    path = os.path.join(OUT_DIR, 'fig_rq3_bn.pdf')
+    plt.savefig(path, bbox_inches='tight')
+    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight')
+    plt.close()
+    print(f'Saved: {path}')
 
 
 def fig5_setting_comparison():

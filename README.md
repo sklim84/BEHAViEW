@@ -84,17 +84,29 @@
 | 20 | 0.668±.008 | 0.671±.008 |
 | 50 | 0.662±.008 | 0.661±.007 |
 
-### Supervised 모델 비교 (HOFINET)
+### Supervised 모델 비교 (HOFINET, corrected protocol)
 
-| 모델 | F1_susp | AUROC | 타입 |
-|------|---------|-------|------|
-| **BECON (d)** | **0.682** | 0.985 | Self-supervised |
-| MLP | 0.678 | 0.991 | Supervised |
-| GraphSAGE | 0.677 | 0.991 | Supervised GNN |
-| XGBoost | 0.675 | 0.992 | Tabular |
-| LightGBM | 0.674 | 0.992 | Tabular |
-| GAT | 0.469 | 0.984 | Supervised GNN |
-| GCN | 0.250 | 0.954 | Supervised GNN |
+| 모델 | F1_susp | AUROC | AUPRC | 타입 |
+|------|---------|-------|-------|------|
+| MLP | 0.679 | 0.991 | 0.616 | Supervised |
+| GraphSAGE | 0.677 | 0.992 | 0.610 | Supervised GNN |
+| XGBoost | 0.675 | 0.992 | 0.665 | Tabular |
+| **BECON (d)** | **0.673** | 0.991 | 0.604 | **Self-supervised** |
+| LightGBM | 0.670 | 0.992 | 0.662 | Tabular |
+| GAT | 0.534 | 0.988 | 0.565 | Supervised GNN |
+| GCN | 0.250 | 0.935 | 0.316 | Supervised GNN |
+
+### Supervised 모델 비교 (AMLworld HI-Small)
+
+| 모델 | F1_susp | AUROC | AUPRC | 타입 |
+|------|---------|-------|-------|------|
+| XGBoost | 0.073 | 0.753 | 0.037 | Tabular |
+| LightGBM | 0.070 | 0.752 | 0.037 | Tabular |
+| **BECON (d)** | **0.066** | 0.608 | 0.027 | **Self-supervised** |
+| GraphSAGE | 0.050 | 0.671 | 0.024 | Supervised GNN |
+| MLP | 0.048 | 0.695 | 0.024 | Supervised |
+| GAT | 0.047 | 0.701 | 0.023 | Supervised GNN |
+| GCN | 0.045 | 0.703 | 0.022 | Supervised GNN |
 
 ### 핵심 발견
 
@@ -103,7 +115,7 @@
 3. **BatchNorm이 결정적**: ~10배 성능 격차, per-layer BN encoder 4종 모두 0.673~0.674 수렴
 4. **k=10 최적, 강건**: k=5~50 범위에서 안정적
 5. **일반성 확인**: HOFINET + AMLworld 두 데이터셋에서 동일 패턴
-6. **라벨 없이 Supervised와 동등**: Self-supervised 0.673 ≈ MLP supervised baseline
+6. **라벨 없이 Supervised에 경쟁적**: HOFINET BECON 0.673 vs MLP 0.679 (Δ=0.005, paired t-test 통계 유의하나 std 범위 내), AMLworld에서 모든 GNN supervised baseline (0.045~0.050) 일관 상회
 
 ---
 
