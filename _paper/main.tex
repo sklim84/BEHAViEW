@@ -70,10 +70,10 @@
 라벨 부족 환경에서 유망한 대안으로 부상하고 있는 그래프 대조학습 역시 기존 모델은 동일 그래프에 대한 확률적 증강으로 contrastive view를 생성하여 거래 네트워크 고유의 특성을 충분히 활용하지 못한다.
 이러한 한계를 완화하기 위해, 본 연구에서는 \method을 제안한다. \method은 행동적 유사도에 기반한 k-NN 그래프를 보조 view로 구축하고, 서브그래프 수준의 이웃 집계를 적용하는 자금세탁 탐지 프레임워크이다. 
 \method은 그래프 대조학습의 성능을 결정하는 두 독립 축, 즉 view 구성과 contrastive level을 체계적으로 분석하여 최적 조합을 도출한다. 
-실제 은행간 이체 데이터와 합성 벤치마크에서의 실험을 통해, 행동적 k-NN view가 의심 계좌 간 연결 비율을 크게 개선하여 동질성을 효과적으로 복원함을 밝힌다. 
+KFTC HOFINET과 AMLworld HI-Small에서의 실험을 통해, 행동적 k-NN view가 의심 계좌 간 연결 비율을 크게 개선하여 동질성을 효과적으로 복원함을 밝힌다.
 또한 서브그래프 풀링이 행동적 view와 결합할 때 amplifier로 작동하며, 그 효과의 크기는 인코더의 정규화 깊이에 반비례함을 10종 인코더 비교를 통해 입증한다.
 더불어 BatchNorm이 대규모 불균형 환경에서 인코더 아키텍처와 무관하게 성능을 결정하는 핵심 요인임을 controlled 비교로 검증한다.
-나아가, \method은 라벨 없이 학습한 자기지도 표현만으로 실제 은행 데이터에서 MLP, XGBoost 등 지도학습 모델과 0.005 F1\_susp 이내의 경쟁력 있는 탐지 성능을 달성하고, 합성 벤치마크에서는 모든 GNN 지도학습 baseline을 일관되게 상회하여 라벨 희소 환경에서의 실용적 가치를 입증한다.
+나아가, \method은 라벨 없이 학습한 자기지도 표현만으로 HOFINET에서 MLP, XGBoost 등 지도학습 모델과 0.005 F1\_susp 이내의 경쟁력 있는 탐지 성능을 달성하고, AMLworld에서는 모든 GNN 지도학습 baseline을 일관되게 상회하여 라벨 희소 환경에서의 실용적 가치를 입증한다.
 \end{abstract}
 
 \keywords{anti-money laundering, graph contrastive learning, k-NN graph view, subgraph pooling, low-homophily, transaction networks}
@@ -113,13 +113,13 @@ contrastive level 축에서는 노드 수준의 대조와 서브그래프 수준
 이 두 축을 교차하여 4가지 설정을 구성하고, 다양한 GCL 인코더에 대해 체계적인 실험을 수행한다.
 실험 결과, 행동적 k-NN view가 의심 계좌 간 연결 비율(S-S/S-B)을 1:5.7에서 1:1.4로 개선하여 동질성을 효과적으로 복원하며, 서브그래프 풀링과의 결합을 통해 추가적인 성능 향상을 달성함을 확인하였다.
 
-금융결제원(KFTC)이 운영하는 전자금융공동망(HOFINET)의 실제 은행간 이체 데이터와 일반성 검증을 위한 합성 벤치마크(AMLworld HI-Small~\cite{amlpatterns2024realistic})에서의 실험을 통해, \method은 기존 GCL 설정 및 지도학습 모델 대비 경쟁력 있는 탐지 성능을 달성한다. 
+KFTC가 운영하는 전자금융공동망(HOFINET)과 일반성 검증을 위한 AMLworld HI-Small~\cite{amlpatterns2024realistic}에서의 실험을 통해, \method은 기존 GCL 설정 및 지도학습 모델 대비 경쟁력 있는 탐지 성능을 달성한다.
 본 연구의 기여는 다음과 같다.
 \begin{itemize}
     \item 행동적 k-NN view가 저동질성 거래 네트워크에서 의심 계좌 간 연결 비율(S-S/S-B)을 1:5.7에서 1:1.4로 개선하여 동질성을 효과적으로 복원하는 메커니즘을 규명한다 (Section~\ref{subsec:rq1}; Table~\ref{tab:rq1}, \ref{tab:ss_sb}).
     \item 서브그래프 풀링이 view homophily와 인코더 정규화 깊이에 dependent한 conditional amplifier로 기능함을 (i) 저동질성 그래프 단독 적용 시의 성능 저하와 (ii) 인코더 정규화 깊이에 반비례하는 amplification magnitude로 입증한다 (Section~\ref{subsec:rq2}; Figure~\ref{fig:rq2_ablation}).
     \item 10종 인코더에 대한 비교 실험을 통해 BatchNorm이 대규모 불균형 환경에서 인코더 아키텍처와 무관하게 성능을 결정하는 핵심 요인임을 발견한다 (Section~\ref{subsec:rq3}; Figure~\ref{fig:rq3_bn}).
-    \item 실제 및 합성 AML 데이터셋에서 일관된 개선 패턴을 확인하여 일반성을 검증하고 (Section~\ref{subsec:rq4}; Table~\ref{tab:rq4}), 실제 은행 데이터에서 라벨 없이 학습한 자기지도 표현이 supervised baseline 대비 0.005 F1\_susp 이내의 경쟁력을 보이며, 합성 벤치마크에서는 모든 GNN 지도학습 baseline을 일관되게 상회함을 입증한다 (Section~\ref{subsec:rq5}; Table~\ref{tab:rq5}).
+    \item HOFINET과 AMLworld 두 데이터셋에서 일관된 개선 패턴을 확인하여 일반성을 검증하고 (Section~\ref{subsec:rq4}; Table~\ref{tab:rq4}), HOFINET에서 라벨 없이 학습한 자기지도 표현이 supervised baseline 대비 0.005 F1\_susp 이내의 경쟁력을 보이며, AMLworld에서는 모든 GNN 지도학습 baseline을 일관되게 상회함을 입증한다 (Section~\ref{subsec:rq5}; Table~\ref{tab:rq5}).
 \end{itemize}
 
 \section{Related Work}\label{sec:related_work}
@@ -357,12 +357,12 @@ $\mathbf{Z} \leftarrow [\mathbf{S}^{(1)} \| \mathbf{S}^{(2)}]$\;
 
 \begin{table}[t]
 \centering
-\caption{RQ1: Effect of behavioral k-NN view (HOFINET, F1\_susp, 4-seed mean$\pm$std). $\Delta$ denotes relative improvement of (b) over (a).}
+\caption{RQ1: Effect of behavioral k-NN view on $F1_{\text{susp}}$ (HOFINET, 4-seed mean$\pm$std). The Augmentation column corresponds to setting (a) (transaction graph + stochastic augmentation) and the Behavioral k-NN column to setting (b) (transaction graph + behavioral k-NN view). $\Delta$ denotes relative improvement of Behavioral k-NN over Augmentation.}
 \label{tab:rq1}
 \small
 \begin{tabular}{lcccc}
 \toprule
-\textbf{Encoder} & \textbf{BN} & \textbf{(a) Baseline} & \textbf{(b) Behav.\ k-NN} & \textbf{$\Delta$} \\
+\textbf{Encoder} & \textbf{BN} & \textbf{Augmentation} & \textbf{Behavioral k-NN} & \textbf{$\Delta$} \\
 \midrule
 GBT       & \multirow{4}{*}{Per-layer} & 0.266{\scriptsize±.009} & \textbf{0.671}{\scriptsize±.003} & +152\% \\
 DGI+BN    &            & 0.266{\scriptsize±.009} & 0.670{\scriptsize±.003} & +152\% \\
