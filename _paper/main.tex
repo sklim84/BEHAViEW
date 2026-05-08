@@ -597,14 +597,14 @@ AMLworld에서는 트리 기반 모델(XGBoost 0.073, LightGBM 0.070)이 최고 
 \toprule
 \textbf{Label Fraction} & \textbf{F1\_susp} & \textbf{AUROC} & \textbf{AUPRC} \\
 \midrule
-1\%  & 0.659{\scriptsize±.045} & 0.967{\scriptsize±.018} & 0.536{\scriptsize±.069} \\
-5\%  & 0.676{\scriptsize±.007} & 0.986{\scriptsize±.003} & 0.601{\scriptsize±.020} \\
-\textbf{10\%} & \textbf{0.682}{\scriptsize±.008} & \textbf{0.991}{\scriptsize±.001} & \textbf{0.614}{\scriptsize±.025} \\
+1\%  & 0.654{\scriptsize±.009} & 0.968{\scriptsize±.004} & 0.550{\scriptsize±.020} \\
+5\%  & 0.671{\scriptsize±.001} & 0.989{\scriptsize±.002} & 0.592{\scriptsize±.009} \\
+\textbf{10\%} & \textbf{0.673}{\scriptsize±.003} & \textbf{0.991}{\scriptsize±.000} & \textbf{0.604}{\scriptsize±.008} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-라벨 비율이 10\%에서 1\%로 감소하여도 F1\_susp는 0.682에서 0.659로 소폭 하락($-$3.4\%)에 그친다. 특히 1\% 라벨(약 450개 학습 샘플)만으로도 F1\_susp 0.659를 달성하여, GCN(0.250)과 GAT(0.469)의 10\% 지도학습보다 우수하다. 이는 \method의 자기지도 표현이 라벨 수에 대해 강건하며, 라벨 획득이 극히 제한적인 실제 AML 환경에서도 효과적으로 활용될 수 있음을 시사한다. 다만, 1\% 조건에서 표준편차가 0.045로 증가하여 분할 민감성이 높아지므로, 실무 적용 시 충분한 라벨 확보가 안정성 측면에서 바람직하다.
+라벨 비율이 10\%에서 1\%로 감소하여도 F1\_susp는 0.673에서 0.654로 소폭 하락($-$2.8\%)에 그친다. 특히 1\% 라벨(약 4,500개 학습 샘플)만으로도 F1\_susp 0.654를 달성하여, GCN(0.250)과 GAT(0.534)의 10\% 지도학습보다 우수하다. 4 seed에 걸친 표준편차도 ±.009로 안정적이어서, 자기지도 표현이 라벨 수에 대해 강건하며 라벨 획득이 극히 제한적인 실제 AML 환경에서도 효과적으로 활용될 수 있음을 시사한다.
 
 \subsubsection{Feature Ablation for k-NN Construction}
 
@@ -618,16 +618,16 @@ AMLworld에서는 트리 기반 모델(XGBoost 0.073, LightGBM 0.070)이 최고 
 \toprule
 \textbf{k-NN Features} & \textbf{F1\_susp} & \textbf{AUROC} & \textbf{AUPRC} \\
 \midrule
-\textbf{Behavioral} (20 feats) & \textbf{0.682}{\scriptsize±.008} & \textbf{0.991}{\scriptsize±.001} & \textbf{0.614}{\scriptsize±.025} \\
-All behavioral (24 feats)      & 0.666{\scriptsize±.008} & 0.991{\scriptsize±.001} & 0.592{\scriptsize±.022} \\
-All feats (31)$^\dagger$       & 0.639{\scriptsize±.008} & 0.991{\scriptsize±.001} & 0.593{\scriptsize±.020} \\
-Non-behavioral (11 feats)      & 0.292{\scriptsize±.003} & 0.965{\scriptsize±.002} & 0.395{\scriptsize±.007} \\
+\textbf{Behavioral} (20 feats) & \textbf{0.673}{\scriptsize±.002} & \textbf{0.991}{\scriptsize±.001} & \textbf{0.604}{\scriptsize±.006} \\
+All behavioral (24 feats)      & 0.658{\scriptsize±.003} & 0.991{\scriptsize±.000} & 0.587{\scriptsize±.004} \\
+All feats (31)$^\dagger$       & 0.633{\scriptsize±.005} & 0.990{\scriptsize±.000} & 0.584{\scriptsize±.004} \\
+Non-behavioral (11 feats)      & 0.286{\scriptsize±.004} & 0.963{\scriptsize±.003} & 0.392{\scriptsize±.012} \\
 \bottomrule
 \multicolumn{4}{l}{\scriptsize $^\dagger$ MLGCL/GCPAL proxy: behavioral (24) + structural (7) features.} \\
 \end{tabular}
 \end{table}
 
-순수 행동적 피처(20개)만으로 구축한 k-NN이 최고 성능(0.682)을 달성한다. 피처를 추가할수록 오히려 성능이 단조 하락하여, count/degree를 포함한 24개 피처에서 0.666($-$2.3\%), MLGCL/GCPAL과 동일하게 모든 피처(31개)를 사용하면 0.639($-$6.3\%)로 저하된다. 비행동적 피처(count, degree, centrality 등 11개)만으로 구축한 k-NN은 0.292로, baseline (a)(0.271)과 유사한 수준에 머문다.
+순수 행동적 피처(20개)만으로 구축한 k-NN이 최고 성능(0.673)을 달성한다. 피처를 추가할수록 오히려 성능이 단조 하락하여, count/degree를 포함한 24개 피처에서 0.658($-$2.2\%), MLGCL/GCPAL과 동일하게 모든 피처(31개)를 사용하면 0.633($-$5.9\%)로 저하된다. 비행동적 피처(count, degree, centrality 등 11개)만으로 구축한 k-NN은 0.286으로, baseline (a)(평균 0.271)과 유사한 수준에 머문다.
 
 이러한 결과는 구조적 피처가 거래 그래프의 위상 구조와 직접적으로 연관되어, k-NN view에 포함 시 거래 그래프와의 정보 중복이 발생하고 view 간 상보성이 저해되기 때문으로 해석된다. MLGCL/GCPAL이 모든 피처를 무차별적으로 사용하는 접근은 이 상보성 훼손을 야기하며, \method의 행동적 피처 선별이 k-NN view의 품질을 결정하는 핵심 설계 원칙임을 확인한다.
 
@@ -661,7 +661,7 @@ Inference (embedding extraction)      & 0.05s \\
 첫째, 행동적 k-NN view는 S-S/S-B 비율을 1:5.7에서 1:1.4로 개선하여 저동질성 거래 네트워크의 동질성을 효과적으로 복원하며, 10종 인코더 전반에서 +21\%$\sim$+152\%의 일관된 성능 향상을 달성한다. 피처 ablation 분석은 순수 행동적 피처(20개)가 전체 피처나 구조적 피처보다 우수한 k-NN view를 생성함을 실증하였다.
 둘째, 서브그래프 풀링은 view-level homophily와 인코더 정규화 깊이에 dependent한 conditional amplifier로 기능한다 (Section~\ref{subsec:rq2}): per-layer BN 인코더에서는 marginal한 +0.002 추가 개선에 그치나, BGRL과 BN 미포함 인코더에서는 +0.014$\sim$+0.078 substantial 개선을 제공한다.
 셋째, BatchNorm은 극심한 불균형 환경에서 contrastive paradigm보다 결정적인 성능 요인이며, ego-neighborhood 정규화 역할을 부분적으로 수행함이 (b)$\to$(d) 인코더 간 차이를 통해 확인된다.
-넷째, HOFINET에서 라벨 없이 학습한 자기지도 표현만으로 supervised baseline 대비 0.005 F1\_susp 이내의 경쟁력 있는 탐지 성능(F1\_susp 0.673)을 달성하였으며, 라벨 비율을 1\%로 줄여도 0.659를 유지하여 라벨 희소 환경에서의 강건성을 확인하였다. AMLworld에서는 모든 GNN 지도학습 baseline을 일관되게 상회하였다.
+넷째, HOFINET에서 라벨 없이 학습한 자기지도 표현만으로 supervised baseline 대비 0.005 F1\_susp 이내의 경쟁력 있는 탐지 성능(F1\_susp 0.673)을 달성하였으며, 라벨 비율을 1\%로 줄여도 0.654를 유지하여 라벨 희소 환경에서의 강건성을 확인하였다. AMLworld에서는 모든 GNN 지도학습 baseline을 일관되게 상회하였다.
 다섯째, 상위 400건 budget 기준 precision@400 = 0.791 $\pm$ 0.049의 운영 곡선을 보고하여 분석 budget 제한 환경에서의 활용 가능성을 정량화하였다 (Section~\ref{subsec:rq5}).
 
 본 연구는 전이적(transductive) 설정에서만 검증되었고, 서브그래프 풀링의 개선 폭이 인코더 family에 따라 크게 차등하며, 시간 기반 hold-out 평가가 아니므로 streaming deployment와 동등하지 않다는 한계가 있다. 향후 동적/시간적 그래프 및 귀납적(inductive) 설정으로의 확장, 학습 가능한 피처 선택 메커니즘 개발, 운영 환경에서의 shadow-run 및 analyst-feedback 검증을 계획한다.
