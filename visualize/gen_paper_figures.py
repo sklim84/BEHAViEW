@@ -25,15 +25,30 @@ plt.rcParams.update({
 
 
 def fig2_ablation_matrix():
-    """Fig.2: (a)(b)(c)(d) 2×2 ablation matrix heatmap — refined, no title."""
-    # BN encoder average results
+    """Fig.2 (paper Fig.3): (a)(b)(c)(d) 2x2 ablation matrix heatmap.
+
+    Cells = mean F1_susp over 4 per-layer BN encoders (GBT, DGI+BN, MVGRL+BN,
+    GRACE+BN), 4 seeds, on the corrected 80% holdout (Gate 1 sweep).
+    """
+    import pandas as pd
+    df = pd.read_csv('results/exp_results_hofinet_ab.csv')
+    parsed = []
+    for n in df['Model']:
+        parts = n.split('_')
+        parsed.append((('_'.join(parts[1:-2])), parts[-2]))
+    df['encoder'] = [p[0] for p in parsed]
+    df['setting'] = [p[1] for p in parsed]
+    bn_per_layer = ['gbt', 'dgi_bn', 'mvgrl_bn', 'grace_bn']
+    means = {s: df[(df['encoder'].isin(bn_per_layer)) & (df['setting'] == s)]['f1_1'].mean()
+             for s in 'abcd'}
     data = np.array([
-        [0.274, 0.677],  # (a), (b) — GCN+BN avg
-        [0.208, 0.682],  # (c), (d)
+        [means['a'], means['b']],   # node-level row
+        [means['c'], means['d']],   # subgraph-pool row
     ])
+    base = means['a']
     pct = np.array([
-        ['baseline', '+147%'],
-        ['-24%', '+149%'],
+        ['baseline', f'+{(means["b"]/base - 1)*100:.0f}%'],
+        [f'{(means["c"]/base - 1)*100:.0f}%', f'+{(means["d"]/base - 1)*100:.0f}%'],
     ])
 
     fig, ax = plt.subplots(figsize=(4.5, 3.5))

@@ -427,7 +427,7 @@ Behavioral k-NN   & \textbf{0.981} & \textbf{62K}  & \textbf{88K} & \textbf{1:1.
 서브그래프 풀링의 효과는 결합되는 view에 따라 상반되며, 그 크기는 인코더 family에 따라 차등적으로 나타난다 (Figure~\ref{fig:rq2_ablation}).
 HOFINET에서 행동적 k-NN view 위에 풀링을 추가한 (d) 설정의 (b) 대비 개선폭은 인코더의 정규화 깊이에 반비례한다.
 Per-layer BatchNorm 4종(GBT, DGI+BN, MVGRL+BN, GRACE+BN)에서는 +0.002$\sim$+0.003으로 marginal하나, final-only BN인 BGRL에서 +0.078, BN 미포함 인코더(DGI/MVGRL/GRACE/GCA) 평균 +0.018로 substantial한 amplification을 제공한다.
-한편 원래 거래 그래프에서 풀링만 적용한 (c) 설정은 모든 인코더에서 baseline (a) 대비 성능이 저하되며 ($-$24\%$\sim$$-$36\%), 이는 Section~\ref{subsec:subgraph_pool}에서 예측한 noise amplification 메커니즘과 일치한다.
+한편 원래 거래 그래프에서 풀링만 적용한 (c) 설정은 BN-augmented 인코더에서 baseline (a) 대비 성능이 저하되며 ($-$17\%$\sim$$-$30\%), 이는 Section~\ref{subsec:subgraph_pool}에서 예측한 noise amplification 메커니즘과 일치한다. BN 미포함 인코더에서는 (c)가 (a) 대비 +4\%$\sim$+12\% 소폭 상승하나, 두 설정 모두 절대 F1\_susp가 0.04$\sim$0.05의 floor에 머물러 실용적 의미를 갖지 못한다.
 
 \begin{figure}[t]
     \centering
@@ -436,7 +436,7 @@ Per-layer BatchNorm 4종(GBT, DGI+BN, MVGRL+BN, GRACE+BN)에서는 +0.002$\sim$+
     \label{fig:rq2_ablation}
 \end{figure}
 
-HOFINET에서는 모든 인코더에서 일관된 순서 (d) $>$ (b) $>$ (a) $>$ (c)가 관찰된다.
+HOFINET에서는 BN-augmented 인코더(per-layer BN 5종 + BGRL)에서 (d) $>$ (b) $>$ (a) $>$ (c) 순서가 관찰되며, BN 미포함 인코더에서는 floor에 가까운 절대값(0.04$\sim$0.07)에서 (d) $>$ (b) $>$ (c) $\geq$ (a) 순서를 보인다.
 (b)에서 (d)로의 개선폭에 대한 4-seed paired t-test 결과, GBT는 $t=10.52$, $p=1.83 \times 10^{-3}$로 유의하며 (Table~\ref{tab:stat_test}), 인코더 정규화가 약한 family에서 효과가 더 강하게 나타난다: BGRL은 $t=43.57$, $p=2.66 \times 10^{-4}$ (Holm 보정), DGI/GRACE는 Holm 보정 후 각각 $p<0.05$로 유의하다.
 다만 AMLworld의 per-layer BN 인코더(GBT, DGI+BN, MVGRL+BN)에서는 (b)가 (d)보다 $-$0.0014$\sim$$-$0.0016 F1 우수한 역전 현상이 관찰되며 (Table~\ref{tab:rq4}), 이는 1.21\% prevalence floor와 BN-rich 인코더의 saturation 효과로 해석된다.
 
