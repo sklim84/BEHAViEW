@@ -23,12 +23,11 @@ import torch.nn.functional as F
 from torch import nn
 from torch.optim import Adam
 from torch_geometric.nn import GCNConv, GINConv as torch_geometric_GINConv
-from GCL.eval import get_split
 from tqdm import tqdm
 
 from config import get_config
 from data_loader import load_graph_data, load_knn_graph
-from utils import set_seed, build_result_dict, save_results_to_csv, evaluate_with_metrics, visualize_tsne
+from utils import set_seed, build_result_dict, save_results_to_csv, evaluate_with_metrics, visualize_tsne, make_split
 
 
 class GNNEncoder_BGRL(nn.Module):
@@ -450,8 +449,8 @@ def main(args):
         args.seed, z_cpu.numpy(), data.y, save_path=vis_save_path, skip=args.skip_tsne)
 
     train_ratio = getattr(args, 'train_ratio', 0.1)
-    test_ratio = 1.0 - train_ratio * 2
-    split = get_split(num_samples=z_cpu.size(0), train_ratio=train_ratio, test_ratio=test_ratio)
+    val_ratio = train_ratio  # paper convention: train=val=10%, test=80%
+    split = make_split(z_cpu.size(0), train_ratio=train_ratio, val_ratio=val_ratio, seed=args.seed)
     test_result = evaluate_with_metrics(z_cpu, data.y, split)
     print(test_result)
     print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, '

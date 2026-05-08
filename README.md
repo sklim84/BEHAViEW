@@ -99,11 +99,29 @@
 ### 핵심 발견
 
 1. **Behavioral view가 핵심**: 모든 encoder에서 일관된 개선, S-S/S-B 비율 4배 개선
-2. **Subgraph pooling은 조건부 증폭기**: 행동적 view 결합 시에만 효과, 단독 시 noise 증폭
-3. **BatchNorm이 결정적**: ~10배 성능 격차, per-layer BN encoder 4종 모두 0.681~0.682 수렴
-4. **k=10 최적, 강건**: k=5~50 범위에서 안정적 (0.661~0.682)
+2. **Subgraph pooling은 조건부 증폭기**: 행동적 view 결합 시에만 효과, 단독 시 noise 증폭. 효과 크기는 인코더 정규화 깊이에 반비례 (BGRL +0.078 ≫ per-layer BN 4종 +0.002~+0.003)
+3. **BatchNorm이 결정적**: ~10배 성능 격차, per-layer BN encoder 4종 모두 0.673~0.674 수렴
+4. **k=10 최적, 강건**: k=5~50 범위에서 안정적
 5. **일반성 확인**: HOFINET + AMLworld 두 데이터셋에서 동일 패턴
-6. **라벨 없이 Supervised와 동등**: Self-supervised 0.682 ≈ MLP 0.678
+6. **라벨 없이 Supervised와 동등**: Self-supervised 0.673 ≈ MLP supervised baseline
+
+---
+
+## Reproducibility & Known Issue: PyGCL `get_split` Semantics
+
+`models/subgraph_cl.py` 의 이전 버전(`v0.x` 이하)은 PyGCL의 `GCL.eval.get_split` 을 사용했습니다. 이 함수는 인자 `(train_ratio=0.1, test_ratio=0.8)` 호출 시 dictionary key 의미가 어긋나, BECON 논문 §4.1의 의도된 10/10/80 분할이 **실제로는 train 10% / valid 80% / test 10%** 로 적용되어 모든 평가가 `split['test']` (trailing 10%) 에서 수행되었습니다. 결과적으로 paper Tables 1–3의 모든 셀은 80% holdout이 아닌 10% holdout 산출물이었습니다.
+
+**Fix (release `v1.0-cikm2026-rebuttal`)**:
+
+- `utils.py` 에 `make_split(n, train_ratio, val_ratio, seed)` 추가 — NumPy `default_rng(seed)` 기반 결정적 split, `'train'` / `'valid'` / `'test'` key가 의도된 비율(10/10/80)을 명시적으로 반환
+- `models/subgraph_cl.py:454` 에서 `get_split` 호출을 `make_split(z.size(0), args.train_ratio, args.train_ratio, args.seed)` 로 교체
+- 모든 main table 셀(`results/exp_results_hofinet_ab.csv`, `results/exp_results_amlworld.csv`)을 보정된 protocol에서 재실행: 320 runs (10 encoders × 4 settings × 4 seeds × 2 datasets)
+- 보정 전 결과는 `results/_backup/` 에 보존
+- 통계 검정(Holm-Bonferroni paired t-test)도 보정 protocol에서 재산출: `results/exp_results_paired_t_test.csv`, `scripts/compute_paired_t_test.py`
+
+**Direction of impact**: 보정 후 GBT-(d) F1_susp 0.682 → 0.673 (소폭 하락, AUPRC 0.616 → 0.604). 인코더 family 순위는 보존되나 (a)/(c) ablation 순위가 swap됨((c) < (a)) — 이는 §3.3의 noise amplification 메커니즘으로 설명됨.
+
+상세 진단 및 영향 분석: `_paper/reviews/rebuttal_round2.md` (§1) / `_paper/reviews/rebuttal_round3.md` (§3.1).
 
 ---
 
@@ -127,13 +145,16 @@ python models/subgraph_cl.py \
 # Supervised baseline 비교
 python models/supervised_baselines.py --gpu 0 --dataset hofinet
 
-# 실험 스크립트
-bash scripts/run_ablation_abcd.sh              # HOFINET 4-setting ablation
-bash scripts/run_amlworld.sh                    # AMLworld 실험
-bash scripts/run_hofinet_ab_multiseed.sh        # HOFINET (a)/(b) multi-seed
-bash scripts/run_k_sensitivity_exp_only.sh      # k 민감도 실험
-bash scripts/run_all_additional_exp.sh          # Label fraction + Feature ablation + Cost
+# 실험 스크립트 — 320 runs main table sweep on corrected 10/10/80 split
+GPU=6 DATASETS=hofinet  bash scripts/run_main_table.sh > logs/main_hofinet.log 2>&1 &
+GPU=7 DATASETS=amlworld bash scripts/run_main_table.sh > logs/main_amlworld.log 2>&1 &
+wait
+
+# 통계 검정 (Holm-Bonferroni paired t-test)
+python scripts/compute_paired_t_test.py
 ```
+
+이전 스크립트(`run_ablation_abcd.sh`, `run_amlworld.sh` 등)는 PyGCL `get_split` 버그 때문에 buggy protocol 산출물을 만들므로 `scripts/_backup/` 으로 archive. `run_main_table.sh` 가 통합 대체.
 
 ---
 
@@ -153,10 +174,9 @@ datasets/
 analysis/
   homophily_knn.py               # S-S/S-B 비율 측정
 scripts/
-  run_ablation_abcd.sh           # HOFINET ablation 실험
-  run_amlworld.sh                # AMLworld 실험
-  run_hofinet_ab_multiseed.sh    # HOFINET multi-seed (a)/(b)
-  run_k_sensitivity_exp_only.sh  # k 민감도 실험
+  run_main_table.sh              # Gate 1 main table sweep (10×4×4×2=320 runs)
+  compute_paired_t_test.py       # Holm-Bonferroni paired t-test
+  _backup/                       # buggy-protocol scripts (archived)
 visualize/
   gen_paper_figures.py           # 논문 figure 생성
   gen_intro_variants.py          # Intro figure 변형

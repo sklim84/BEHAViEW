@@ -30,6 +30,28 @@ def set_seed(seed):
     torch.backends.cudnn.benchmark = False
 
 
+def make_split(n, train_ratio, val_ratio, seed):
+    """NumPy-seeded train/valid/test split (test_ratio = 1 - train - val).
+
+    Replaces PyGCL's GCL.eval.get_split, which silently swaps the 'valid' and
+    'test' slice semantics when train_ratio + test_ratio < 1 (the BECON
+    paper's intended 10/10/80 = train/val/test partition was therefore
+    evaluated on the trailing 10% slice instead of the middle 80% one).
+
+    Returns dict with torch.LongTensor entries 'train' / 'valid' / 'test',
+    deterministic per `seed` and independent of upstream torch RNG state.
+    """
+    rng = np.random.default_rng(seed)
+    perm = rng.permutation(n)
+    n_train = int(n * train_ratio)
+    n_val = int(n * val_ratio)
+    return {
+        'train': torch.from_numpy(perm[:n_train].copy()).long(),
+        'valid': torch.from_numpy(perm[n_train:n_train + n_val].copy()).long(),
+        'test':  torch.from_numpy(perm[n_train + n_val:].copy()).long(),
+    }
+
+
 def create_loss(loss_name):
     """손실 함수 이름으로부터 GCL Loss 객체를 생성한다."""
     if loss_name == 'BootstrapLatent':
