@@ -73,7 +73,7 @@
 실제 은행간 이체 데이터와 합성 벤치마크에서의 실험을 통해, 행동적 k-NN view가 의심 계좌 간 연결 비율을 크게 개선하여 동질성을 효과적으로 복원함을 밝힌다. 
 또한 서브그래프 풀링이 행동적 view와 결합할 때 amplifier로 작동하며, 그 효과의 크기는 인코더의 정규화 깊이에 반비례함을 10종 인코더 비교를 통해 입증한다.
 더불어 BatchNorm이 대규모 불균형 환경에서 인코더 아키텍처와 무관하게 성능을 결정하는 핵심 요인임을 controlled 비교로 검증한다.
-나아가, \method은 라벨 없이 학습한 자기지도 표현만으로 실제 은행 데이터에서 MLP, XGBoost 등 지도학습 모델과 0.005 F1\_susp 이내의 경쟁력 있는 탐지 성능을 달성하고, 합성 벤치마크에서는 모든 GNN 지도학습 baseline을 일관되게 상회한다. 일 400건 분석 budget 기준 precision@400 = 0.791 $\pm$ 0.049의 운영 곡선과 단일 H100에서 2초 미만의 batch inference latency를 보고하여 라벨 희소 환경에서의 운영 가능성을 정량화한다.
+나아가, \method은 라벨 없이 학습한 자기지도 표현만으로 실제 은행 데이터에서 MLP, XGBoost 등 지도학습 모델과 0.005 F1\_susp 이내의 경쟁력 있는 탐지 성능을 달성하고, 합성 벤치마크에서는 모든 GNN 지도학습 baseline을 일관되게 상회하여 라벨 희소 환경에서의 실용적 가치를 입증한다.
 \end{abstract}
 
 \keywords{anti-money laundering, graph contrastive learning, k-NN graph view, subgraph pooling, low-homophily, transaction networks}
@@ -120,7 +120,6 @@ contrastive level 축에서는 노드 수준의 대조와 서브그래프 수준
     \item 서브그래프 풀링이 view homophily와 인코더 정규화 깊이에 dependent한 conditional amplifier로 기능함을 (i) 저동질성 그래프 단독 적용 시의 성능 저하와 (ii) 인코더 정규화 깊이에 반비례하는 amplification magnitude로 입증한다 (Section~\ref{subsec:rq2}; Figure~\ref{fig:rq2_ablation}).
     \item 10종 인코더에 대한 비교 실험을 통해 BatchNorm이 대규모 불균형 환경에서 인코더 아키텍처와 무관하게 성능을 결정하는 핵심 요인임을 발견한다 (Section~\ref{subsec:rq3}; Figure~\ref{fig:rq3_bn}).
     \item 실제 및 합성 AML 데이터셋에서 일관된 개선 패턴을 확인하여 일반성을 검증하고 (Section~\ref{subsec:rq4}; Table~\ref{tab:rq4}), 실제 은행 데이터에서 라벨 없이 학습한 자기지도 표현이 supervised baseline 대비 0.005 F1\_susp 이내의 경쟁력을 보이며, 합성 벤치마크에서는 모든 GNN 지도학습 baseline을 일관되게 상회함을 입증한다 (Section~\ref{subsec:rq5}; Table~\ref{tab:rq5}).
-    \item 일 400건 분석 budget 기준 precision@400 = 0.791 $\pm$ 0.049의 운영 곡선과 단일 H100에서 2초 미만의 batch inference latency를 정량화하고, 시간 기반 hold-out 부재 등의 한계를 명시한다 (Section~\ref{sec:deployment}).
 \end{itemize}
 
 \section{Related Work}\label{sec:related_work}
@@ -579,6 +578,8 @@ AMLworld에서는 트리 기반 모델(XGBoost 0.073, LightGBM 0.070)이 최고 
 
 이 결과는 AML 도메인에서 라벨 획득이 수사기관의 확인 및 의심거래보고(STR)에 의존하여 부족하고 불완전한 현실을 고려할 때, 라벨 없이 거래 행동 패턴만으로 의심 계좌를 탐지할 수 있는 자기지도 접근의 실용적 가치를 시사한다.
 
+분석 budget이 제한된 환경에서의 활용성을 정량화하기 위해, \method 설정 (d) GBT가 점수 상위 $k$개 계좌에 대한 precision@$k$를 4 시드 mean $\pm$ 1$\sigma$로 보고한다 (HOFINET 보정 80\% holdout, $k \in \{50, 100, 200, 400, 800\}$). precision@50 = 0.875 $\pm$ 0.121, precision@100 = 0.853 $\pm$ 0.097, precision@200 = 0.834 $\pm$ 0.063, precision@400 = 0.791 $\pm$ 0.049, precision@800 = 0.746 $\pm$ 0.025로, 상위 400건 budget 환경에서 약 317 $\pm$ 19건의 진성 의심 계좌가 surface된다. 작은 $k$에서의 분산은 단일 shift 규모 caseload에서 운영적으로 유의미한 변동성을 가짐을 시사하며, 점추정의 안정성은 $k \geq 200$ 구간에서 std $\pm 0.07$ 미만으로 확보된다.
+
 \subsection{Additional Analysis}\label{subsec:additional}
 
 본 절에서는 \method의 주요 주장을 보강하는 세 가지 추가 분석을 제시한다.
@@ -653,30 +654,6 @@ Inference (embedding extraction)      & 0.05s \\
 
 전체 파이프라인은 약 11.4분에 완료되며, k-NN 구축이 전체의 89\%를 차지한다. 그러나 k-NN 구축은 일회성 전처리 단계로, 피처가 변경되지 않는 한 재계산이 불필요하다. 실질적인 학습 시간은 200 에포크에 75.7초(에포크당 0.38초)로 매우 효율적이며, 추론은 0.05초로 실시간 적용이 가능하다. k-NN 구축에는 scikit-learn의 ball tree 알고리즘을 사용하였으며, 452K 노드에 대해 $O(N \log N)$ 시간 복잡도로 확장 가능하다.
 
-\section{Deployment Considerations}\label{sec:deployment}
-
-\subsection{Status and Operating Assumption}\label{sec:deploy-status}
-\method은 현재 deployment 이전(pre-deployment) 단계의 offline 평가 결과만을 보고하며, 본 논문은 운영 환경 shadow-run, analyst feedback, 또는 pilot 결과를 포함하지 않는다. 아래의 deployment 수치는 HOFINET의 80\% 계좌 holdout (Section~\ref{sec:experiments})에서 도출된 것으로 시간 기반 hold-out이 아니다.\footnote{HOFINET 계좌 단위 snapshot 표현은 분석 시점별 거래 분리를 제공하지 않으므로, 운영 곡선은 계좌 분류 deployment의 상한이며 analyst-streaming 환경에서는 일정 수준의 generalization gap이 예상된다.}
-
-\subsection{Operating Point and Caseload}\label{sec:deploy-curve}
-일 400건 alert 분석 budget 환경 하에서, \method 설정 (d)는 보정된 80\% holdout에서 precision@400 = 0.791 $\pm$ 0.049를 달성한다 (4 시드 mean $\pm$ 1$\sigma$). 이는 일 평균 약 317 $\pm$ 19건의 진성 의심 계좌가 surface됨을 의미한다. 전체 운영 곡선은 다음과 같다:
-
-\begin{itemize}
-  \item precision@50  = 0.875 $\pm$ 0.121
-  \item precision@100 = 0.853 $\pm$ 0.097
-  \item precision@200 = 0.834 $\pm$ 0.063
-  \item precision@400 = 0.791 $\pm$ 0.049 (realistic operating point)
-  \item precision@800 = 0.746 $\pm$ 0.025
-\end{itemize}
-
-작은 $k$에서의 분산은 운영적으로 유의미하다: $k=50$에서 $\pm 0.121$ 은 single-shift caseload 50건이 75$\sim$100\% TP rate 범위에 분포함을 의미한다. 운영에서는 std가 $\pm 0.07$ 미만이 되는 $k \geq 200$에서만 점추정치를 보고할 것을 권장한다. alerts/day metric은 보고하지 않는데, HOFINET이 시간 기반 hold-out을 제공하지 않아 계좌 단위 top-$\hat{p}\geq 0.5$ 카운트를 일수 분모에 투영하는 것이 운영적으로 비현실적이기 때문이다.
-
-\subsection{Integration Path}\label{sec:deploy-integration}
-모델은 frozen encoder이며, inference는 행동적 피처 벡터와 local k-NN 그래프에 대한 forward pass이다. 단일 H100에서 452K 계좌 전체 batch에 대한 end-to-end latency는 2초 미만이며, 계좌당 incremental cost는 k-NN edge 갱신($k=10$ amortized 5\,ms 미만)이 지배한다. 따라서 serving model은 STR 스크리닝 파이프라인의 overnight batch ranking 단계에 호환되며, 본 연구는 online streaming inference를 제안하지 않는다.
-
-\subsection{Limitations and Threats to Validity}\label{sec:deploy-limit}
-세 가지 한계를 명시한다. (i) HOFINET은 시간 기반 hold-out 평가가 아니다; 계좌 random split은 train/test 사이에 계좌 행동 이력을 공유하며, 이는 계좌 분류 task에 적합하나 streaming deployment와 동일하지 않다. (ii) AMLworld의 패턴별 AUROC가 0.685 (FAN-IN)에서 0.799 (SCATTER-GATHER)까지 분산되며, sink-dominated 패턴에서의 deployment recall이 낮다. (iii) 두 데이터셋의 prevalence(HOFINET 2.13\%, AMLworld 1.21\%)는 일반적 STR-flag rate를 bracket하나 특정 운영 환경의 caseload와 일치하지 않으므로 deployment 시 보정이 필요하다.
-
 \section{Conclusion and Future Work}
 
 본 연구에서는 저동질성 거래 네트워크에서의 자금세탁 탐지를 위한 그래프 대조학습 프레임워크 \method을 제안하였다. view 구성과 contrastive level의 두 독립 축에 대한 체계적 분석을 통해 다음의 핵심 발견을 도출하였다.
@@ -685,7 +662,7 @@ Inference (embedding extraction)      & 0.05s \\
 둘째, 서브그래프 풀링은 view-level homophily와 인코더 정규화 깊이에 dependent한 conditional amplifier로 기능한다 (Section~\ref{subsec:rq2}): per-layer BN 인코더에서는 marginal한 +0.002 추가 개선에 그치나, BGRL과 BN 미포함 인코더에서는 +0.014$\sim$+0.078 substantial 개선을 제공한다.
 셋째, BatchNorm은 극심한 불균형 환경에서 contrastive paradigm보다 결정적인 성능 요인이며, ego-neighborhood 정규화 역할을 부분적으로 수행함이 (b)$\to$(d) 인코더 간 차이를 통해 확인된다.
 넷째, HOFINET에서 라벨 없이 학습한 자기지도 표현만으로 supervised baseline 대비 0.005 F1\_susp 이내의 경쟁력 있는 탐지 성능(F1\_susp 0.673)을 달성하였으며, 라벨 비율을 1\%로 줄여도 0.659를 유지하여 라벨 희소 환경에서의 강건성을 확인하였다. AMLworld에서는 모든 GNN 지도학습 baseline을 일관되게 상회하였다.
-다섯째, precision@400 = 0.791 $\pm$ 0.049의 운영 곡선과 단일 H100에서 2초 미만의 batch inference latency를 통해 운영 환경에서의 deployment 가능성을 정량화하였다 (Section~\ref{sec:deployment}).
+다섯째, 상위 400건 budget 기준 precision@400 = 0.791 $\pm$ 0.049의 운영 곡선을 보고하여 분석 budget 제한 환경에서의 활용 가능성을 정량화하였다 (Section~\ref{subsec:rq5}).
 
 본 연구는 전이적(transductive) 설정에서만 검증되었고, 서브그래프 풀링의 개선 폭이 인코더 family에 따라 크게 차등하며, 시간 기반 hold-out 평가가 아니므로 streaming deployment와 동등하지 않다는 한계가 있다. 향후 동적/시간적 그래프 및 귀납적(inductive) 설정으로의 확장, 학습 가능한 피처 선택 메커니즘 개발, 운영 환경에서의 shadow-run 및 analyst-feedback 검증을 계획한다.
 
