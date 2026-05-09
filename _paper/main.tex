@@ -250,7 +250,7 @@ Section~\ref{subsec:rq3}의 controlled 인코더 비교는 이 설계 선택이 
 \begin{equation}\label{eq:subgraph_pool}
     \mathbf{s}_i = \frac{1}{|\mathcal{N}(v_i)| + 1}\left(\mathbf{h}_i + \sum_{v_j \in \mathcal{N}(v_i)} \mathbf{h}_j\right)
 \end{equation}
-여기서 $\mathcal{N}(v_i)$는 $v_i$의 이웃 노드 집합이다. 이 연산은 scatter\_add를 활용하여 효율적으로 구현된다.
+여기서 $\mathcal{N}(v_i)$는 $v_i$의 이웃 노드 집합이다. 이 연산은 scatter\_add를 활용하여 효율적으로 구현된다. 식~\eqref{eq:subgraph_pool} 의 mean pool 은 \method 의 기본 (default) 변형이며, heterophilous 이웃에서 신호 역전 현상이 발생하여 (Theorem~\ref{thm:meanpool}; Section~\ref{subsubsec:theory_pool}) heterophily-aware 변형 (cosine-similarity 가중치 풀링) 도 함께 구현하여 비교한다 (Theorem~\ref{thm:hap}).
 
 서브그래프 풀링은 각 view의 해당 그래프 이웃 구조를 기준으로 적용된다. 즉, View 1에서는 거래 그래프의 이웃을, View 2에서는 k-NN 그래프의 이웃을 각각 집계한다.
 이 설계의 핵심 통찰은 서브그래프 풀링이 그래프의 연결 패턴을 증폭한다는 점이다. 
@@ -369,6 +369,14 @@ $\eta_h = 0.85$, $k = 10$, $\epsilon = 0.2$ 대입: $\mathbb{E}[\rho^{(\text{mea
 
 \paragraph{Combined view + pool narrative.}
 정리~\ref{thm:knn_homophily}--\ref{thm:combined} 은 view 가 edge-level 동질성 부재를, 정리~\ref{thm:meanpool}--\ref{thm:hap} 은 pool 이 aggregation-level 신호 역전을 각각 해소함을 보인다. 두 정리는 모두 단일 mechanism — DCSBM 의 degree heterogeneity (식~\eqref{eq:dcsbm}) — 에서 유도되며, \method 의 두 설계 선택을 통합 정당화한다.
+
+\begin{corollary}[Predicted 4-setting ablation pattern]\label{cor:ablation}
+$\eta_h^{\text{tx}} > 1/2 + 1/(2k)$ (mean-pool flip threshold) 와 BN-equipped 인코더 가정 하에서, BehaView 의 4 settings 에 대한 F1\_susp 순서는 다음과 같이 예측된다 (Theorem~\ref{thm:knn_homophily}, \ref{thm:meanpool}):
+\begin{equation}\label{eq:ablation}
+    F1(b) \;\approx\; F1(d) \;>\; F1(a) \;>\; F1(c).
+\end{equation}
+즉 view 효과는 양 ($b>a$), tx-graph mean pool 은 음 ($c<a$), k-NN view + pool 은 view 단독과 동등 ($d \approx b$). HOFINET 측정에서 6 BN-equipped 인코더 모두 이 순서를 만족한다 ($\Delta(b{-}a) \in [+0.255, +0.405]$, $\Delta(c{-}a) \in [-0.070, -0.052]$).
+\end{corollary}
 
 \paragraph{Cross-dataset verification.}
 HOFINET 외 AMLworld HI-Small 과 AMLNet 두 데이터셋에서도 정리~\ref{thm:combined} 의 하한과 식~\eqref{eq:eta_dcsbm} 의 DCSBM 예측을 검증한다 (Table~\ref{tab:theory_verify}). 세 데이터셋 모두 (i) 측정 동질성 격차가 정리~\ref{thm:combined} 하한을 충족 (slack $\geq 0$), (ii) 측정 ego-heterophily 가 mean-pool flip threshold $1/2 + 1/(2k) = 0.55$ ($k=10$) 를 초과한다. DCSBM 예측은 measured aggregated $\eta_h$ 를 5--11\% 만큼 under-predict 하는데, 이는 degree heterogeneity 만으로 설명되지 않는 추가 anti-homophily 메커니즘 (의도적 layering, mule-network 패턴) 의 존재를 시사한다.
