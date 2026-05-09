@@ -18,6 +18,7 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import copy
+import pandas as pd
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -320,6 +321,50 @@ class HeterophilyAwarePool(nn.Module):
         return total_sum / total_weight.clamp(min=1e-6)
 
 
+class CycleAwarePool(nn.Module):
+    """HAP + cycle-membership boost.
+
+    HeterophilyAwarePool 의 cosine 가중치에 triangle (cycle) 멤버십 가중치 추가.
+    각 edge (u, v) 의 weight = max(0, cos(z_u, z_v)) * (1 + alpha * 1[tri_u > 0]).
+    self-loop weight = 1 + alpha * 1[tri_v > 0].
+
+    triangle membership 은 외부에서 set_tri() 로 주입한다 (HOFINET 의 'triangle' feature).
+    의심 계좌가 거래 cycle (mule layering 패턴) 에 더 자주 참여한다는 도메인 가정 활용.
+    """
+    def __init__(self, alpha=2.0):
+        super().__init__()
+        self.alpha = alpha
+        self.tri_indicator = None
+
+    def set_tri(self, tri_count):
+        """tri_count: [N] tensor of triangle counts; 0/1 indicator 로 변환."""
+        self.tri_indicator = (tri_count > 0).float().unsqueeze(1)
+
+    def forward(self, z, edge_index):
+        if self.tri_indicator is None:
+            raise RuntimeError("CycleAwarePool: tri_indicator not set; call set_tri() first")
+        N, D = z.size()
+        src, tgt = edge_index[0], edge_index[1]
+        tri = self.tri_indicator.to(z.device)
+
+        z_norm = F.normalize(z, p=2, dim=1)
+        cos_sim = (z_norm[src] * z_norm[tgt]).sum(dim=1, keepdim=True).clamp(min=0.0)
+
+        edge_boost = 1.0 + self.alpha * tri[src]
+        weighted_w = cos_sim * edge_boost
+
+        weighted_z = weighted_w * z[src]
+        neigh_sum = torch.zeros(N, D, device=z.device)
+        weight_sum = torch.zeros(N, 1, device=z.device)
+        neigh_sum.scatter_add_(0, tgt.unsqueeze(1).expand(-1, D), weighted_z)
+        weight_sum.scatter_add_(0, tgt.unsqueeze(1), weighted_w)
+
+        self_boost = 1.0 + self.alpha * tri
+        total_sum = neigh_sum + self_boost * z
+        total_weight = weight_sum + self_boost
+        return total_sum / total_weight.clamp(min=1e-6)
+
+
 class SubgraphCL(nn.Module):
     """Unified Contrastive Learning framework.
 
@@ -329,12 +374,13 @@ class SubgraphCL(nn.Module):
     (c) aug view + subgraph: use_knn=False, use_subgraph=True
     (d) behav view + subgraph: use_knn=True, use_subgraph=True
 
-    pool_variant ('mean' | 'heterophily'): subgraph pool 방식 선택.
-      - 'mean': 표준 mean pool (BECON 기본)
+    pool_variant ('mean' | 'heterophily' | 'cycle'): subgraph pool 방식 선택.
+      - 'mean': 표준 mean pool (BehaView 기본)
       - 'heterophily': cosine-sim weighted pool (heterophilous 이웃 noise 완화)
+      - 'cycle': HAP + triangle membership boost (cycle 패턴 amplification, P5)
     """
     def __init__(self, encoder, hidden_dim, proj_dim=64, use_subgraph=True,
-                 pool_variant='mean'):
+                 pool_variant='mean', cycle_alpha=2.0):
         super().__init__()
         self.online_encoder = encoder
         self.target_encoder = None
@@ -342,6 +388,8 @@ class SubgraphCL(nn.Module):
         self.pool_variant = pool_variant
         if pool_variant == 'heterophily':
             self._subgraph_pool = HeterophilyAwarePool()
+        elif pool_variant == 'cycle':
+            self._subgraph_pool = CycleAwarePool(alpha=cycle_alpha)
         else:
             self._subgraph_pool = SubgraphPooling()
 
@@ -465,14 +513,24 @@ def main(args):
     print(f'Encoder: {encoder_type} ({encoder_cls.__name__})')
 
     pool_variant = getattr(args, 'pool_variant', 'mean')
+    cycle_alpha = getattr(args, 'cycle_alpha', 2.0)
     model = SubgraphCL(
         encoder=encoder,
         hidden_dim=args.hidden_dim,
         use_subgraph=use_subgraph,
         pool_variant=pool_variant,
+        cycle_alpha=cycle_alpha,
     ).to(device)
+    if pool_variant == 'cycle' and use_subgraph:
+        # Inject triangle feature for CycleAwarePool
+        df_full = pd.read_csv(f'./datasets/{args.node_data_name}.csv')
+        if 'triangle' not in df_full.columns:
+            raise RuntimeError(f"pool_variant=cycle requires 'triangle' feature column in {args.node_data_name}")
+        tri_count = torch.tensor(df_full['triangle'].values, dtype=torch.float, device=device)
+        model._subgraph_pool.set_tri(tri_count)
     if use_subgraph:
-        print(f'Subgraph pool variant: {pool_variant}')
+        print(f'Subgraph pool variant: {pool_variant}'
+              + (f' (cycle_alpha={cycle_alpha})' if pool_variant == 'cycle' else ''))
 
     optimizer = Adam(model.parameters(), lr=args.lr)
 

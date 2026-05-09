@@ -31,8 +31,10 @@ parser.add_argument('--encoder_type', type=str, default='bgrl',
 parser.add_argument('--subgraph_pool', action='store_true',
                     help='Use subgraph (neighborhood) pooling instead of global pooling')
 parser.add_argument('--pool_variant', type=str, default='mean',
-                    choices=['mean', 'heterophily'],
-                    help='Subgraph pool variant: mean (default) or heterophily-aware (cosine-sim weighted)')
+                    choices=['mean', 'heterophily', 'cycle'],
+                    help='Subgraph pool variant: mean (default), heterophily-aware (cosine-sim weighted), or cycle-aware (HAP + triangle boost)')
+parser.add_argument('--cycle_alpha', type=float, default=2.0,
+                    help='Triangle-membership boost coefficient for cycle-aware pool')
 
 # Evaluation
 parser.add_argument('--skip_tsne', action='store_true', help='Skip t-SNE visualization (for HP search)')
