@@ -30,6 +30,9 @@ parser.add_argument('--encoder_type', type=str, default='bgrl',
                     help='GNN encoder type for subgraph_cl (bgrl/dgi/mvgrl)')
 parser.add_argument('--subgraph_pool', action='store_true',
                     help='Use subgraph (neighborhood) pooling instead of global pooling')
+parser.add_argument('--pool_variant', type=str, default='mean',
+                    choices=['mean', 'heterophily'],
+                    help='Subgraph pool variant: mean (default) or heterophily-aware (cosine-sim weighted)')
 
 # Evaluation
 parser.add_argument('--skip_tsne', action='store_true', help='Skip t-SNE visualization (for HP search)')

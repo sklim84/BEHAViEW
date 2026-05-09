@@ -257,7 +257,7 @@ ENCODERS = {
 
 
 class SubgraphPooling(nn.Module):
-    """각 노드의 ego-subgraph 표현을 계산.
+    """각 노드의 ego-subgraph 표현을 mean pooling으로 계산.
 
     GNN 출력(모든 노드 임베딩) + 그래프의 edge_index를 받아,
     각 노드의 이웃 임베딩을 mean pooling하여 subgraph representation 생성.
@@ -290,6 +290,36 @@ class SubgraphPooling(nn.Module):
         return subgraph_repr
 
 
+class HeterophilyAwarePool(nn.Module):
+    """Cosine-similarity-weighted ego-subgraph pooling.
+
+    Mean pool의 한계 (heterophilous 이웃에서 noise amplification) 회피.
+    각 edge (u, v)의 가중치 w_uv = max(0, cos(z_u, z_v)). self-loop 가중치 1.0 고정.
+    이질적 이웃 (cos < 0) 은 가중치 0으로 사실상 제외 → 의심 신호 희석 완화.
+
+        s_v = (z_v + sum_u w_uv * z_u) / (1 + sum_u w_uv)
+    """
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, z, edge_index):
+        N, D = z.size()
+        src, tgt = edge_index[0], edge_index[1]
+
+        z_norm = F.normalize(z, p=2, dim=1)
+        cos_sim = (z_norm[src] * z_norm[tgt]).sum(dim=1, keepdim=True).clamp(min=0.0)
+
+        weighted_z  = cos_sim * z[src]
+        neigh_sum   = torch.zeros(N, D, device=z.device)
+        weight_sum  = torch.zeros(N, 1, device=z.device)
+        neigh_sum.scatter_add_(0, tgt.unsqueeze(1).expand(-1, D), weighted_z)
+        weight_sum.scatter_add_(0, tgt.unsqueeze(1), cos_sim)
+
+        total_sum    = neigh_sum + z              # self-loop weight = 1
+        total_weight = weight_sum + 1.0
+        return total_sum / total_weight.clamp(min=1e-6)
+
+
 class SubgraphCL(nn.Module):
     """Unified Contrastive Learning framework.
 
@@ -298,13 +328,22 @@ class SubgraphCL(nn.Module):
     (b) behav view + node-level: use_knn=True, use_subgraph=False
     (c) aug view + subgraph: use_knn=False, use_subgraph=True
     (d) behav view + subgraph: use_knn=True, use_subgraph=True
+
+    pool_variant ('mean' | 'heterophily'): subgraph pool 방식 선택.
+      - 'mean': 표준 mean pool (BECON 기본)
+      - 'heterophily': cosine-sim weighted pool (heterophilous 이웃 noise 완화)
     """
-    def __init__(self, encoder, hidden_dim, proj_dim=64, use_subgraph=True):
+    def __init__(self, encoder, hidden_dim, proj_dim=64, use_subgraph=True,
+                 pool_variant='mean'):
         super().__init__()
         self.online_encoder = encoder
         self.target_encoder = None
         self.use_subgraph = use_subgraph
-        self._subgraph_pool = SubgraphPooling()
+        self.pool_variant = pool_variant
+        if pool_variant == 'heterophily':
+            self._subgraph_pool = HeterophilyAwarePool()
+        else:
+            self._subgraph_pool = SubgraphPooling()
 
         # Projection head
         self.projector = nn.Sequential(
@@ -425,11 +464,15 @@ def main(args):
     encoder = encoder_cls(**encoder_kwargs)
     print(f'Encoder: {encoder_type} ({encoder_cls.__name__})')
 
+    pool_variant = getattr(args, 'pool_variant', 'mean')
     model = SubgraphCL(
         encoder=encoder,
         hidden_dim=args.hidden_dim,
         use_subgraph=use_subgraph,
+        pool_variant=pool_variant,
     ).to(device)
+    if use_subgraph:
+        print(f'Subgraph pool variant: {pool_variant}')
 
     optimizer = Adam(model.parameters(), lr=args.lr)
 
