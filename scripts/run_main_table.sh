@@ -4,7 +4,8 @@
 #
 # 10 encoders × 4 settings (a/b/c/d) × 4 seeds × 2 datasets = 320 runs
 # Replaces all paper Tables 1-3 cells which were produced under the
-# PyGCL get_split valid/test inversion (see _paper/reviews/rebuttal_round2.md §1).
+# PyGCL get_split valid/test inversion; uses utils.make_split for the
+# corrected protocol.
 #
 # Output:
 #   - HOFINET  → results/exp_results_hofinet_ab.csv  (ab = "ablation"; full 4-setting)

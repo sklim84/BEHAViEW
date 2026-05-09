@@ -133,8 +133,6 @@
 
 **Direction of impact**: 보정 후 GBT-(d) F1_susp 0.682 → 0.673 (소폭 하락, AUPRC 0.616 → 0.604). 인코더 family 순위는 보존되나 (a)/(c) ablation 순위가 swap됨((c) < (a)) — 이는 §3.3의 noise amplification 메커니즘으로 설명됨.
 
-상세 진단 및 영향 분석: `_paper/reviews/rebuttal_round2.md` (§1) / `_paper/reviews/rebuttal_round3.md` (§3.1).
-
 ---
 
 ## 빠른 시작

@@ -8,6 +8,7 @@ visualize/*/
 # Logs
 logs/
 run.log
+*.log
 
 # Experiment artifacts
 results.tsv
@@ -18,3 +19,18 @@ datasets/HOFINET.csv
 datasets/HOFINET_KNN_*.csv
 datasets/amlworld/*.csv
 datasets/amlworld/*.txt
+datasets/amlnet/*.csv
+datasets/amlnet/*.txt*
+datasets/paysim/*.csv
+datasets/banksim/*.csv
+datasets/dgraphfin/*.npz
+datasets/S-FFSD/*.csv
+datasets/S-FFSD/*.pdf
+datasets/elliptic/raw/*.csv
+datasets/elliptic/processed/*.pt
+datasets/elliptic/*.npz
+datasets/elliptic2/*.csv
+datasets/elliptic_plus_plus/repo/
+
+# Local-only idea development workspace (not pushed to GitHub)
+_idea_dev/
