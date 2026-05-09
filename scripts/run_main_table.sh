@@ -75,9 +75,9 @@ for DS in $DATASETS; do
     case "$DS" in
         hofinet)
             DS_TAG="hof"
-            NODE="HOFINET_NODE_FEAT"
-            EDGE="HOFINET_EDGES"
-            KNN="HOFINET_KNN_BEHAV_k10"
+            NODE="hofinet/HOFINET_NODE_FEAT"
+            EDGE="hofinet/HOFINET_EDGES"
+            KNN="hofinet/HOFINET_KNN_BEHAV_k10"
             RESULT="./results/exp_results_hofinet_ab.csv"
             ;;
         amlworld)
@@ -86,6 +86,13 @@ for DS in $DATASETS; do
             EDGE="amlworld/AMLWORLD_EDGES"
             KNN="amlworld/AMLWORLD_KNN_BEHAV_k10"
             RESULT="./results/exp_results_amlworld.csv"
+            ;;
+        amlnet)
+            DS_TAG="amlnet"
+            NODE="amlnet/AMLNET_NODE_FEAT"
+            EDGE="amlnet/AMLNET_EDGES"
+            KNN="amlnet/AMLNET_KNN_BEHAV_k10"
+            RESULT="./results/exp_results_amlnet.csv"
             ;;
         *)
             echo "unknown dataset: $DS"; exit 1
