@@ -232,7 +232,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', type=str, default='0')
     parser.add_argument('--seeds', nargs='+', type=int, default=[2024, 2025, 2026, 2027])
-    parser.add_argument('--dataset', type=str, default='hofinet', choices=['hofinet', 'amlworld'])
+    parser.add_argument('--dataset', type=str, default='hofinet', choices=['hofinet', 'amlworld', 'amlnet'])
     parser.add_argument('--result_file', type=str, default='./results/exp_results_supervised.csv')
     args = parser.parse_args()
 
@@ -241,9 +241,12 @@ def main():
     if args.dataset == 'hofinet':
         node_data = 'HOFINET_NODE_FEAT'
         edge_data = 'HOFINET_EDGES'
-    else:
+    elif args.dataset == 'amlworld':
         node_data = 'amlworld/AMLWORLD_NODE_FEAT'
         edge_data = 'amlworld/AMLWORLD_EDGES'
+    else:
+        node_data = 'amlnet/AMLNET_NODE_FEAT'
+        edge_data = 'amlnet/AMLNET_EDGES'
 
     # Load data using config-compatible args
     class Args:
