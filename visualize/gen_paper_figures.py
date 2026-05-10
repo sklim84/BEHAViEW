@@ -82,8 +82,8 @@ def fig2_ablation_matrix():
 
     plt.tight_layout()
     path = os.path.join(OUT_DIR, 'fig_rq2_ablation.pdf')
-    plt.savefig(path, bbox_inches='tight')
-    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight')
+    plt.savefig(path, bbox_inches='tight', dpi=300)
+    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
     plt.close()
     print(f'Saved: {path}')
 
@@ -127,8 +127,8 @@ def fig3_susp_connectivity():
 
     plt.tight_layout()
     path = os.path.join(OUT_DIR, 'fig3_fraud_connectivity.png')
-    plt.savefig(path, bbox_inches='tight')
-    plt.savefig(path.replace('.png', '.pdf'), bbox_inches='tight')
+    plt.savefig(path, bbox_inches='tight', dpi=300)
+    plt.savefig(path.replace('.png', '.pdf'), bbox_inches='tight', dpi=300)
     plt.close()
     print(f'Saved: {path}')
 
@@ -214,8 +214,8 @@ def fig4_bn_effect():
 
     plt.tight_layout()
     path = os.path.join(OUT_DIR, 'fig_rq3_bn.pdf')
-    plt.savefig(path, bbox_inches='tight')
-    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight')
+    plt.savefig(path, bbox_inches='tight', dpi=300)
+    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
     plt.close()
     print(f'Saved: {path}')
 
@@ -260,8 +260,8 @@ def fig5_setting_comparison():
     ax.set_title('F1_susp across Settings and Encoder Types', fontsize=13, fontweight='bold')
     plt.tight_layout()
     path = os.path.join(OUT_DIR, 'fig5_setting_comparison.png')
-    plt.savefig(path, bbox_inches='tight')
-    plt.savefig(path.replace('.png', '.pdf'), bbox_inches='tight')
+    plt.savefig(path, bbox_inches='tight', dpi=300)
+    plt.savefig(path.replace('.png', '.pdf'), bbox_inches='tight', dpi=300)
     plt.close()
     print(f'Saved: {path}')
 
@@ -304,8 +304,8 @@ def fig_intro_homophily():
 
     plt.tight_layout(w_pad=1.0)
     path = os.path.join(OUT_DIR, 'fig_intro_homophily.pdf')
-    plt.savefig(path, bbox_inches='tight')
-    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight')
+    plt.savefig(path, bbox_inches='tight', dpi=300)
+    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
     plt.close()
     print(f'Saved: {path}')
 
@@ -409,8 +409,8 @@ def fig1_framework():
 
     plt.tight_layout()
     path = os.path.join(OUT_DIR, 'fig1_framework.png')
-    plt.savefig(path, bbox_inches='tight')
-    plt.savefig(path.replace('.png', '.pdf'), bbox_inches='tight')
+    plt.savefig(path, bbox_inches='tight', dpi=300)
+    plt.savefig(path.replace('.png', '.pdf'), bbox_inches='tight', dpi=300)
     plt.close()
     print(f'Saved: {path}')
 
