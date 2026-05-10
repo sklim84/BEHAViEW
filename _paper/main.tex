@@ -298,7 +298,7 @@ AMLNet            &  11{,}000 & 1{,}090{,}172 & 13.52\% & Synthetic \\
 \end{table}
 
 \paragraph{Settings, baselines, and protocol.}
-\method 의 4 ablation 설정 — (a) 증강 view + node-level, (b) 행동 k-NN view + node-level, (c) 증강 view + subgraph pool, (d) 행동 k-NN view + subgraph pool — 을 (Figure~\ref{fig:framework} 하단) 10종 self-supervised 인코더 (per-layer BN: GBT/DGI+BN/MVGRL+BN/GRACE+BN/GIN, final BN: BGRL, BN-less: DGI/MVGRL/GRACE/GCA) 에 교차 적용한다. 공정 비교를 위해 모든 인코더에 동일한 BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) 와 하이퍼파라미터 (lr=5e-4, hidden=256, $L$=2, dropout=0.2, 200 ep) 를 적용한다. Supervised baseline 으로 GCN/GAT/GraphSAGE/MLP/LightGBM/XGBoost 6종에 class-weight 보정을 적용한다.
+\method 의 4 ablation 설정 — (a) 증강 view + node-level, (b) 행동 k-NN view + node-level, (c) 증강 view + subgraph pool, (d) 행동 k-NN view + subgraph pool — 을 (Figure~\ref{fig:framework} 하단) 10종 self-supervised 인코더 (per-layer BN: GBT/DGI+BN/MVGRL+BN/GRACE+BN/GIN, final BN: BGRL, BN-less: DGI/MVGRL/GRACE/GCA) 에 교차 적용한다. 공정 비교를 위해 모든 인코더에 동일한 BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) 와 하이퍼파라미터 (lr=5e-4, hidden=256, $L$=2, dropout=0.2, 200 ep) 를 적용한다. Supervised baseline 으로 GCN, GAT, GraphSAGE, MLP, LightGBM, XGBoost 6종에 class-weight 보정을 적용한다.
 
 평가 지표는 의심 클래스 F1-score (F1\_susp) 를 주, AUROC/AUPRC 를 보조로 사용한다. 모든 실험은 10\%/10\%/80\% train/val/test 분할 (시드별 동일 분할로 paired comparison 보장) 과 4 시드 (2024--2027) 평균±표준편차로 보고한다. 통계적 유의성은 4-seed paired $t$-test 로 검증하며 (Holm--Bonferroni 보정 적용, 상세 Table~\ref{tab:stat_test} 부록), 시드별 원시 결과는 \texttt{results/} 에 공개한다. 자기지도 모델은 인코더를 고정하고 임베딩 $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$ 에 대해 LogisticRegression 으로 평가한다. 모든 실험은 Python 3.12 / PyTorch 2.10 / CUDA 12.8 / NVIDIA H100 80GB 환경.
 
