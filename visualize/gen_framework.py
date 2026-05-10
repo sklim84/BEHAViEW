@@ -50,7 +50,7 @@ ROW_H = 1.7        # height of each row box (View/Encoder/Pool/Proj)
 TERMINAL_W = 3.0   # input + BYOL + Inference width (== BW for visual unity)
 TERMINAL_H = 4.0   # input + BYOL + Inference height (spans both rows)
 
-GAP = 0.85         # horizontal gap between columns
+GAP = 1.15         # horizontal gap between columns
 
 # Column x positions (left edge of each box)
 x_in   = 0.5
