@@ -403,11 +403,11 @@ HOFINET, AMLworld, AMLNet 세 데이터셋 모두 거래 그래프 S-S/S-B = 1:5
 
 \subsection{Comparison with Supervised Models (RQ5)}\label{subsec:rq5}
 
-\method (d) 는 라벨을 사용하지 않고도 지도학습 baseline 과 경쟁적 성능을 달성한다. Table~\ref{tab:rq5} 는 세 데이터셋에서 \method (d) 와 6종 지도학습 baseline (GCN, GAT, GraphSAGE, MLP, LightGBM, XGBoost) 의 결과를 비교한다.
+\method 은 라벨을 사용하지 않고도 지도학습 baseline 과 경쟁적 성능을 달성한다. Table~\ref{tab:rq5} 는 세 데이터셋에서 \method (제안 설정 (d), 데이터셋별 최강 인코더) 과 6종 지도학습 baseline (GCN, GAT, GraphSAGE, MLP, LightGBM, XGBoost) 의 결과를 비교한다.
 
 \begin{table}[t]
 \centering
-\caption{RQ5: Self-supervised \method (d) vs.\ supervised baselines (4-seed mean$\pm$std on the 80\% holdout; the same test indices are used across all models for paired comparison). Best in bold (ties share bold), sole second-best underlined. \method (d) reports the strongest encoder per dataset: GBT on HOFINET, BGRL on AMLworld, and GBT on AMLNet.}
+\caption{RQ5: Self-supervised \method vs.\ supervised baselines (4-seed mean$\pm$std on the 80\% holdout; the same test indices are used across all models for paired comparison). Best in bold (ties share bold), sole second-best underlined. \method denotes the proposed setting (d) with the strongest encoder per dataset (GBT on HOFINET, BGRL on AMLworld, GBT on AMLNet). Models are ordered by complexity: tabular boosting, MLP, supervised GNNs, then \method.}
 \label{tab:rq5}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{llccc}
@@ -416,40 +416,40 @@ HOFINET, AMLworld, AMLNet 세 데이터셋 모두 거래 그래프 S-S/S-B = 1:5
 \midrule
 \multicolumn{5}{l}{\textit{HOFINET (suspicious ratio: 2.13\%)}} \\
 \midrule
-MLP       & Supervised     & \textbf{0.679}{\scriptsize±.002} & 0.991{\scriptsize±.000} & 0.616{\scriptsize±.009} \\
-GraphSAGE & Supervised GNN & \underline{0.677}{\scriptsize±.002} & 0.992{\scriptsize±.000} & 0.610{\scriptsize±.004} \\
 XGBoost   & Tabular        & 0.675{\scriptsize±.001} & \textbf{0.992}{\scriptsize±.000} & \textbf{0.665}{\scriptsize±.005} \\
-\method (d) & Self-supervised & 0.673{\scriptsize±.003} & 0.991{\scriptsize±.000} & 0.604{\scriptsize±.006} \\
 LightGBM  & Tabular        & 0.670{\scriptsize±.001} & \textbf{0.992}{\scriptsize±.000} & \underline{0.662}{\scriptsize±.002} \\
-GAT       & Supervised GNN & 0.534{\scriptsize±.024} & 0.988{\scriptsize±.001} & 0.565{\scriptsize±.010} \\
+MLP       & Supervised     & \textbf{0.679}{\scriptsize±.002} & 0.991{\scriptsize±.000} & 0.616{\scriptsize±.009} \\
 GCN       & Supervised GNN & 0.250{\scriptsize±.007} & 0.935{\scriptsize±.017} & 0.316{\scriptsize±.045} \\
+GAT       & Supervised GNN & 0.534{\scriptsize±.024} & 0.988{\scriptsize±.001} & 0.565{\scriptsize±.010} \\
+GraphSAGE & Supervised GNN & \underline{0.677}{\scriptsize±.002} & 0.992{\scriptsize±.000} & 0.610{\scriptsize±.004} \\
+\method   & Self-supervised & 0.673{\scriptsize±.003} & 0.991{\scriptsize±.000} & 0.604{\scriptsize±.006} \\
 \midrule
 \multicolumn{5}{l}{\textit{AMLworld (suspicious ratio: 1.23\%)}} \\
 \midrule
 XGBoost   & Tabular        & \textbf{0.073}{\scriptsize±.002} & \textbf{0.753}{\scriptsize±.003} & \textbf{0.037}{\scriptsize±.001} \\
 LightGBM  & Tabular        & \underline{0.070}{\scriptsize±.002} & 0.752{\scriptsize±.003} & \underline{0.037}{\scriptsize±.001} \\
-\method (d) & Self-supervised & 0.066{\scriptsize±.009} & 0.608{\scriptsize±.030} & 0.027{\scriptsize±.001} \\
-GraphSAGE & Supervised GNN & 0.050{\scriptsize±.001} & 0.671{\scriptsize±.013} & 0.024{\scriptsize±.001} \\
 MLP       & Supervised     & 0.048{\scriptsize±.002} & 0.695{\scriptsize±.014} & 0.024{\scriptsize±.001} \\
-GAT       & Supervised GNN & 0.047{\scriptsize±.001} & 0.701{\scriptsize±.013} & 0.023{\scriptsize±.001} \\
 GCN       & Supervised GNN & 0.045{\scriptsize±.001} & 0.703{\scriptsize±.007} & 0.022{\scriptsize±.001} \\
+GAT       & Supervised GNN & 0.047{\scriptsize±.001} & 0.701{\scriptsize±.013} & 0.023{\scriptsize±.001} \\
+GraphSAGE & Supervised GNN & 0.050{\scriptsize±.001} & 0.671{\scriptsize±.013} & 0.024{\scriptsize±.001} \\
+\method   & Self-supervised & 0.066{\scriptsize±.009} & 0.608{\scriptsize±.030} & 0.027{\scriptsize±.001} \\
 \midrule
 \multicolumn{5}{l}{\textit{AMLNet (suspicious ratio: 13.52\%)}} \\
 \midrule
-MLP       & Supervised     & \textbf{0.714}{\scriptsize±.005} & \textbf{0.945}{\scriptsize±.001} & \textbf{0.797}{\scriptsize±.008} \\
-GraphSAGE & Supervised GNN & \underline{0.708}{\scriptsize±.007} & 0.940{\scriptsize±.005} & \underline{0.806}{\scriptsize±.005} \\
 XGBoost   & Tabular        & 0.699{\scriptsize±.007} & 0.938{\scriptsize±.002} & 0.785{\scriptsize±.012} \\
 LightGBM  & Tabular        & 0.687{\scriptsize±.011} & 0.936{\scriptsize±.004} & 0.781{\scriptsize±.013} \\
-\method (d) & Self-supervised & 0.679{\scriptsize±.002} & 0.928{\scriptsize±.001} & 0.751{\scriptsize±.005} \\
-GAT       & Supervised GNN & 0.500{\scriptsize±.047} & 0.803{\scriptsize±.013} & 0.562{\scriptsize±.039} \\
+MLP       & Supervised     & \textbf{0.714}{\scriptsize±.005} & \textbf{0.945}{\scriptsize±.001} & \textbf{0.797}{\scriptsize±.008} \\
 GCN       & Supervised GNN & 0.467{\scriptsize±.006} & 0.785{\scriptsize±.011} & 0.476{\scriptsize±.022} \\
+GAT       & Supervised GNN & 0.500{\scriptsize±.047} & 0.803{\scriptsize±.013} & 0.562{\scriptsize±.039} \\
+GraphSAGE & Supervised GNN & \underline{0.708}{\scriptsize±.007} & 0.940{\scriptsize±.005} & \underline{0.806}{\scriptsize±.005} \\
+\method   & Self-supervised & 0.679{\scriptsize±.002} & 0.928{\scriptsize±.001} & 0.751{\scriptsize±.005} \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
-세 데이터셋 모두에서 \method (d) 가 supervised baseline 과 경쟁적이거나 GNN 지도학습 대비 강건한 성능을 보인다. HOFINET 에서 \method (d) 0.673 은 MLP (0.679), GraphSAGE (0.677), XGBoost (0.675), LightGBM (0.670) 과 0.006 이내의 차이를 보이며 ($t{=}{-}10.08$, $p{=}2.08{\times}10^{-3}$, 통계적 유의함에도 절대 차이는 미미), GCN (0.250) 과 GAT (0.534) 은 over-smoothing 과 불안정성으로 인해 약하다. AMLworld 에서 \method (d) 0.066 은 트리 기반 (0.070 $\sim$ 0.073) 보다 0.004 $\sim$ 0.007 미달하나 모든 GNN 지도학습 (0.045 $\sim$ 0.050) 을 0.015 $\sim$ 0.021 일관되게 상회하여, 라벨 희소 + 1.23\% 불균형 환경에서 자기지도가 우위를 보인다. AMLNet (13.5\% prevalence) 에서 \method (d) 0.679 는 LightGBM (0.687) 과 0.008 이내의 차이를 보이며, MLP (0.714) 등 트리와 MLP 대비 0.020 $\sim$ 0.035 미달하나 GAT (0.500), GCN (0.467) 대비 +0.18 $\sim$ +0.21 의 우위를 보인다. 지도학습 대비 격차가 prevalence 와 함께 좁아지는 점 (HOFINET 0.006, AMLNet 0.035) 은, AML 도메인의 실제 환경 (low prevalence + 라벨 희소) 에서 \method 의 가치를 더욱 부각한다.
+세 데이터셋 모두에서 \method 이 supervised baseline 과 경쟁적이거나 GNN 지도학습 대비 강건한 성능을 보인다. HOFINET 에서 \method 0.673 은 MLP (0.679), GraphSAGE (0.677), XGBoost (0.675), LightGBM (0.670) 과 0.006 이내의 차이를 보이며 ($t{=}{-}10.08$, $p{=}2.08{\times}10^{-3}$, 통계적 유의함에도 절대 차이는 미미), GCN (0.250) 과 GAT (0.534) 은 over-smoothing 과 불안정성으로 인해 약하다. AMLworld 에서 \method 0.066 은 트리 기반 (0.070 $\sim$ 0.073) 보다 0.004 $\sim$ 0.007 미달하나 모든 GNN 지도학습 (0.045 $\sim$ 0.050) 을 0.015 $\sim$ 0.021 일관되게 상회하여, 라벨 희소 + 1.23\% 불균형 환경에서 자기지도가 우위를 보인다. AMLNet (13.5\% prevalence) 에서 \method 0.679 는 LightGBM (0.687) 과 0.008 이내의 차이를 보이며, MLP (0.714) 등 트리와 MLP 대비 0.020 $\sim$ 0.035 미달하나 GAT (0.500), GCN (0.467) 대비 +0.18 $\sim$ +0.21 의 우위를 보인다. 지도학습 대비 격차가 prevalence 와 함께 좁아지는 점 (HOFINET 0.006, AMLNet 0.035) 은, AML 도메인의 실제 환경 (low prevalence + 라벨 희소) 에서 \method 의 가치를 더욱 부각한다.
 
-분석 예산이 제한된 환경에서의 활용성. \method (d) GBT 의 HOFINET precision@$k$ ($k \in \{50, 100, 200, 400, 800\}$, 4 seed) 는 0.875, 0.853, 0.834, 0.791, 0.746 으로, 상위 400 건 예산에서 약 317 건의 진성 의심 계좌를 검출한다.
+분석 예산이 제한된 환경에서의 활용성. \method GBT 의 HOFINET precision@$k$ ($k \in \{50, 100, 200, 400, 800\}$, 4 seed) 는 0.875, 0.853, 0.834, 0.791, 0.746 으로, 상위 400 건 예산에서 약 317 건의 진성 의심 계좌를 검출한다.
 
 \subsection{Additional Analyses}\label{subsec:additional}
 
