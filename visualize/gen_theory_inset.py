@@ -1,7 +1,14 @@
-"""Theory inset: mean-pool signal vs heterophily, with flip threshold.
+"""Theory inset: mean-pool signal-flip threshold visualization.
 
-Generates two separate PDFs (one per subfigure) so they can be embedded
-via LaTeX subfigure with their own captions.
+Single-panel design (Variant A simplification):
+- Main curve: k=10 (paper's default) in bold teal
+- Other k values (5, 20, 50) as faint context background
+- Flip threshold (eta_h* = 0.55 for k=10) marked with red dashed line
+- Three dataset markers showing all measured eta_h exceed the threshold
+- Shaded "flip region" (eta_h > 0.55) where mean-pool signal sign reverses
+
+Message: All AML datasets we use have eta_h > flip threshold,
+explaining why setting (c) (transaction graph + mean pool) fails.
 """
 import matplotlib
 matplotlib.use('Agg')
@@ -24,71 +31,79 @@ OUT = '/home/work/kftc_model/KA-003-FraudCenGCL/_paper/figures'
 os.makedirs(OUT, exist_ok=True)
 
 
-def panel_a_mean_pool_flip():
-    fig, ax = plt.subplots(figsize=(3.5, 2.6))
+def fig_theory_inset():
+    """Single-panel: signal flip threshold + dataset markers."""
+    C_MAIN     = '#1B5E7D'   # dark teal — k=10 (main)
+    C_CTX      = '#9CA3AF'   # gray — other k context
+    C_FLIP     = '#C73E1D'   # warm red — flip threshold
+    C_FLIP_BG  = '#FEE2E2'   # light red — flip region shading
+    C_DOT_HOF  = '#2E86AB'
+    C_DOT_AML  = '#E07A5F'
+    C_DOT_NET  = '#2A9D8F'
+    C_TEXT     = '#1F2937'
+
+    fig, ax = plt.subplots(figsize=(4.8, 2.8))
     eta = np.linspace(0, 1, 200)
-    for k, color, ls in [(5, '#999999', ':'), (10, '#1f77b4', '-'),
-                         (20, '#666666', '--'), (50, '#333333', '-.')]:
+
+    # Background: flip region (eta > 0.55 for k=10)
+    ax.axvspan(0.55, 1.0, color=C_FLIP_BG, alpha=0.45, zorder=0)
+    # Region label placed at bottom of red area (out of legend's way)
+    ax.text(0.78, -0.97, 'signal-flip region (mean pool fails)',
+            fontsize=8.5, color=C_FLIP, ha='center', va='bottom', style='italic',
+            fontweight='bold')
+
+    # Context curves (k=5, 20, 50) — faint
+    for k in [5, 20, 50]:
         rho = (1 + k * (1 - 2*eta)) / (k + 1)
-        ax.plot(eta, rho, color=color, linestyle=ls, linewidth=1.6, label=f'$k={k}$')
+        ax.plot(eta, rho, color=C_CTX, linewidth=1.0, alpha=0.45,
+                linestyle=':', zorder=1)
+        ax.text(1.005, rho[-1], f'$k{{=}}{k}$', fontsize=7,
+                color=C_CTX, va='center', ha='left')
 
-    ax.axhline(0, color='red', linewidth=0.8, alpha=0.5)
-    ax.axvline(0.55, color='red', linewidth=1.0, linestyle=':', alpha=0.7)
-    ax.text(0.56, 0.85, '$\\eta_h^* = 0.55$\n(flip,\n$k{=}10$)', fontsize=8, color='red', va='top')
+    # Main curve: k=10
+    k = 10
+    rho_main = (1 + k * (1 - 2*eta)) / (k + 1)
+    ax.plot(eta, rho_main, color=C_MAIN, linewidth=2.4, zorder=3,
+            label='$k=10$ (paper default)')
+    ax.text(1.005, rho_main[-1], '$k{=}10$', fontsize=8.5,
+            color=C_MAIN, fontweight='bold', va='center', ha='left')
 
-    for x, m, label, dy in [(0.851, 'o', 'HOFINET', -0.10),
-                             (0.941, 's', 'AMLworld', 0.0),
-                             (0.878, '^', 'AMLNet', +0.10)]:
+    # Zero line
+    ax.axhline(0, color='#6B7280', linewidth=0.7, zorder=1)
+
+    # Flip threshold line + label (positioned bottom-left to avoid region label)
+    ax.axvline(0.55, color=C_FLIP, linewidth=1.4, linestyle='--', zorder=2)
+    ax.annotate('flip threshold\n$\\eta_h^* = 1/2 + 1/(2k) = 0.55$',
+                xy=(0.55, -0.30), xytext=(0.05, -0.55),
+                fontsize=8.5, color=C_FLIP, fontweight='bold', ha='left',
+                arrowprops=dict(arrowstyle='->', color=C_FLIP, lw=0.9, alpha=0.85))
+
+    # Dataset markers (all on the k=10 curve)
+    datasets = [
+        ('HOFINET',  0.851, C_DOT_HOF, 'o'),
+        ('AMLworld', 0.941, C_DOT_AML, 's'),
+        ('AMLNet',   0.878, C_DOT_NET, '^'),
+    ]
+    for name, x, color, marker in datasets:
         y = (1 + 10*(1 - 2*x)) / 11
-        ax.scatter([x], [y], s=50, marker=m, color='#1f77b4',
-                   zorder=5, edgecolors='black', linewidth=0.8)
-        if label == 'AMLworld':
-            ax.text(x + 0.04, y, label, fontsize=7, ha='left', va='center', color='#1f77b4')
-        else:
-            ax.text(x, y + dy, label, fontsize=7, ha='center', color='#1f77b4')
+        ax.scatter([x], [y], s=120, marker=marker, color=color,
+                   edgecolors='white', linewidths=1.4, zorder=6,
+                   label=f'{name} ($\\eta_h{{=}}{x:.2f}$)')
 
-    ax.set_xlabel('Heterophily $\\eta_h$', fontsize=12)
-    ax.set_ylabel('$\\mathbb{E}[\\rho^{(\\mathrm{mean})}]$', fontsize=12)
-    ax.set_xlim(0, 1)
-    ax.set_ylim(-1, 1.05)
-    ax.grid(alpha=0.25)
-    ax.legend(loc='lower left', fontsize=10, framealpha=0.95)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-
-    plt.tight_layout()
-    out = os.path.join(OUT, 'fig_theory_inset_a')
-    plt.savefig(out + '.pdf', bbox_inches='tight', dpi=300)
-    plt.savefig(out + '.png', bbox_inches='tight', dpi=300)
-    plt.close()
-    print('Saved:', out + '.pdf')
-
-
-def panel_b_hap_vs_mean():
-    fig, ax = plt.subplots(figsize=(3.5, 2.6))
-    eta = np.linspace(0, 1, 200)
-    k, eps = 10, 0.2
-    rho_mean = (1 + k * (1 - 2*eta)) / (k + 1)
-    rho_hap = 1 - 4 * eps**2 * eta - eps**2
-
-    gap = rho_hap - rho_mean
-    ax.fill_between(eta, 0, gap, where=(gap > 0), alpha=0.25, color='#2ca02c', label='HAP advantage')
-    ax.plot(eta, rho_mean, color='#d62728', linewidth=1.6, label='Mean pool', linestyle='--')
-    ax.plot(eta, rho_hap, color='#2ca02c', linewidth=1.8, label='HAP (Thm 6 LB)')
-    ax.axhline(0, color='gray', linewidth=0.6)
-    ax.axvline(0.55, color='red', linewidth=0.8, linestyle=':', alpha=0.6)
-
-    ax.set_xlabel('Heterophily $\\eta_h$', fontsize=12)
-    ax.set_ylabel('Post-pool signal $\\mathbb{E}[\\rho]$', fontsize=12)
-    ax.set_xlim(0, 1)
+    ax.set_xlabel('Ego-neighborhood heterophily $\\eta_h$', fontsize=12)
+    ax.set_ylabel('Mean-pool signal $\\mathbb{E}[\\rho^{(\\mathrm{mean})}]$', fontsize=12)
+    ax.set_xlim(0, 1.08)
     ax.set_ylim(-1, 1.1)
-    ax.grid(alpha=0.25)
-    ax.legend(loc='lower left', fontsize=10, framealpha=0.95)
+    ax.grid(alpha=0.18, zorder=0)
+    # Legend at upper-right
+    ax.legend(loc='upper right', bbox_to_anchor=(1.0, 0.96),
+              fontsize=8.5, framealpha=0.95,
+              edgecolor='#CCCCCC', handlelength=1.4, borderaxespad=0.5)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
     plt.tight_layout()
-    out = os.path.join(OUT, 'fig_theory_inset_b')
+    out = os.path.join(OUT, 'fig_theory_inset')
     plt.savefig(out + '.pdf', bbox_inches='tight', dpi=300)
     plt.savefig(out + '.png', bbox_inches='tight', dpi=300)
     plt.close()
@@ -96,5 +111,4 @@ def panel_b_hap_vs_mean():
 
 
 if __name__ == '__main__':
-    panel_a_mean_pool_flip()
-    panel_b_hap_vs_mean()
+    fig_theory_inset()

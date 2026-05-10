@@ -230,24 +230,12 @@ $\mathbb{E}[\rho^{(\text{mean})}] = (1 + k(1 - 2\eta_h)) / (k+1)$. Signal 역전
 $\epsilon < 1/\sqrt{2}$ 하에서, 임의 $\eta_h$ 에 대해 $\mathbb{E}[\rho^{(\text{hap})}] \geq 1 - O(\epsilon^2) - 4\epsilon^2 \eta_h$.
 \end{theorem}
 
-Figure~\ref{fig:theory_inset} 는 두 정리를 나타낸다. (a) mean pool signal 이 $k=10$ 에서 $\eta_h^* = 0.55$ 를 넘으면 부호가 역전되며, 세 데이터셋의 측정 $\eta_h$ (0.85--0.94) 모두 이 임계를 초과한다. (b) HAP 은 cross-class neighbor 의 cosine 가중치 차단으로 신호를 $\sim 0.93$ 수준으로 보존한다.
+Figure~\ref{fig:theory_inset} 는 정리~\ref{thm:meanpool} 의 신호 역전 임계와 세 데이터셋의 측정 $\eta_h$ 위치를 나타낸다. 세 데이터셋 모두 $\eta_h^* = 0.55$ ($k{=}10$) 를 초과하여 mean-pool signal 이 부호 역전 영역에 위치하며, 이는 setting (c) (transaction graph + mean pool) 의 성능 저하 원인을 설명한다.
 
 \begin{figure}[t]
     \centering
-    \begin{subfigure}{0.49\columnwidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/fig_theory_inset_a.pdf}
-        \caption{Mean-pool signal flip}
-        \label{fig:theory_inset_a}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.49\columnwidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/fig_theory_inset_b.pdf}
-        \caption{Mean vs.\ HAP}
-        \label{fig:theory_inset_b}
-    \end{subfigure}
-    \caption{Theoretical analysis visualization. (a) Mean-pool signal $\mathbb{E}[\rho^{(\mathrm{mean})}]$ vs.\ heterophily $\eta_h$ for $k \in \{5, 10, 20, 50\}$ (Thm~\ref{thm:meanpool}); the flip threshold $\eta_h^* = 0.55$ ($k{=}10$) is exceeded on all three datasets, justifying why setting (c) drops below (a). (b) HAP (Thm~\ref{thm:hap}) lower bound vs.\ mean pool ($k{=}10$, $\epsilon{=}0.2$); the green area shows HAP's signal-preservation advantage (Cor~\ref{cor:gap_pool}).}
+    \includegraphics[width=\columnwidth]{figures/fig_theory_inset.pdf}
+    \caption{Mean-pool signal $\mathbb{E}[\rho^{(\mathrm{mean})}]$ vs.\ ego-neighborhood heterophily $\eta_h$ (Thm~\ref{thm:meanpool}). Once $\eta_h$ exceeds the flip threshold $\eta_h^*\,{=}\,1/2 + 1/(2k)\,{=}\,0.55$ ($k{=}10$, paper default), the signal sign reverses (red region). All three AML datasets sit deep inside this flip region.}
     \label{fig:theory_inset}
 \end{figure}
 
