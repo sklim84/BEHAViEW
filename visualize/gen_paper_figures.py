@@ -272,60 +272,116 @@ def fig5_setting_comparison():
 
 
 def fig_intro_homophily():
-    """Intro Figure: S-S/S-B ratio comparison — Transaction vs Behavioral k-NN.
+    """Intro Figure: ego-network homophily contrast (refined Variant C).
 
-    Side-by-side bar charts (original layout) with refined paper-friendly palette.
-    Self-explanatory for readers unfamiliar with homophily.
+    A central suspicious account (ego) and its 12 neighbors are visualized
+    for two graph types. Color encodes neighbor class (suspicious vs benign).
+    Edge opacity reflects signal strength (S-S edges = strong, S-B = faded).
     """
-    categories = ['S-S', 'S-B']
-    trans_vals = [257384, 1468962]   # Transaction graph (S-S, S-B)
-    knn_vals   = [61987,  87555]     # Behavioral k-NN
+    import matplotlib.patches as mpatches
+    import matplotlib.patheffects as pe
 
-    trans_pct = [v / sum(trans_vals) * 100 for v in trans_vals]
-    knn_pct   = [v / sum(knn_vals)   * 100 for v in knn_vals]
+    # Refined paper-friendly palette
+    C_EGO       = '#1B5E7D'  # dark teal: ego (suspicious) node
+    C_SUSP      = '#2E86AB'  # medium teal: suspicious neighbor (signal)
+    C_BENIGN    = '#D1D5DB'  # neutral light gray: benign neighbor (noise)
+    C_EDGE_S    = '#2E86AB'  # signal edge: medium teal (visible)
+    C_EDGE_B    = '#E5E7EB'  # noise edge: very light gray (faded)
+    C_TEXT      = '#1F2937'
+    C_SUB       = '#6B7280'
+    C_HIGHL     = '#C73E1D'  # warm red: low-homophily state
+    C_GREEN     = '#2A9D8F'  # teal-green: restored state
+    C_ARROW     = '#E07A5F'  # warm coral: transformation arrow
 
-    # Refined palette: dark teal for S-S (signal), warm orange-red for S-B (noise)
-    C_SS    = '#2E86AB'   # teal-blue
-    C_SB    = '#E07A5F'   # warm coral (matches S-B = "spread to benign", problematic)
-    C_TEXT  = '#1F2937'
-    C_SUB   = '#6B7280'
-    C_HIGHL = '#C73E1D'
-    C_GREEN = '#2A9D8F'
+    np.random.seed(7)
 
-    fig, axes = plt.subplots(1, 2, figsize=(4.4, 2.6), sharey=True)
-    bar_width = 0.55
+    fig, axes = plt.subplots(1, 2, figsize=(4.6, 2.4))
+    fig.patch.set_facecolor('white')
 
-    for ax, pcts, title, ratio, rcolor in [
-        (axes[0], trans_pct, 'Transaction Graph', '1 : 5.7', C_HIGHL),
-        (axes[1], knn_pct,   'Behavioral k-NN',   '1 : 1.4', C_GREEN),
-    ]:
-        bars = ax.bar(categories, pcts, color=[C_SS, C_SB], width=bar_width,
-                      edgecolor='white', linewidth=0)
-        ax.set_title(title, fontsize=10.5, fontweight='bold', pad=8, color=C_TEXT)
-        ax.set_ylim(0, 105)
-        ax.tick_params(axis='both', labelsize=10, colors=C_SUB)
+    n_neighbors = 12
+    radius = 1.05
 
-        for bar, pct in zip(bars, pcts):
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2.5,
-                    f'{pct:.0f}%', ha='center', va='bottom',
-                    fontsize=10, fontweight='bold', color=C_TEXT)
+    panels = [
+        (axes[0], 0.15, 'Transaction Graph', '1 : 5.7', C_HIGHL),
+        (axes[1], 0.41, 'Behavioral k-NN',   '1 : 1.4', C_GREEN),
+    ]
 
-        # Ratio annotation (color-coded by state)
-        ax.text(0.5, -0.32, f'S-S : S-B = {ratio}', transform=ax.transAxes,
-                ha='center', fontsize=9.5, fontweight='bold', color=rcolor)
+    for ax, ss_ratio, title, ratio, rcolor in panels:
+        ax.set_facecolor('white')
+        ax.set_xlim(-1.55, 1.55)
+        ax.set_ylim(-1.65, 1.55)
+        ax.set_aspect('equal')
+        ax.axis('off')
 
-        # Cleaner spines
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_color(C_SUB)
-        ax.spines['bottom'].set_color(C_SUB)
+        n_susp = round(n_neighbors * ss_ratio)
+        is_susp = [True]*n_susp + [False]*(n_neighbors - n_susp)
+        np.random.shuffle(is_susp)
 
-    axes[0].set_ylabel('Edge Proportion (%)', fontsize=10.5, color=C_TEXT)
+        # Slight angle offset so neighbors aren't on cardinal axes
+        angles = np.linspace(0, 2*np.pi, n_neighbors, endpoint=False) + np.pi/12
 
-    plt.tight_layout(w_pad=1.5)
+        # Draw edges first (lower z-order)
+        for angle, susp in zip(angles, is_susp):
+            x, y = radius * np.cos(angle), radius * np.sin(angle)
+            if susp:
+                ax.plot([0, x], [0, y], color=C_EDGE_S,
+                        linewidth=1.3, alpha=0.85, zorder=1, solid_capstyle='round')
+            else:
+                ax.plot([0, x], [0, y], color=C_EDGE_B,
+                        linewidth=0.9, alpha=1.0, zorder=1, solid_capstyle='round')
+
+        # Draw neighbor nodes
+        for angle, susp in zip(angles, is_susp):
+            x, y = radius * np.cos(angle), radius * np.sin(angle)
+            color = C_SUSP if susp else C_BENIGN
+            edge_color = '#0F4D6B' if susp else '#9CA3AF'
+            ax.scatter(x, y, s=180, c=color, edgecolors=edge_color,
+                       linewidths=1.0, zorder=4)
+
+        # Draw ego (center) — slightly larger, distinct dark teal with ring
+        ax.scatter(0, 0, s=420, c=C_EGO, edgecolors='white', linewidths=2.2, zorder=5,
+                   path_effects=[pe.withStroke(linewidth=3.0, foreground='#0A3548')])
+        ax.text(0, 0, '?', ha='center', va='center', fontsize=14, fontweight='bold',
+                color='white', zorder=6,
+                path_effects=[pe.withStroke(linewidth=1.0, foreground=C_EGO)])
+
+        # Title (top)
+        ax.text(0, 1.45, title, ha='center', va='center',
+                fontsize=10.5, fontweight='bold', color=C_TEXT)
+
+        # Ratio annotation (bottom, color-coded)
+        ax.text(0, -1.50, f'S-S : S-B = ', ha='right', va='center',
+                fontsize=9, color=C_SUB)
+        ax.text(0, -1.50, f'  {ratio}', ha='left', va='center',
+                fontsize=9.5, fontweight='bold', color=rcolor)
+
+    # Transformation arrow between panels
+    fig.patches.append(mpatches.FancyArrowPatch(
+        (0.475, 0.50), (0.525, 0.50), transform=fig.transFigure,
+        arrowstyle='-|>', mutation_scale=18, color=C_ARROW, linewidth=2.2,
+        zorder=10))
+    fig.text(0.5, 0.40, 'k-NN view',
+             ha='center', va='top', fontsize=7.5, color=C_ARROW,
+             fontstyle='italic', fontweight='bold')
+
+    # Compact legend at bottom
+    legend_elements = [
+        mpatches.Patch(facecolor=C_EGO,    edgecolor='white',
+                       label='Ego (suspicious account)'),
+        mpatches.Patch(facecolor=C_SUSP,   edgecolor='#0F4D6B',
+                       label='Suspicious neighbor'),
+        mpatches.Patch(facecolor=C_BENIGN, edgecolor='#9CA3AF',
+                       label='Benign neighbor'),
+    ]
+    fig.legend(handles=legend_elements, loc='lower center',
+               bbox_to_anchor=(0.5, -0.02), ncol=3, frameon=False,
+               fontsize=8, handlelength=1.0, handletextpad=0.4,
+               columnspacing=1.6)
+
+    plt.tight_layout(rect=[0, 0.05, 1, 1])
     path = os.path.join(OUT_DIR, 'fig_intro_homophily.pdf')
-    plt.savefig(path, bbox_inches='tight', dpi=300)
-    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
+    plt.savefig(path, bbox_inches='tight', dpi=300, facecolor='white')
+    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300, facecolor='white')
     plt.close()
     print(f'Saved: {path}')
 

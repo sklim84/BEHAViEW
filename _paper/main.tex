@@ -92,7 +92,7 @@ KFTC HOFINET, AMLworld, AMLNet 세 데이터셋에서의 실험을 통해 행동
 \begin{figure}[t!]
     \centering
     \includegraphics[width=0.95\columnwidth]{figures/fig_intro_homophily.pdf}
-    \caption{Edge proportion of suspicious accounts on HOFINET. S-S = suspicious$\to$suspicious, S-B = suspicious$\to$benign. In the transaction graph, only 15\% of a suspicious account's edges connect to other suspicious accounts (S-S/S-B = 1:5.7), making neighborhood aggregation unreliable. The behavioral k-NN view ($k{=}10$) raises the S-S share to 41\% (1:1.4), enabling effective signal propagation.}
+    \caption{Ego-network of a suspicious account on HOFINET (12 illustrative neighbors). In the transaction graph, only $\sim$15\% of neighbors are also suspicious (S-S : S-B $=$ 1:5.7), violating the GNN homophily assumption. The behavioral k-NN view ($k{=}10$) restores the S-S share to $\sim$41\% (1:1.4), so that neighborhood aggregation now propagates signal rather than benign noise.}
     \label{fig:intro_homophily}
 \end{figure}
 
