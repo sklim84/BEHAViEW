@@ -24,18 +24,16 @@ plt.rcParams.update({
     'savefig.dpi': 300,
 })
 
-# ============ Color palette ============
-C_INPUT     = '#E1F5FE'
-C_VIEW1     = '#BBDEFB'
-C_VIEW2     = '#FFE0B2'
-C_ENC_ON    = '#A5D6A7'
-C_ENC_TG    = '#C8E6C9'
-C_POOL_TX   = '#CE93D8'
-C_POOL_KNN  = '#E1BEE7'
-C_PROJ      = '#F8BBD0'
-C_LOSS      = '#FFCDD2'
-C_INFER     = '#FFF59D'
-C_PROPOSED  = '#FF8A65'
+# ============ Color palette (simplified to 3 functional categories) ============
+# Terminal boxes (Input, Loss, Inference) — cyan
+# View 1 (Augmented) — blue, matches legend (a)/(c)
+# View 2 (Behavioral k-NN) — orange, matches legend (b)/(d)
+# All other process boxes (Encoder, Pool, Projector) — neutral gray
+C_TERMINAL  = '#E1F5FE'   # cyan: terminal endpoints (Input, Loss, Inference)
+C_VIEW1     = '#BBDEFB'   # blue: View 1 (Augmented)
+C_VIEW2     = '#FFE0B2'   # orange: View 2 (Behavioral k-NN)
+C_PROCESS   = '#ECEFF1'   # light gray: Encoder, Pool, Projector
+C_PROPOSED  = '#FF8A65'   # coral: legend (d) star marker only
 C_BORDER    = '#37474F'
 C_TEXT      = '#212121'
 C_SUB       = '#546E7A'
@@ -109,7 +107,7 @@ text(TOTAL_X/2, 10.4,
 # ============ Input (terminal) ============
 icx = x_in + TERMINAL_W/2
 icy = TERMINAL_Y + TERMINAL_H/2
-box(x_in, TERMINAL_Y, TERMINAL_W, TERMINAL_H, C_INPUT, lw=1.3)
+box(x_in, TERMINAL_Y, TERMINAL_W, TERMINAL_H, C_TERMINAL, lw=1.3)
 text(icx, icy + 0.35, 'Transaction', fs=12, weight='bold')
 text(icx, icy - 0.15, 'Graph', fs=12, weight='bold')
 text(icx, icy - 0.65, '$\\mathcal{G}_{\\mathrm{tx}}$', fs=11, color=C_SUB)
@@ -134,11 +132,11 @@ text(vcx, (ROW_T_Y + ROW_B_Y + ROW_H)/2,
 
 # ============ Encoder ============
 ecx = x_enc + BW/2
-box(x_enc, ROW_T_Y, BW, ROW_H, C_ENC_ON)
+box(x_enc, ROW_T_Y, BW, ROW_H, C_PROCESS)
 text(ecx, ROW_T_Y + ROW_H*0.62, 'Online Encoder', fs=11.5, weight='bold')
 text(ecx, ROW_T_Y + ROW_H*0.30, '$f_\\theta$  (GCN+BN)', fs=10, color=C_SUB)
 
-box(x_enc, ROW_B_Y, BW, ROW_H, C_ENC_TG)
+box(x_enc, ROW_B_Y, BW, ROW_H, C_PROCESS)
 text(ecx, ROW_B_Y + ROW_H*0.62, 'Target Encoder', fs=11.5, weight='bold')
 text(ecx, ROW_B_Y + ROW_H*0.30, '$f_\\xi$  (EMA, stop-grad)', fs=10, color=C_SUB)
 
@@ -153,11 +151,11 @@ arrow(ecx - 0.3, ROW_T_Y, ecx - 0.3, ROW_B_Y + ROW_H,
 
 # ============ Pool ============
 pcx = x_pool + BW/2
-box(x_pool, ROW_T_Y, BW, ROW_H, C_POOL_TX)
+box(x_pool, ROW_T_Y, BW, ROW_H, C_PROCESS)
 text(pcx, ROW_T_Y + ROW_H*0.62, 'Subgraph Pool', fs=11.5, weight='bold')
 text(pcx, ROW_T_Y + ROW_H*0.30, 'tx-graph neighbors', fs=10, color=C_SUB)
 
-box(x_pool, ROW_B_Y, BW, ROW_H, C_POOL_KNN)
+box(x_pool, ROW_B_Y, BW, ROW_H, C_PROCESS)
 text(pcx, ROW_B_Y + ROW_H*0.62, 'Subgraph Pool', fs=11.5, weight='bold')
 text(pcx, ROW_B_Y + ROW_H*0.30, 'k-NN neighbors', fs=10, color=C_SUB)
 
@@ -171,11 +169,11 @@ text(pcx, (ROW_T_Y + ROW_B_Y + ROW_H)/2,
 
 # ============ Projector / Predictor ============
 prcx = x_proj + BW/2
-box(x_proj, ROW_T_Y, BW, ROW_H, C_PROJ)
+box(x_proj, ROW_T_Y, BW, ROW_H, C_PROCESS)
 text(prcx, ROW_T_Y + ROW_H*0.62, 'Projector', fs=11.5, weight='bold')
 text(prcx, ROW_T_Y + ROW_H*0.30, '$g_\\theta$ + Predictor $q_\\theta$', fs=10, color=C_SUB)
 
-box(x_proj, ROW_B_Y, BW, ROW_H, C_PROJ)
+box(x_proj, ROW_B_Y, BW, ROW_H, C_PROCESS)
 text(prcx, ROW_B_Y + ROW_H*0.62, 'Projector', fs=11.5, weight='bold')
 text(prcx, ROW_B_Y + ROW_H*0.30, '$g_\\xi$  (stop-grad)', fs=10, color=C_SUB, style='italic')
 
@@ -186,7 +184,7 @@ arrow(x_pool + BW, ROW_B_Y + ROW_H/2, x_proj, ROW_B_Y + ROW_H/2)
 # ============ BYOL Loss (terminal) ============
 lcx = x_loss + TERMINAL_W/2
 lcy = TERMINAL_Y + TERMINAL_H/2
-box(x_loss, TERMINAL_Y, TERMINAL_W, TERMINAL_H, C_LOSS, lw=1.3)
+box(x_loss, TERMINAL_Y, TERMINAL_W, TERMINAL_H, C_TERMINAL, lw=1.3)
 text(lcx, lcy + 0.5, 'BYOL', fs=12, weight='bold')
 text(lcx, lcy + 0.0, 'Bootstrap Loss', fs=12, weight='bold')
 text(lcx, lcy - 0.55, 'symmetric, no neg.', fs=9.5, color=C_SUB, style='italic')
@@ -198,7 +196,7 @@ arrow(x_proj + BW, ROW_B_Y + ROW_H/2, x_loss, lcy - 0.6)
 # ============ Inference (terminal) ============
 incx = x_infr + TERMINAL_W/2
 incy = TERMINAL_Y + TERMINAL_H/2
-box(x_infr, TERMINAL_Y, TERMINAL_W, TERMINAL_H, C_INFER, lw=1.3)
+box(x_infr, TERMINAL_Y, TERMINAL_W, TERMINAL_H, C_TERMINAL, lw=1.3)
 text(incx, incy + 0.6, 'Inference', fs=12, weight='bold')
 text(incx, incy + 0.05, '$z_v = [s^{(1)}\\,\\|\\,s^{(2)}]$', fs=10.5, color=C_TEXT)
 text(incx, incy - 0.45, '$\\downarrow$ LogReg', fs=10.5, weight='bold')
@@ -221,7 +219,7 @@ settings_x_offset = 2.7
 settings = [
     ('(a)', 'Aug. + Node',     C_VIEW1, False),
     ('(b)', 'Behav. + Node',   C_VIEW2, False),
-    ('(c)', 'Aug. + Subgraph', C_POOL_TX, False),
+    ('(c)', 'Aug. + Subgraph', C_PROCESS, False),
     ('(d)', 'Behav. + Subgraph ($\\star$ proposed)', C_PROPOSED, True),
 ]
 slot_w = (leg_w - settings_x_offset - 0.6) / 4

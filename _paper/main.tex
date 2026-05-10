@@ -142,17 +142,9 @@ DGI~\cite{velivckovic2018deep}, GRACE~\cite{zhu2020deep}, GraphCL~\cite{you2020g
 \method 은 GNN 인코더 입력으로 행동적 피처만을 사용한다 (구조적 피처는 message passing 을 통해 암묵적으로 학습됨). 이 분류의 핵심적 역할은 k-NN view 구축에 있으며, count 와 degree 를 제외한 순수 행동 변수 20개가 k-NN 에 사용된다 (Section~\ref{subsec:knn_view}).
 
 \subsection{Behavioral k-NN View Construction}\label{subsec:knn_view}
-\method의 핵심 구성 요소는 행동적 유사도에 기반한 k-NN 그래프 $\mathcal{G}_{\text{knn}}$의 구축이다 (Figure~\ref{fig:knn_construction}).
-기존 GCL 모델이 동일 그래프에 대한 확률적 증강으로 두 contrastive view를 생성하는 반면, \method은 거래 그래프 $\mathcal{G}_{\text{trans}}$와 구조적으로 독립된 k-NN 그래프를 보조 view로 활용한다 (Figure~\ref{fig:framework}의 View 2).
+\method 의 핵심 구성 요소는 행동적 유사도에 기반한 k-NN 그래프 $\mathcal{G}_{\text{knn}}$ 의 구축이다. 기존 GCL 모델이 동일 그래프에 대한 확률적 증강으로 두 contrastive view 를 생성하는 반면, \method 은 거래 그래프 $\mathcal{G}_{\text{trans}}$ 와 구조적으로 독립된 k-NN 그래프를 보조 view 로 활용한다 (Figure~\ref{fig:framework} 의 View 2).
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\columnwidth]{figures/fig_knn_construction.pdf}
-    \caption{Behavioral k-NN view construction pipeline. Pure behavioral features (count 와 degree excluded for view orthogonality) are normalized via StandardScaler + L2-norm (Eq.~\eqref{eq:l2norm}), then ball-tree k-NN search ($O(N \log N)$) yields $\mathcal{G}_{\mathrm{knn}}$ (Eq.~\eqref{eq:knn_edge}). On HOFINET, the resulting graph improves S-S/S-B from 1:5.7 to 1:1.4.}
-    \label{fig:knn_construction}
-\end{figure}
-
-k-NN 그래프 구축 과정은 다음과 같다. 
+k-NN 그래프 구축 과정은 다음과 같다.
 먼저 행동적 피처 행렬 $\mathbf{X}^{\text{behav}}$에서 거래 건수(count)와 degree centrality를 제외한 순수 행동 변수만을 선별한다. 
 건수와 degree는 구조적 속성과 상관이 높아 행동적 유사도의 순수성을 저해하기 때문이다. 
 선별된 피처에 StandardScaler를 적용하여 각 변수를 평균 0, 분산 1로 정규화한 뒤, L2 정규화를 수행한다.
