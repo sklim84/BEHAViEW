@@ -201,8 +201,10 @@ def fig4_bn_effect():
                   ncol=legend_ncol)
         ax.set_ylabel('$F1_{susp}$', fontsize=13)
 
+    PANEL_FIGSIZE = (4.2, 3.2)
+
     # Panel A: BN-augmented encoders
-    fig, ax = plt.subplots(figsize=(4.5, 3.2))
+    fig, ax = plt.subplots(figsize=PANEL_FIGSIZE)
     _plot_panel(ax, bn_aug_order, bn_aug_styles, (0.0, 0.75), 'lower right', 2)
     plt.tight_layout()
     path_a = os.path.join(OUT_DIR, 'fig_rq3_bn_a.pdf')
@@ -212,7 +214,7 @@ def fig4_bn_effect():
     print(f'Saved: {path_a}')
 
     # Panel B: BN-free encoders
-    fig, ax = plt.subplots(figsize=(4.0, 3.2))
+    fig, ax = plt.subplots(figsize=PANEL_FIGSIZE)
     bn_free_styles = {enc: (col, 'o') for enc, col in zip(bn_free_order, bn_free_colors)}
     _plot_panel(ax, bn_free_order, bn_free_styles, (0.0, 0.10), 'upper left', 1)
     plt.tight_layout()
