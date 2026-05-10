@@ -80,7 +80,7 @@ KFTC HOFINET, AMLworld, AMLNet 세 데이터셋에서의 실험을 통해 행동
 또한 서브그래프 풀링은 행동적 view 와 결합할 때 amplifier 로 작동하며, 그 효과의 크기는 10종 인코더 비교에서 인코더의 정규화 깊이에 반비례한다.
 \method 의 두 핵심 설계가 거래 그래프의 동질성 부재와 풀링 단계 신호 역전을 각각 해소함은 degree-corrected stochastic block model 기반 분석으로 정량화된다.
 더불어 BatchNorm 은 대규모 불균형 환경에서 인코더 아키텍처와 무관하게 성능을 결정하는 핵심 요인이며, 이는 통제된 비교를 통해 검증된다.
-나아가 \method 은 라벨 없이 학습한 자기지도 표현만으로 HOFINET에서 MLP, XGBoost 등 지도학습 모델과 0.006 F1\_susp 이내의 경쟁력 있는 탐지 성능을 달성하고, AMLworld에서는 모든 GNN 지도학습 baseline을 일관되게 상회하여 라벨 희소 환경에서의 실용적 가치를 입증한다.
+나아가 \method 은 라벨 없이 학습한 자기지도 표현만으로 HOFINET 에서 강력한 지도학습 baseline 과 경쟁적인 탐지 성능을 달성하고, AMLworld 에서는 모든 GNN 지도학습 baseline 을 일관되게 상회하여 라벨 희소 환경에서의 실용적 가치를 입증한다.
 \end{abstract}
 
 \keywords{anti-money laundering, graph contrastive learning, k-NN graph view, subgraph pooling, low-homophily, transaction networks}
@@ -104,12 +104,12 @@ KFTC HOFINET, AMLworld, AMLNet 세 데이터셋에서의 실험을 통해 행동
 
 본 연구의 출발점은 자금세탁 계좌들이 분할거래/다단계 이체 같은 공통 수법을 사용하므로 행동적 거래 패턴 (금액 분포, 시간적 빈도, 거래 유형 엔트로피) 을 공유한다는 관찰이다. 이 행동적 유사도를 기반으로 k-NN 그래프를 구축하면 의심 계좌끼리 자연스럽게 연결되어 거래 그래프에서는 단절되어 있던 동질성이 view 수준에서 회복된다. 본 연구는 이 관찰을 (i) 행동/구조 피처 분류, (ii) 행동 피처 단독 k-NN view 구성, (iii) 서브그래프 풀링을 통한 신호 증폭의 세 가지 설계로 구체화한다.
 
-본 연구에서는 \method 을 제안한다 (Figure~\ref{fig:framework}). \method 은 두 독립 축 — 행동/구조 피처 분류에 기반한 view 구성과 노드/서브그래프 수준의 contrastive level — 을 교차한 4가지 설정에서 10종 GCL 인코더로 체계적 실험을 수행하고, degree-corrected stochastic block model (DCSBM)~\cite{karrer2011stochastic} 기반 분석으로 그 메커니즘을 정량적으로 정당화한다. 실험 결과, 행동적 k-NN view 가 S-S/S-B 비율을 1:5.7 에서 1:1.4 로 개선하여 동질성을 복원하고, 서브그래프 풀링과의 결합으로 추가 성능 향상을 달성한다. HOFINET (KFTC 전자금융공동망 실거래), AMLworld~\cite{amlpatterns2024realistic} (대규모 합성), AMLNet (소규모 high-prevalence) 의 세 데이터셋에서 일관된 효과를 검증한다. 본 연구의 기여는 다음과 같다.
+본 연구에서는 \method 을 제안한다 (Figure~\ref{fig:framework}). \method 은 두 독립 축 — 행동/구조 피처 분류에 기반한 view 구성과 노드/서브그래프 수준의 contrastive level — 을 교차한 4가지 설정에서 10종 GCL 인코더로 체계적 실험을 수행하고, degree-corrected stochastic block model (DCSBM)~\cite{karrer2011stochastic} 기반 분석으로 그 메커니즘을 정량적으로 정당화한다. 실험 결과, 행동적 k-NN view 가 S-S/S-B 비율을 1:5.7 에서 1:1.4 로 개선하여 동질성을 복원하고, 서브그래프 풀링과의 결합으로 추가 성능 향상을 달성한다. 한국의 은행 간 이체 결제망 HOFINET 기반 합성 데이터, AMLworld~\cite{amlpatterns2024realistic} (대규모 합성), AMLNet (소규모 high-prevalence) 의 세 데이터셋에서 일관된 효과를 검증한다. 본 연구의 기여는 다음과 같다.
 \begin{itemize}
     \item \textbf{Method.} 행동/구조 피처 taxonomy 와 행동 피처 단독 k-NN view 구성, 서브그래프 풀링, 두 독립 설계 축 (view 구성 $\times$ contrastive level) 을 교차한 4-setting 분석 framework 를 제안하며 (Section~\ref{sec:method}; Figure~\ref{fig:framework}), 10종 GCL 인코더에 인코더-비종속적으로 적용 가능한 통합 구현을 공개한다.
     \item \textbf{Theory.} DCSBM 기반 분석으로 (i) 행동적 k-NN view 가 거래 그래프 동질성을 하한 $1-\alpha$ 까지 회복함, (ii) 서브그래프 mean pooling 이 heterophilous neighborhood ($\eta_h > 1/2 + 1/(2k)$) 에서 신호 역전을 일으키며 heterophily-aware variant 가 이를 회피함, (iii) BYOL-style bootstrap loss 의 trivial constant solution 이 BN-equipped 인코더에서만 차단됨을 형식화한다 (Section~\ref{subsec:theory}; Theorems~\ref{thm:knn_homophily}--\ref{thm:bn_collapse}).
     \item \textbf{Empirical findings.} 10종 인코더 $\times$ 4 setting 통제 비교를 통해 (i) 행동적 k-NN view 가 S-S/S-B 를 1:5.7$\to$1:1.4 로 개선하여 모든 인코더에서 일관된 향상을 가져오며, (ii) 서브그래프 풀링이 view homophily 와 인코더 정규화 깊이에 의존하는 \textit{conditional amplifier} 로 기능하고, (iii) BatchNorm 이 인코더 아키텍처와 무관하게 성능을 결정하는 dominant factor 임을 발견한다 (Sections~\ref{subsec:rq1}--\ref{subsec:rq3}; Tables~\ref{tab:rq1}, \ref{tab:ss_sb}; Figures~\ref{fig:rq2_ablation}, \ref{fig:rq3_bn}).
-    \item \textbf{Generalizability and competitiveness.} HOFINET (KFTC 실거래, 2.13\% prevalence), AMLworld (대규모 합성, 1.23\%), AMLNet (소규모 합성, 13.52\%) 세 데이터셋에서 핵심 패턴이 재현되며, 라벨 없는 자기지도 표현이 HOFINET 에서 supervised baseline 과 0.006 F1\_susp 이내, AMLNet 에서 LightGBM 과 0.008 이내의 경쟁력을 보이고 AMLworld 에서는 모든 GNN 지도학습 baseline 을 일관되게 상회한다 (Sections~\ref{subsec:rq4}--\ref{subsec:rq5}; Tables~\ref{tab:rq4}, \ref{tab:rq5}).
+    \item \textbf{Generalizability and competitiveness.} HOFINET (KFTC 기반 합성, 2.13\% prevalence), AMLworld (대규모 합성, 1.23\%), AMLNet (소규모 합성, 13.52\%) 세 데이터셋에서 핵심 패턴이 재현되며, 라벨 없는 자기지도 표현이 HOFINET 에서 강력한 지도학습 baseline 과 경쟁적이고 AMLworld 에서는 모든 GNN 지도학습 baseline 을 일관되게 상회한다 (Sections~\ref{subsec:rq4}--\ref{subsec:rq5}; Tables~\ref{tab:rq4}, \ref{tab:rq5}).
 \end{itemize}
 
 \section{Related Work}\label{sec:related_work}
@@ -290,7 +290,7 @@ Thm~\ref{thm:bn_collapse}          & BN-conditional collapse-prevention & RQ3 (F
 \subsection{Experimental Setting}
 
 \paragraph{Datasets.}
-세 AML 데이터셋을 사용한다 (Table~\ref{tab:datasets}). \textbf{HOFINET} 은 금융결제원 (KFTC) 의 전자금융공동망 실거래로 가계/기업 타행 이체 40개월 (2021Q3--2024Q4) 분량을 포함한다. \textbf{AMLworld HI-Small}~\cite{amlpatterns2024realistic} 은 NeurIPS 2023 공개 합성 벤치마크로 fan-out, scatter-gather, cycle 등 8가지 패턴을 모델링한다. \textbf{AMLNet} 은 high-prevalence regime 검증용 소규모 합성 벤치마크로 AMLworld 와 동일 피처 스키마를 공유한다. 데이터셋 상세는 부록~\ref{app:datasets}.
+세 AML 데이터셋을 사용한다 (Table~\ref{tab:datasets}). \textbf{HOFINET} 은 한국의 은행 간 이체 결제망인 Home and Firm Banking Network 를 기반으로 구축한 약 470만 건의 합성 거래 데이터로, 가계/기업 타행 이체 40개월 (2021Q3--2024Q4) 분량의 패턴을 모델링한다. \textbf{AMLworld HI-Small}~\cite{amlpatterns2024realistic} 은 NeurIPS 2023 공개 합성 벤치마크로 fan-out, scatter-gather, cycle 등 8가지 패턴을 모델링한다. \textbf{AMLNet} 은 high-prevalence regime 검증용 소규모 합성 벤치마크로 AMLworld 와 동일 피처 스키마를 공유한다. 데이터셋 상세는 부록~\ref{app:datasets}.
 
 \begin{table}[t]
 \centering
@@ -302,7 +302,7 @@ Thm~\ref{thm:bn_collapse}          & BN-conditional collapse-prevention & RQ3 (F
 \toprule
 \textbf{Dataset} & $|V|$ & $|E|$ & $\rho$ & \textbf{Type} \\
 \midrule
-HOFINET           & 452{,}816 & 4{,}732{,}130 & 2.13\% & Real (KFTC) \\
+HOFINET           & 452{,}816 & 4{,}732{,}130 & 2.13\% & Synthetic (KFTC-based) \\
 AMLworld HI-Small & 515{,}088 & 5{,}078{,}345 & 1.23\% & Synthetic \\
 AMLNet            &  11{,}000 & 1{,}090{,}172 & 13.52\% & Synthetic \\
 \bottomrule
@@ -650,7 +650,7 @@ AMLNet   & 0.791 & 0.900 & 0.109 & $\geq$0.209 & 0.878 & 0.783 & \cmark \\
 \section{Datasets — Detailed Description}\label{app:datasets}
 
 \paragraph{HOFINET.}
-HOFINET (Home/Firm Banking Network, 전자금융공동망) 은 금융결제원 (Korea Financial Telecommunications \& Clearings Institute, KFTC) 이 운영하는 은행간 이체 공동망으로, 인터넷·모바일뱅킹 등 가계 채널과 펌뱅킹 등 기업 채널의 타행 이체를 통합 처리한다. 본 연구가 사용한 스냅샷은 452,816개 계좌 (노드) 와 4,732,130건의 유향 멀티엣지로 구성되며, 의심 계좌 비율은 2.13\% (9,644 suspicious accounts) 이다. 의심거래 라벨은 개별 금융기관이 운영 환경에서 부여한 것으로, 분할거래 (structuring), 다단계 이체 (layering), mule-network 등 6가지 AML 유형을 포함한다. 데이터 기간은 2021년 3분기부터 2024년 4분기까지 40개월이다.
+HOFINET 데이터셋은 한국의 은행 간 이체 결제망인 Home and Firm Banking Network 를 기반으로 구축한 합성 거래 데이터이다. Home and Firm Banking Network 는 금융결제원 (Korea Financial Telecommunications \& Clearings Institute, KFTC) 이 운영하는 은행간 이체 공동망으로, 인터넷·모바일뱅킹 등 가계 채널과 펌뱅킹 등 기업 채널의 타행 이체를 통합 처리한다. 본 연구가 사용한 스냅샷은 452,816개 계좌 (노드) 와 약 470만 건 (4,732,130건) 의 유향 멀티엣지로 구성되며, 의심 계좌 비율은 2.13\% (9,644 suspicious accounts) 이다. 합성 시뮬레이션은 분할거래 (structuring), 다단계 이체 (layering), mule-network 등 6가지 AML 유형을 모델링하며, 데이터 기간은 2021년 3분기부터 2024년 4분기까지 40개월에 해당한다.
 
 \paragraph{AMLworld HI-Small.}
 NeurIPS 2023 Datasets \& Benchmarks Track 에서 공개된 합성 AML 벤치마크~\cite{amlpatterns2024realistic} 로, 515,088개 계좌와 5,078,345건의 유향 멀티엣지로 구성된다. 거래 수준의 laundering 비율은 0.10\%이며, 계좌 수준의 의심 비율은 1.23\% 로 HOFINET (2.13\%) 보다 낮다. 시뮬레이션은 fan-out, fan-in, scatter-gather, gather-scatter, cycle, bipartite, stack, random 8가지 AML 패턴을 모델링한다.
