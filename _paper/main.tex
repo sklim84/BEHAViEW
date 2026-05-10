@@ -84,7 +84,7 @@
 \begin{figure}[t!]
     \centering
     \includegraphics[width=0.95\columnwidth]{figures/fig_intro_homophily.pdf}
-    \caption{Ego-network of a suspicious account on HOFINET (12 illustrative neighbors). In the transaction graph, only $\sim$15\% of neighbors are also suspicious (S-S : S-B $=$ 1:5.7), violating the GNN homophily assumption. The behavioral k-NN view ($k{=}10$) restores the S-S share to $\sim$41\% (1:1.4), so that neighborhood aggregation now propagates signal rather than benign noise.}
+    \caption{Ego-network of a suspicious account on HOFINET (12 illustrative neighbors). In the transaction graph, only $\sim$15\% of neighbors are also suspicious (S-S : S-B $=$ 1:5.7; S=suspicious, B=benign), violating the GNN homophily assumption. The behavioral k-NN view ($k{=}10$) restores the S-S share to $\sim$41\% (1:1.4), so that neighborhood aggregation now propagates signal rather than benign noise.}
     \label{fig:intro_homophily}
 \end{figure}
 
@@ -115,7 +115,7 @@ DGI~\cite{velivckovic2018deep}, GRACE~\cite{zhu2020deep}, GraphCL~\cite{you2020g
 \begin{figure*}[t!]
     \centering
     \includegraphics[width=0.95\textwidth]{figures/fig_framework.pdf}
-    \caption{Overview of \method. Two views (augmented graph + behavioral k-NN) are processed by a shared GNN encoder, aggregated via subgraph pooling, then trained with BYOL-style bootstrap loss. The bottom legend shows the 4-setting ablation; (d) is the proposed configuration.}
+    \caption{Overview of \method. Two views (augmented graph + behavioral k-NN) are processed by a shared GNN encoder, aggregated via subgraph pooling, then trained with BYOL-style bootstrap loss. The 4-setting ablation legend at the bottom: (a) augmented graph + node-level, (b) behavioral k-NN + node-level, (c) augmented graph + subgraph pool, (d) behavioral k-NN + subgraph pool (proposed).}
     \label{fig:framework}
 \end{figure*}
 
@@ -208,7 +208,7 @@ Figure~\ref{fig:theory_inset} 는 정리~\ref{thm:meanpool} 의 신호 역전 �
 \begin{figure}[t]
     \centering
     \includegraphics[width=\columnwidth]{figures/fig_theory_inset.pdf}
-    \caption{Theory$\to$empirical bridge for Theorem~\ref{thm:meanpool}. X-axis: ego-neighborhood heterophily $\eta_h$; Y-axis: setting (c) F1\_susp drop relative to (a). All three AML datasets exceed the theoretical flip threshold $\eta_h^* = 0.55$ ($k{=}10$), and most encoders show $\Delta F1 \leq 0$ as predicted. AMLworld remains near zero due to its 1.23\% prevalence floor (baseline already at random level), while AMLNet and HOFINET show the largest drops where signal exists to reverse.}
+    \caption{Theory$\to$empirical bridge for Theorem~\ref{thm:meanpool}. X-axis: ego-neighborhood heterophily $\eta_h$; Y-axis: $F1_{\text{susp}}$ drop of setting (c) (transaction graph + subgraph pool) relative to (a) (transaction graph + augmentation, baseline). All three AML datasets exceed the theoretical flip threshold $\eta_h^* = 0.55$ ($k{=}10$), and most encoders show $\Delta F1_{\text{susp}} \leq 0$ as predicted. AMLworld remains near zero due to its 1.23\% prevalence floor (baseline already at random level), while AMLNet and HOFINET show the largest drops where signal exists to reverse.}
     \label{fig:theory_inset}
 \end{figure}
 
@@ -245,7 +245,7 @@ $\eta_h^{\text{tx}} > 1/2 + 1/(2 \bar{d}_{\text{tx}})$ ($\bar{d}_{\text{tx}}$ �
 \toprule
 \textbf{Dataset} & $|V|$ & $|E|$ & $\rho$ & \textbf{Type} \\
 \midrule
-HOFINET           & 452{,}816 & 4{,}732{,}130 & 2.13\% & Synthetic (KFTC-based) \\
+HOFINET           & 452{,}816 & 4{,}732{,}130 & 2.13\% & Synthetic \\
 AMLworld HI-Small & 515{,}088 & 5{,}078{,}345 & 1.23\% & Synthetic \\
 AMLNet            &  11{,}000 & 1{,}090{,}172 & 13.52\% & Synthetic \\
 \bottomrule
@@ -320,7 +320,7 @@ GRACE     &            & 0.044{\scriptsize±.001} & 0.054{\scriptsize±.005} & 0
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.85\columnwidth]{figures/fig_rq2_ablation.pdf}
-    \caption{$F1_{\text{susp}}$ across four settings from the two-axis combination (HOFINET, average of 4 per-layer BN encoders). The behavioral k-NN view is the primary driver, and subgraph pooling provides additional gains only when combined with it. (d) is the proposed setting.}
+    \caption{$F1_{\text{susp}}$ across the four ablation settings of the two design axes (view construction $\times$ contrastive level) on HOFINET, averaged over 4 per-layer BN encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN). Settings: (a) aug+node, (b) k-NN+node, (c) aug+pool, (d) k-NN+pool (proposed). The behavioral k-NN view is the primary driver, and subgraph pooling provides additional gains only when combined with it.}
     \label{fig:rq2_ablation}
 \end{figure}
 
