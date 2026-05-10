@@ -272,74 +272,51 @@ def fig5_setting_comparison():
 
 
 def fig_intro_homophily():
-    """Intro Figure: S-S/S-B ratio comparison — Transaction vs Behavioral k-NN.
+    """Intro Figure: S-S/S-B ratio — Transaction vs Behavioral k-NN.
 
-    Modern stacked horizontal bar design with refined color palette.
-    Each bar = one graph type, stacked horizontally as S-S | S-B segments.
+    Minimal stacked horizontal bar; row labels (left) and ratio (right)
+    flank the bars so nothing overlaps. No legend (S-S/S-B explained in caption).
     """
-    # Refined paper-friendly palette
-    C_SS    = '#2E86AB'  # teal-blue: signal (suspicious-suspicious)
-    C_SB    = '#E5E7EB'  # neutral light gray: noise (suspicious-benign)
-    C_TEXT  = '#1F2937'  # near-black
-    C_SUB   = '#6B7280'  # gray for secondary text
-    C_HIGHL = '#C73E1D'  # warm accent for problem state
-    C_GREEN = '#2A9D8F'  # accent for restored state
+    C_SS    = '#2E86AB'  # teal-blue: S-S signal
+    C_SB    = '#E5E7EB'  # neutral gray: S-B noise
+    C_TEXT  = '#1F2937'
+    C_SUB   = '#6B7280'
+    C_HIGHL = '#C73E1D'
+    C_GREEN = '#2A9D8F'
 
     data = [
-        {'name': 'Transaction Graph', 'ss': 257384, 'sb': 1468962, 'ratio': '1 : 5.7', 'tag_color': C_HIGHL},
-        {'name': 'Behavioral k-NN',   'ss': 61987,  'sb': 87555,   'ratio': '1 : 1.4', 'tag_color': C_GREEN},
+        {'name': 'Transaction Graph', 'ss': 257384, 'sb': 1468962, 'ratio': '1 : 5.7', 'rcolor': C_HIGHL},
+        {'name': 'Behavioral k-NN',   'ss': 61987,  'sb': 87555,   'ratio': '1 : 1.4', 'rcolor': C_GREEN},
     ]
 
-    fig, ax = plt.subplots(figsize=(4.6, 2.1))
-
-    bar_h = 0.45
+    fig, ax = plt.subplots(figsize=(4.4, 1.4))
+    bar_h = 0.55
     y_pos = [1.0, 0.0]
 
-    bar_handles = []
     for i, d in enumerate(data):
         total = d['ss'] + d['sb']
         ss_pct = d['ss'] / total * 100
         sb_pct = d['sb'] / total * 100
         y = y_pos[i]
 
-        h1 = ax.barh(y, ss_pct, color=C_SS, height=bar_h, edgecolor='white', linewidth=0.0,
-                     zorder=3, label='S-S (suspicious$\\to$suspicious)' if i == 0 else None)
-        h2 = ax.barh(y, sb_pct, left=ss_pct, color=C_SB, height=bar_h, edgecolor='white', linewidth=0.0,
-                     zorder=3, label='S-B (suspicious$\\to$benign)' if i == 0 else None)
-        if i == 0:
-            bar_handles = [h1, h2]
+        ax.barh(y, ss_pct, color=C_SS, height=bar_h, edgecolor='white', linewidth=0.0, zorder=3)
+        ax.barh(y, sb_pct, left=ss_pct, color=C_SB, height=bar_h, edgecolor='white', linewidth=0.0, zorder=3)
 
-        # Inline percentage labels
+        # Inline % (small, only in middle of each segment)
         ax.text(ss_pct/2, y, f'{ss_pct:.0f}%', ha='center', va='center',
-                fontsize=11, fontweight='bold', color='white', zorder=5)
+                fontsize=9, fontweight='bold', color='white', zorder=5)
         ax.text(ss_pct + sb_pct/2, y, f'{sb_pct:.0f}%', ha='center', va='center',
-                fontsize=11, fontweight='bold', color=C_TEXT, zorder=5)
+                fontsize=9, fontweight='bold', color=C_TEXT, zorder=5)
 
-        # Graph name (left of bar)
-        ax.text(-2, y + 0.28, d['name'], ha='right', va='center',
-                fontsize=11, fontweight='bold', color=C_TEXT)
-        # Ratio (left of bar, below name)
-        ax.text(-2, y - 0.28, f'S-S : S-B = ', ha='right', va='center',
-                fontsize=9, color=C_SUB)
-        ax.text(-2, y - 0.28, f'{d["ratio"]}', ha='left', va='center',
-                fontsize=9.5, fontweight='bold', color=d['tag_color'])
+        # Row label (left, smaller)
+        ax.text(-2, y, d['name'], ha='right', va='center',
+                fontsize=9, color=C_TEXT)
+        # Ratio (right of bar, color-coded)
+        ax.text(102, y, d['ratio'], ha='left', va='center',
+                fontsize=9.5, fontweight='bold', color=d['rcolor'])
 
-    # Transformation arrow (Transaction Graph → Behavioral k-NN, goes DOWN)
-    ax.annotate('', xy=(50, 0.30), xytext=(50, 0.70),
-                arrowprops=dict(arrowstyle='-|>', lw=1.8, color=C_GREEN, mutation_scale=16),
-                zorder=4)
-    ax.text(52, 0.5, 'apply\nbehavioral\nk-NN view', ha='left', va='center',
-            fontsize=8.5, color=C_GREEN, fontweight='bold', style='italic',
-            linespacing=1.15)
-
-    # Legend at top
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.30),
-              ncol=2, frameon=False, fontsize=9, handlelength=1.2,
-              handletextpad=0.5, columnspacing=2.0)
-
-    # Axes cleanup
-    ax.set_xlim(-26, 100)
-    ax.set_ylim(-0.45, 1.55)
+    ax.set_xlim(-30, 122)
+    ax.set_ylim(-0.45, 1.45)
     ax.set_yticks([])
     ax.set_xticks([])
     for spine in ax.spines.values():
