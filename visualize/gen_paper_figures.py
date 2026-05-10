@@ -272,57 +272,57 @@ def fig5_setting_comparison():
 
 
 def fig_intro_homophily():
-    """Intro Figure: S-S/S-B ratio — Transaction vs Behavioral k-NN.
+    """Intro Figure: S-S/S-B ratio comparison — Transaction vs Behavioral k-NN.
 
-    Minimal stacked horizontal bar; row labels (left) and ratio (right)
-    flank the bars so nothing overlaps. No legend (S-S/S-B explained in caption).
+    Side-by-side bar charts (original layout) with refined paper-friendly palette.
+    Self-explanatory for readers unfamiliar with homophily.
     """
-    C_SS    = '#2E86AB'  # teal-blue: S-S signal
-    C_SB    = '#E5E7EB'  # neutral gray: S-B noise
+    categories = ['S-S', 'S-B']
+    trans_vals = [257384, 1468962]   # Transaction graph (S-S, S-B)
+    knn_vals   = [61987,  87555]     # Behavioral k-NN
+
+    trans_pct = [v / sum(trans_vals) * 100 for v in trans_vals]
+    knn_pct   = [v / sum(knn_vals)   * 100 for v in knn_vals]
+
+    # Refined palette: dark teal for S-S (signal), warm orange-red for S-B (noise)
+    C_SS    = '#2E86AB'   # teal-blue
+    C_SB    = '#E07A5F'   # warm coral (matches S-B = "spread to benign", problematic)
     C_TEXT  = '#1F2937'
     C_SUB   = '#6B7280'
     C_HIGHL = '#C73E1D'
     C_GREEN = '#2A9D8F'
 
-    data = [
-        {'name': 'Transaction Graph', 'ss': 257384, 'sb': 1468962, 'ratio': '1 : 5.7', 'rcolor': C_HIGHL},
-        {'name': 'Behavioral k-NN',   'ss': 61987,  'sb': 87555,   'ratio': '1 : 1.4', 'rcolor': C_GREEN},
-    ]
+    fig, axes = plt.subplots(1, 2, figsize=(4.4, 2.6), sharey=True)
+    bar_width = 0.55
 
-    fig, ax = plt.subplots(figsize=(4.4, 1.4))
-    bar_h = 0.55
-    y_pos = [1.0, 0.0]
+    for ax, pcts, title, ratio, rcolor in [
+        (axes[0], trans_pct, 'Transaction Graph', '1 : 5.7', C_HIGHL),
+        (axes[1], knn_pct,   'Behavioral k-NN',   '1 : 1.4', C_GREEN),
+    ]:
+        bars = ax.bar(categories, pcts, color=[C_SS, C_SB], width=bar_width,
+                      edgecolor='white', linewidth=0)
+        ax.set_title(title, fontsize=10.5, fontweight='bold', pad=8, color=C_TEXT)
+        ax.set_ylim(0, 105)
+        ax.tick_params(axis='both', labelsize=10, colors=C_SUB)
 
-    for i, d in enumerate(data):
-        total = d['ss'] + d['sb']
-        ss_pct = d['ss'] / total * 100
-        sb_pct = d['sb'] / total * 100
-        y = y_pos[i]
+        for bar, pct in zip(bars, pcts):
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2.5,
+                    f'{pct:.0f}%', ha='center', va='bottom',
+                    fontsize=10, fontweight='bold', color=C_TEXT)
 
-        ax.barh(y, ss_pct, color=C_SS, height=bar_h, edgecolor='white', linewidth=0.0, zorder=3)
-        ax.barh(y, sb_pct, left=ss_pct, color=C_SB, height=bar_h, edgecolor='white', linewidth=0.0, zorder=3)
+        # Ratio annotation (color-coded by state)
+        ax.text(0.5, -0.32, f'S-S : S-B = {ratio}', transform=ax.transAxes,
+                ha='center', fontsize=9.5, fontweight='bold', color=rcolor)
 
-        # Inline % (small, only in middle of each segment)
-        ax.text(ss_pct/2, y, f'{ss_pct:.0f}%', ha='center', va='center',
-                fontsize=9, fontweight='bold', color='white', zorder=5)
-        ax.text(ss_pct + sb_pct/2, y, f'{sb_pct:.0f}%', ha='center', va='center',
-                fontsize=9, fontweight='bold', color=C_TEXT, zorder=5)
+        # Cleaner spines
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_color(C_SUB)
+        ax.spines['bottom'].set_color(C_SUB)
 
-        # Row label (left, smaller)
-        ax.text(-2, y, d['name'], ha='right', va='center',
-                fontsize=9, color=C_TEXT)
-        # Ratio (right of bar, color-coded)
-        ax.text(102, y, d['ratio'], ha='left', va='center',
-                fontsize=9.5, fontweight='bold', color=d['rcolor'])
+    axes[0].set_ylabel('Edge Proportion (%)', fontsize=10.5, color=C_TEXT)
 
-    ax.set_xlim(-30, 122)
-    ax.set_ylim(-0.45, 1.45)
-    ax.set_yticks([])
-    ax.set_xticks([])
-    for spine in ax.spines.values():
-        spine.set_visible(False)
-
-    plt.tight_layout()
+    plt.tight_layout(w_pad=1.5)
     path = os.path.join(OUT_DIR, 'fig_intro_homophily.pdf')
     plt.savefig(path, bbox_inches='tight', dpi=300)
     plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
