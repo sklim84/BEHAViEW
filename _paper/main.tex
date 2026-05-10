@@ -109,7 +109,7 @@ KFTC HOFINET, AMLworld, AMLNet 세 데이터셋에서의 실험을 통해 행동
     \item 행동/구조 피처 taxonomy 와 행동 피처 단독 k-NN view 구성, 서브그래프 풀링, view 구성과 contrastive level 두 축을 교차한 분석 framework 를 제안하며 (Section~\ref{sec:method}; Figure~\ref{fig:framework}), 다양한 GCL 인코더에 인코더-비종속적으로 적용 가능한 통합 구현을 공개한다.
     \item DCSBM 기반 분석으로 (i) 행동적 k-NN view 에 의한 거래 그래프 동질성의 정량적 회복, (ii) 서브그래프 mean pooling 의 신호 역전 조건과 heterophily-aware variant 의 회피, (iii) BYOL-style bootstrap loss 의 trivial constant collapse 가 BN-equipped 인코더에서만 차단됨을 형식화한다 (Section~\ref{subsec:theory}; Theorems~\ref{thm:knn_homophily}--\ref{thm:bn_collapse}).
     \item 다양한 GCL 인코더에 대한 통제 비교를 통해 (i) 행동적 k-NN view 가 모든 인코더에서 일관된 향상을 가져오며, (ii) 서브그래프 풀링이 view homophily 와 인코더 정규화 깊이에 의존하는 conditional amplifier 로 기능하고, (iii) BatchNorm 이 인코더 아키텍처와 무관하게 성능을 결정하는 dominant factor 임을 발견한다 (Sections~\ref{subsec:rq1}--\ref{subsec:rq3}).
-    \item 상이한 prevalence regime 을 가진 세 AML 벤치마크에서 핵심 패턴이 재현되며, 라벨 없는 자기지도 표현이 강력한 지도학습 baseline 과 경쟁적이거나 일관되게 상회함을 보인다 (Sections~\ref{subsec:rq4}--\ref{subsec:rq5}).
+    \item 상이한 prevalence regime 을 가진 세 AML 벤치마크에서 (i) 핵심 패턴이 데이터셋 간 일관되게 재현되어 일반성을 검증하며, (ii) 라벨 없는 자기지도 표현이 강력한 지도학습 baseline 과 경쟁적이거나 일관되게 상회하여 라벨 희소 환경에서의 실용적 가치를 입증한다 (Sections~\ref{subsec:rq4}--\ref{subsec:rq5}).
 \end{itemize}
 
 \section{Related Work}\label{sec:related_work}
