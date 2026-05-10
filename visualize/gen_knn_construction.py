@@ -5,7 +5,12 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 
-plt.rcParams.update({'font.size': 9, 'font.family': 'sans-serif'})
+plt.rcParams.update({
+    'font.size': 11,
+    'font.family': 'sans-serif',
+    'figure.dpi': 300,
+    'savefig.dpi': 300,
+})
 
 fig, ax = plt.subplots(figsize=(7.0, 1.6))
 ax.set_xlim(0, 14)

@@ -13,14 +13,15 @@ OUT_DIR = 'visualize/paper_figures'
 os.makedirs(OUT_DIR, exist_ok=True)
 
 plt.rcParams.update({
-    'font.size': 11,
+    'font.size': 12,
     'font.family': 'sans-serif',
-    'axes.labelsize': 12,
-    'axes.titlesize': 13,
-    'xtick.labelsize': 10,
-    'ytick.labelsize': 10,
-    'legend.fontsize': 9,
+    'axes.labelsize': 13,
+    'axes.titlesize': 14,
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
+    'legend.fontsize': 10,
     'figure.dpi': 300,
+    'savefig.dpi': 300,
 })
 
 
@@ -55,11 +56,11 @@ def fig2_ablation_matrix():
     im = ax.imshow(data, cmap='GnBu', vmin=0.1, vmax=0.75, aspect='equal')
 
     ax.set_xticks([0, 1])
-    ax.set_xticklabels(['Augmentation\nView', 'Behavioral\nk-NN View'], fontsize=9.5, ha='center')
+    ax.set_xticklabels(['Augmentation\nView', 'Behavioral\nk-NN View'], fontsize=11, ha='center')
     ax.set_yticks([0, 1])
-    ax.set_yticklabels(['Node-Level', 'Subgraph\nPooling'], fontsize=9.5)
-    ax.set_xlabel('View Construction', fontsize=11, labelpad=8)
-    ax.set_ylabel('Contrastive Level', fontsize=11, labelpad=8)
+    ax.set_yticklabels(['Node-Level', 'Subgraph\nPooling'], fontsize=11)
+    ax.set_xlabel('View Construction', fontsize=13, labelpad=8)
+    ax.set_ylabel('Contrastive Level', fontsize=13, labelpad=8)
 
     ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False, pad=6)
 
@@ -179,10 +180,7 @@ def fig4_bn_effect():
     setting_labels = ['(a)\nbaseline', '(b)\n+view', '(c)\n+level', '(d)\n+both']
     x = np.arange(len(settings))
 
-    fig, axes = plt.subplots(1, 2, figsize=(9.0, 3.2),
-                              gridspec_kw={'width_ratios': [6, 4], 'wspace': 0.20})
-
-    def _plot_panel(ax, encoders, style_map, ylim, title, legend_loc, legend_ncol):
+    def _plot_panel(ax, encoders, style_map, ylim, legend_loc, legend_ncol):
         for enc in encoders:
             ys = [df[(df['encoder'] == enc) & (df['setting'] == s)]['f1_1'].mean()
                   for s in settings]
@@ -190,34 +188,39 @@ def fig4_bn_effect():
                     for s in settings]
             color, marker = style_map[enc] if isinstance(style_map, dict) else style_map[encoders.index(enc)]
             ax.errorbar(x, ys, yerr=errs, marker=marker if isinstance(style_map, dict) else 'o',
-                        markersize=6, linewidth=1.6, capsize=2.2, color=color,
+                        markersize=7, linewidth=1.8, capsize=2.5, color=color,
                         label=enc_labels[enc])
         ax.set_xticks(x)
-        ax.set_xticklabels(setting_labels, fontsize=9.5)
+        ax.set_xticklabels(setting_labels, fontsize=11)
+        ax.tick_params(axis='y', labelsize=11)
         ax.set_ylim(ylim)
-        ax.set_title(title, fontsize=11)
         ax.grid(axis='y', alpha=0.25, zorder=0)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        ax.legend(fontsize=8, loc=legend_loc, framealpha=0.9, edgecolor='#CCCCCC',
+        ax.legend(fontsize=10, loc=legend_loc, framealpha=0.9, edgecolor='#CCCCCC',
                   ncol=legend_ncol)
+        ax.set_ylabel('$F1_{susp}$', fontsize=13)
 
-    _plot_panel(axes[0], bn_aug_order, bn_aug_styles,
-                (0.0, 0.75), '(a) BN-augmented encoders',
-                'lower right', 2)
-    axes[0].set_ylabel('$F1_{susp}$', fontsize=11)
-
-    bn_free_styles = {enc: (col, 'o') for enc, col in zip(bn_free_order, bn_free_colors)}
-    _plot_panel(axes[1], bn_free_order, bn_free_styles,
-                (0.0, 0.10), '(b) BN-free encoders',
-                'upper left', 1)
-
+    # Panel A: BN-augmented encoders
+    fig, ax = plt.subplots(figsize=(4.5, 3.2))
+    _plot_panel(ax, bn_aug_order, bn_aug_styles, (0.0, 0.75), 'lower right', 2)
     plt.tight_layout()
-    path = os.path.join(OUT_DIR, 'fig_rq3_bn.pdf')
-    plt.savefig(path, bbox_inches='tight', dpi=300)
-    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
+    path_a = os.path.join(OUT_DIR, 'fig_rq3_bn_a.pdf')
+    plt.savefig(path_a, bbox_inches='tight', dpi=300)
+    plt.savefig(path_a.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
     plt.close()
-    print(f'Saved: {path}')
+    print(f'Saved: {path_a}')
+
+    # Panel B: BN-free encoders
+    fig, ax = plt.subplots(figsize=(4.0, 3.2))
+    bn_free_styles = {enc: (col, 'o') for enc, col in zip(bn_free_order, bn_free_colors)}
+    _plot_panel(ax, bn_free_order, bn_free_styles, (0.0, 0.10), 'upper left', 1)
+    plt.tight_layout()
+    path_b = os.path.join(OUT_DIR, 'fig_rq3_bn_b.pdf')
+    plt.savefig(path_b, bbox_inches='tight', dpi=300)
+    plt.savefig(path_b.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
+    plt.close()
+    print(f'Saved: {path_b}')
 
 
 def fig5_setting_comparison():
@@ -276,7 +279,7 @@ def fig_intro_homophily():
     trans_pct = [v / sum(trans_vals) * 100 for v in trans_vals]
     knn_pct = [v / sum(knn_vals) * 100 for v in knn_vals]
 
-    fig, axes = plt.subplots(1, 2, figsize=(3.4, 2.4), sharey=True)
+    fig, axes = plt.subplots(1, 2, figsize=(4.4, 3.0), sharey=True)
 
     colors = ['#e74c3c', '#3498db']  # red for S-S, blue for S-B
     bar_width = 0.55
@@ -287,20 +290,20 @@ def fig_intro_homophily():
     ]:
         bars = ax.bar(categories, pcts, color=colors, width=bar_width,
                       edgecolor='black', linewidth=0.6)
-        ax.set_title(title, fontsize=8, fontweight='bold', pad=4)
-        ax.set_ylim(0, 105)
-        ax.tick_params(axis='both', labelsize=7)
+        ax.set_title(title, fontsize=11, fontweight='bold', pad=6)
+        ax.set_ylim(0, 110)
+        ax.tick_params(axis='both', labelsize=11)
 
         # Value labels
         for bar, pct in zip(bars, pcts):
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1.5,
-                    f'{pct:.0f}%', ha='center', va='bottom', fontsize=7, fontweight='bold')
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2.0,
+                    f'{pct:.0f}%', ha='center', va='bottom', fontsize=10, fontweight='bold')
 
         # Ratio annotation
         ax.text(0.5, -0.22, f'S-S : S-B = {ratio}', transform=ax.transAxes,
-                ha='center', fontsize=7, style='italic', color='#555555')
+                ha='center', fontsize=10, style='italic', color='#555555')
 
-    axes[0].set_ylabel('Edge Proportion (%)', fontsize=8)
+    axes[0].set_ylabel('Edge Proportion (%)', fontsize=12)
 
     plt.tight_layout(w_pad=1.0)
     path = os.path.join(OUT_DIR, 'fig_intro_homophily.pdf')
