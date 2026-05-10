@@ -99,10 +99,7 @@ def arrow(x1, y1, x2, y2, color=C_ARROW, lw=1.4, style='->',
                 bbox=dict(boxstyle='round,pad=0.2', facecolor='white',
                           edgecolor='none', alpha=0.9))
 
-# ============ Title ============
-text(TOTAL_X/2, 10.4,
-     '$\\mathtt{BehaView}$: Behavioral Subgraph Contrast Framework',
-     fs=13, weight='bold')
+# Title removed — caption already conveys 'Overview of \method'.
 
 # ============ Input (terminal) ============
 icx = x_in + TERMINAL_W/2
@@ -128,7 +125,7 @@ arrow(x_in + TERMINAL_W, icy - 0.4, x_v, ROW_B_Y + ROW_H/2)
 
 # Axis 1
 text(vcx, (ROW_T_Y + ROW_B_Y + ROW_H)/2,
-     'View Construction $\\updownarrow$', fs=9.5, weight='bold', color=C_AXIS)
+     'View Construction $\\updownarrow$', fs=11.5, weight='bold', color=C_AXIS)
 
 # ============ Encoder ============
 ecx = x_enc + BW/2
@@ -147,7 +144,7 @@ arrow(x_v + BW, ROW_B_Y + ROW_H/2, x_enc, ROW_B_Y + ROW_H/2)
 # EMA (online → target, vertical)
 arrow(ecx - 0.3, ROW_T_Y, ecx - 0.3, ROW_B_Y + ROW_H,
       color=C_EMA, lw=1.5, text_label='EMA',
-      text_offset=(-0.7, 0), text_color=C_EMA, text_size=8.5)
+      text_offset=(-0.85, 0), text_color=C_EMA, text_size=11)
 
 # ============ Pool ============
 pcx = x_pool + BW/2
@@ -165,7 +162,7 @@ arrow(x_enc + BW, ROW_B_Y + ROW_H/2, x_pool, ROW_B_Y + ROW_H/2)
 
 # Axis 2
 text(pcx, (ROW_T_Y + ROW_B_Y + ROW_H)/2,
-     'Contrastive Level $\\updownarrow$', fs=9.5, weight='bold', color=C_AXIS)
+     'Contrastive Level $\\updownarrow$', fs=11.5, weight='bold', color=C_AXIS)
 
 # ============ Projector / Predictor ============
 prcx = x_proj + BW/2
@@ -216,24 +213,37 @@ text(leg_x + 0.3, leg_y + leg_h/2, '4 settings:',
      fs=10, weight='bold', ha='left')
 
 settings_x_offset = 2.7
+# Legend colors match framework body:
+# View 1 (blue) = augmented; View 2 (orange) = behavioral.
+# Subgraph variants (c)(d) reuse the same view color, distinguished by
+# an additional gray pool indicator stacked next to the view marker.
 settings = [
-    ('(a)', 'Aug. + Node',     C_VIEW1, False),
-    ('(b)', 'Behav. + Node',   C_VIEW2, False),
-    ('(c)', 'Aug. + Subgraph', C_PROCESS, False),
-    ('(d)', 'Behav. + Subgraph ($\\star$ proposed)', C_PROPOSED, True),
+    ('(a)', 'Aug. + Node',     C_VIEW1, False, False),
+    ('(b)', 'Behav. + Node',   C_VIEW2, False, False),
+    ('(c)', 'Aug. + Subgraph', C_VIEW1, True,  False),
+    ('(d)', 'Behav. + Subgraph ($\\star$ proposed)', C_VIEW2, True, True),
 ]
 slot_w = (leg_w - settings_x_offset - 0.6) / 4
-for i, (tag, desc, col, star) in enumerate(settings):
+for i, (tag, desc, col, has_pool, is_proposed) in enumerate(settings):
     x0 = leg_x + settings_x_offset + i * slot_w
     sw = 0.4
     sh = 0.45
     sy = leg_y + (leg_h - sh)/2
+    # Main view-color marker
     box(x0, sy, sw, sh, col,
-        edge=C_PROPOSED if star else C_BORDER,
-        lw=1.6 if star else 0.8)
-    text(x0 + sw + 0.15, leg_y + leg_h/2, tag,
+        edge=C_PROPOSED if is_proposed else C_BORDER,
+        lw=1.6 if is_proposed else 0.8)
+    # Pool indicator (small gray box adjacent) for (c)/(d)
+    if has_pool:
+        box(x0 + sw + 0.05, sy, sw*0.55, sh, C_PROCESS,
+            edge=C_PROPOSED if is_proposed else C_BORDER,
+            lw=1.6 if is_proposed else 0.8)
+        offset_extra = sw*0.55 + 0.05
+    else:
+        offset_extra = 0
+    text(x0 + sw + offset_extra + 0.18, leg_y + leg_h/2, tag,
          fs=10, weight='bold', ha='left')
-    text(x0 + sw + 0.65, leg_y + leg_h/2, desc,
+    text(x0 + sw + offset_extra + 0.68, leg_y + leg_h/2, desc,
          fs=9, ha='left', color=C_SUB)
 
 plt.savefig(os.path.join(OUT, 'fig_framework.pdf'), bbox_inches='tight', dpi=300)
