@@ -330,20 +330,23 @@ def fig_intro_homophily():
                 ax.plot([0, x], [0, y], color=C_EDGE_B,
                         linewidth=0.9, alpha=1.0, zorder=1, solid_capstyle='round')
 
-        # Draw neighbor nodes
+        # Draw neighbor nodes with S/B labels
         for angle, susp in zip(angles, is_susp):
             x, y = radius * np.cos(angle), radius * np.sin(angle)
             color = C_SUSP if susp else C_BENIGN
             edge_color = '#0F4D6B' if susp else '#9CA3AF'
-            ax.scatter(x, y, s=180, c=color, edgecolors=edge_color,
+            label = 'S' if susp else 'B'
+            label_color = 'white' if susp else '#374151'
+            ax.scatter(x, y, s=200, c=color, edgecolors=edge_color,
                        linewidths=1.0, zorder=4)
+            ax.text(x, y, label, ha='center', va='center',
+                    fontsize=8, fontweight='bold', color=label_color, zorder=5)
 
         # Draw ego (center) — slightly larger, distinct dark teal with ring
-        ax.scatter(0, 0, s=420, c=C_EGO, edgecolors='white', linewidths=2.2, zorder=5,
+        ax.scatter(0, 0, s=440, c=C_EGO, edgecolors='white', linewidths=2.2, zorder=5,
                    path_effects=[pe.withStroke(linewidth=3.0, foreground='#0A3548')])
-        ax.text(0, 0, '?', ha='center', va='center', fontsize=14, fontweight='bold',
-                color='white', zorder=6,
-                path_effects=[pe.withStroke(linewidth=1.0, foreground=C_EGO)])
+        ax.text(0, 0, 'S', ha='center', va='center', fontsize=12, fontweight='bold',
+                color='white', zorder=6)
 
         # Title (top)
         ax.text(0, 1.45, title, ha='center', va='center',
@@ -366,17 +369,15 @@ def fig_intro_homophily():
 
     # Compact legend at bottom
     legend_elements = [
-        mpatches.Patch(facecolor=C_EGO,    edgecolor='white',
-                       label='Ego (suspicious account)'),
         mpatches.Patch(facecolor=C_SUSP,   edgecolor='#0F4D6B',
-                       label='Suspicious neighbor'),
+                       label='S = Suspicious'),
         mpatches.Patch(facecolor=C_BENIGN, edgecolor='#9CA3AF',
-                       label='Benign neighbor'),
+                       label='B = Benign'),
     ]
     fig.legend(handles=legend_elements, loc='lower center',
-               bbox_to_anchor=(0.5, -0.02), ncol=3, frameon=False,
-               fontsize=8, handlelength=1.0, handletextpad=0.4,
-               columnspacing=1.6)
+               bbox_to_anchor=(0.5, -0.02), ncol=2, frameon=False,
+               fontsize=8.5, handlelength=1.0, handletextpad=0.4,
+               columnspacing=2.0)
 
     plt.tight_layout(rect=[0, 0.05, 1, 1])
     path = os.path.join(OUT_DIR, 'fig_intro_homophily.pdf')
