@@ -300,7 +300,7 @@ AMLNet            &  11{,}000 & 1{,}090{,}172 & 13.52\% & Synthetic \\
 \paragraph{Settings, baselines, and protocol.}
 \method 의 4 ablation 설정 — (a) 증강 view + node-level, (b) 행동 k-NN view + node-level, (c) 증강 view + subgraph pool, (d) 행동 k-NN view + subgraph pool — 을 (Figure~\ref{fig:framework} 하단) 10종 self-supervised 인코더 (per-layer BN: GBT/DGI+BN/MVGRL+BN/GRACE+BN/GIN, final BN: BGRL, BN-less: DGI/MVGRL/GRACE/GCA) 에 교차 적용한다. 공정 비교를 위해 모든 인코더에 동일한 BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) 와 하이퍼파라미터 (lr=5e-4, hidden=256, $L$=2, dropout=0.2, 200 ep) 를 적용한다. Supervised baseline 으로 GCN, GAT, GraphSAGE, MLP, LightGBM, XGBoost 6종에 class-weight 보정을 적용한다.
 
-평가 지표는 의심 클래스 F1-score (F1\_susp) 를 주, AUROC/AUPRC 를 보조로 사용한다. 모든 실험은 10\%/10\%/80\% train/val/test 분할 (시드별 동일 분할로 paired comparison 보장) 과 4 시드 (2024--2027) 평균±표준편차로 보고한다. 통계적 유의성은 4-seed paired $t$-test 로 검증하며 (Holm--Bonferroni 보정 적용, 상세 Table~\ref{tab:stat_test} 부록), 시드별 원시 결과는 \texttt{results/} 에 공개한다. 자기지도 모델은 인코더를 고정하고 임베딩 $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$ 에 대해 LogisticRegression 으로 평가한다. 모든 실험은 Python 3.12 / PyTorch 2.10 / CUDA 12.8 / NVIDIA H100 80GB 환경.
+평가 지표는 의심 클래스 F1-score (F1\_susp) 를 주, AUROC/AUPRC 를 보조로 사용한다. 모든 실험은 10\%/10\%/80\% train/val/test 분할 (시드별 동일 분할로 paired comparison 보장) 과 4 시드 (2024--2027) 평균±표준편차로 보고한다. 통계적 유의성은 4-seed paired $t$-test 로 검증하며 (Holm--Bonferroni 보정 적용, 상세 결과는 부록의 Table~\ref{tab:stat_test}), 시드별 원시 결과는 공개 리포지토리에 함께 배포한다. 자기지도 모델은 인코더를 고정하고 임베딩 $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$ 에 대해 LogisticRegression 으로 평가한다. 모든 실험은 Python 3.12 / PyTorch 2.10 / CUDA 12.8 / NVIDIA H100 80GB 환경.
 
 \subsection{Effectiveness and Mechanism of Behavioral k-NN View (RQ1)}\label{subsec:rq1}
 
@@ -352,7 +352,7 @@ Behavioral k-NN   & \textbf{0.981} & \textbf{62K}  & \textbf{88K} & \textbf{1:1.
 
 \subsection{Effectiveness of Subgraph Pooling (RQ2)}\label{subsec:rq2}
 
-서브그래프 풀링의 효과는 결합되는 view 와 인코더의 정규화 깊이에 동시에 의존한다 (Figure~\ref{fig:rq2_ablation}; 4-setting raw 수치는 \texttt{results/exp\_results\_hofinet\_ab.csv} 에 공개). HOFINET 에서 (d) 의 (b) 대비 개선폭은 정규화 깊이에 반비례하며, per-layer BN 4종은 +0.002$\sim$+0.003 의 미미한 차이, BGRL 은 +0.078, BN 미포함 인코더는 평균 +0.018 의 개선을 보인다. 거래 그래프에 풀링만 적용한 (c) 는 BN-augmented 인코더에서 (a) 대비 $-$17\%$\sim$$-$30\% 저하한다 (Figure~\ref{fig:rq2_ablation} 의 (c) 막대 참조; 6 BN 인코더 측정 $-17.1\%$ (BGRL) $\sim$ $-29.9\%$ (GIN)). 이는 Section~\ref{subsec:subgraph_pool} 의 noise amplification 메커니즘 (정리~\ref{thm:meanpool}) 과 일치한다.
+서브그래프 풀링의 효과는 결합되는 view 와 인코더의 정규화 깊이에 동시에 의존한다 (Figure~\ref{fig:rq2_ablation}). HOFINET 에서 (d) 의 (b) 대비 개선폭은 정규화 깊이에 반비례하며, per-layer BN 4종은 +0.002$\sim$+0.003 의 미미한 차이, BGRL 은 +0.078, BN 미포함 인코더는 평균 +0.018 의 개선을 보인다. 거래 그래프에 풀링만 적용한 (c) 는 BN-augmented 인코더에서 (a) 대비 $-$17\%$\sim$$-$30\% 저하한다 (Figure~\ref{fig:rq2_ablation} 의 (c) 막대 참조; 6 BN 인코더 측정 $-17.1\%$ (BGRL) $\sim$ $-29.9\%$ (GIN)). 이는 Section~\ref{subsec:subgraph_pool} 의 noise amplification 메커니즘 (정리~\ref{thm:meanpool}) 과 일치한다.
 
 \begin{figure}[t]
     \centering
@@ -444,7 +444,7 @@ HOFINET/AMLworld/AMLNet 세 데이터셋 모두 거래 그래프 S-S/S-B = 1:5.7
 
 \begin{table}[t]
 \centering
-\caption{RQ5: Self-supervised \method (d) vs.\ supervised baselines (4-seed mean$\pm$std on the corrected 80\% holdout, identical test indices via \texttt{utils.make\_split}). Best in bold (ties share bold), sole second-best underlined. \method (d) reports the strongest encoder per dataset: GBT on HOFINET, BGRL on AMLworld, and GBT on AMLNet.}
+\caption{RQ5: Self-supervised \method (d) vs.\ supervised baselines (4-seed mean$\pm$std on the 80\% holdout; the same test indices are used across all models for paired comparison). Best in bold (ties share bold), sole second-best underlined. \method (d) reports the strongest encoder per dataset: GBT on HOFINET, BGRL on AMLworld, and GBT on AMLNet.}
 \label{tab:rq5}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{llccc}
