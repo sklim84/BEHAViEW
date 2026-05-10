@@ -45,7 +45,7 @@ C_SG        = '#C62828'
 # ============ Layout grid ============
 # All pipeline boxes have uniform width BW.
 # Terminal boxes (Input, BYOL Loss, Inference) share width = TERMINAL_W and height = TERMINAL_H.
-BW = 3.0           # uniform pipeline box width
+BW = 3.4           # uniform pipeline box width (slightly wider for readability)
 ROW_H = 1.7        # height of each row box (View/Encoder/Pool/Proj)
 TERMINAL_W = 3.0   # input + BYOL + Inference width (== BW for visual unity)
 TERMINAL_H = 4.0   # input + BYOL + Inference height (spans both rows)
@@ -112,12 +112,12 @@ text(icx, icy - 0.65, '$\\mathcal{G}_{\\mathrm{tx}}$', fs=11, color=C_SUB)
 # ============ View 1 / View 2 ============
 vcx = x_v + BW/2
 box(x_v, ROW_T_Y, BW, ROW_H, C_VIEW1)
-text(vcx, ROW_T_Y + ROW_H*0.65, 'View 1', fs=11.5, weight='bold')
-text(vcx, ROW_T_Y + ROW_H*0.30, 'Augmented Graph', fs=10, color=C_SUB)
+text(vcx, ROW_T_Y + ROW_H*0.65, 'View 1', fs=12.5, weight='bold')
+text(vcx, ROW_T_Y + ROW_H*0.30, 'Augmented Graph', fs=11, color=C_SUB)
 
 box(x_v, ROW_B_Y, BW, ROW_H, C_VIEW2)
-text(vcx, ROW_B_Y + ROW_H*0.65, 'View 2', fs=11.5, weight='bold')
-text(vcx, ROW_B_Y + ROW_H*0.30, 'Behavioral k-NN', fs=10, color=C_SUB)
+text(vcx, ROW_B_Y + ROW_H*0.65, 'View 2', fs=12.5, weight='bold')
+text(vcx, ROW_B_Y + ROW_H*0.30, 'Behavioral k-NN', fs=11, color=C_SUB)
 
 # Input → views
 arrow(x_in + TERMINAL_W, icy + 0.4, x_v, ROW_T_Y + ROW_H/2)
@@ -125,17 +125,17 @@ arrow(x_in + TERMINAL_W, icy - 0.4, x_v, ROW_B_Y + ROW_H/2)
 
 # Axis 1
 text(vcx, (ROW_T_Y + ROW_B_Y + ROW_H)/2,
-     'View Construction $\\updownarrow$', fs=11.5, weight='bold', color=C_AXIS)
+     'View Construction $\\updownarrow$', fs=12.5, weight='bold', color=C_AXIS)
 
 # ============ Encoder ============
 ecx = x_enc + BW/2
 box(x_enc, ROW_T_Y, BW, ROW_H, C_PROCESS)
-text(ecx, ROW_T_Y + ROW_H*0.62, 'Online Encoder', fs=11.5, weight='bold')
-text(ecx, ROW_T_Y + ROW_H*0.30, '$f_\\theta$  (GCN+BN)', fs=10, color=C_SUB)
+text(ecx, ROW_T_Y + ROW_H*0.62, 'Online Encoder', fs=12.5, weight='bold')
+text(ecx, ROW_T_Y + ROW_H*0.30, '$f_\\theta$  (GCN+BN)', fs=11, color=C_SUB)
 
 box(x_enc, ROW_B_Y, BW, ROW_H, C_PROCESS)
-text(ecx, ROW_B_Y + ROW_H*0.62, 'Target Encoder', fs=11.5, weight='bold')
-text(ecx, ROW_B_Y + ROW_H*0.30, '$f_\\xi$  (EMA, stop-grad)', fs=10, color=C_SUB)
+text(ecx, ROW_B_Y + ROW_H*0.62, 'Target Encoder', fs=12.5, weight='bold')
+text(ecx, ROW_B_Y + ROW_H*0.30, '$f_\\xi$  (EMA, stop-grad)', fs=11, color=C_SUB)
 
 # View → Encoder
 arrow(x_v + BW, ROW_T_Y + ROW_H/2, x_enc, ROW_T_Y + ROW_H/2)
@@ -149,12 +149,12 @@ arrow(ecx - 0.3, ROW_T_Y, ecx - 0.3, ROW_B_Y + ROW_H,
 # ============ Pool ============
 pcx = x_pool + BW/2
 box(x_pool, ROW_T_Y, BW, ROW_H, C_PROCESS)
-text(pcx, ROW_T_Y + ROW_H*0.62, 'Subgraph Pool', fs=11.5, weight='bold')
-text(pcx, ROW_T_Y + ROW_H*0.30, 'tx-graph neighbors', fs=10, color=C_SUB)
+text(pcx, ROW_T_Y + ROW_H*0.62, 'Subgraph Pool', fs=12.5, weight='bold')
+text(pcx, ROW_T_Y + ROW_H*0.30, 'tx-graph neighbors', fs=11, color=C_SUB)
 
 box(x_pool, ROW_B_Y, BW, ROW_H, C_PROCESS)
-text(pcx, ROW_B_Y + ROW_H*0.62, 'Subgraph Pool', fs=11.5, weight='bold')
-text(pcx, ROW_B_Y + ROW_H*0.30, 'k-NN neighbors', fs=10, color=C_SUB)
+text(pcx, ROW_B_Y + ROW_H*0.62, 'Subgraph Pool', fs=12.5, weight='bold')
+text(pcx, ROW_B_Y + ROW_H*0.30, 'k-NN neighbors', fs=11, color=C_SUB)
 
 # Encoder → Pool
 arrow(x_enc + BW, ROW_T_Y + ROW_H/2, x_pool, ROW_T_Y + ROW_H/2)
@@ -162,17 +162,17 @@ arrow(x_enc + BW, ROW_B_Y + ROW_H/2, x_pool, ROW_B_Y + ROW_H/2)
 
 # Axis 2
 text(pcx, (ROW_T_Y + ROW_B_Y + ROW_H)/2,
-     'Contrastive Level $\\updownarrow$', fs=11.5, weight='bold', color=C_AXIS)
+     'Contrastive Level $\\updownarrow$', fs=12.5, weight='bold', color=C_AXIS)
 
 # ============ Projector / Predictor ============
 prcx = x_proj + BW/2
 box(x_proj, ROW_T_Y, BW, ROW_H, C_PROCESS)
-text(prcx, ROW_T_Y + ROW_H*0.62, 'Projector', fs=11.5, weight='bold')
-text(prcx, ROW_T_Y + ROW_H*0.30, '$g_\\theta$ + Predictor $q_\\theta$', fs=10, color=C_SUB)
+text(prcx, ROW_T_Y + ROW_H*0.62, 'Projector', fs=12.5, weight='bold')
+text(prcx, ROW_T_Y + ROW_H*0.30, '$g_\\theta$ + Predictor $q_\\theta$', fs=11, color=C_SUB)
 
 box(x_proj, ROW_B_Y, BW, ROW_H, C_PROCESS)
-text(prcx, ROW_B_Y + ROW_H*0.62, 'Projector', fs=11.5, weight='bold')
-text(prcx, ROW_B_Y + ROW_H*0.30, '$g_\\xi$  (stop-grad)', fs=10, color=C_SUB, style='italic')
+text(prcx, ROW_B_Y + ROW_H*0.62, 'Projector', fs=12.5, weight='bold')
+text(prcx, ROW_B_Y + ROW_H*0.30, '$g_\\xi$  (stop-grad)', fs=11, color=C_SUB, style='italic')
 
 # Pool → Proj
 arrow(x_pool + BW, ROW_T_Y + ROW_H/2, x_proj, ROW_T_Y + ROW_H/2)
