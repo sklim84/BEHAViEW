@@ -225,7 +225,7 @@ Figure~\ref{fig:theory_inset} 는 정리~\ref{thm:meanpool} 의 신호 역전 �
 \begin{figure}[t]
     \centering
     \includegraphics[width=\columnwidth]{figures/fig_theory_inset.pdf}
-    \caption{Mean-pool signal $\mathbb{E}[\rho^{(\mathrm{mean})}]$ vs.\ ego-neighborhood heterophily $\eta_h$ (Thm~\ref{thm:meanpool}). Once $\eta_h$ exceeds the flip threshold $\eta_h^*\,{=}\,1/2 + 1/(2k)\,{=}\,0.55$ ($k{=}10$, paper default), the signal sign reverses (red region). All three AML datasets sit deep inside this flip region.}
+    \caption{Theory$\to$empirical bridge for Theorem~\ref{thm:meanpool}. X-axis: ego-neighborhood heterophily $\eta_h$; Y-axis: setting (c) F1\_susp drop relative to (a). All three AML datasets exceed the theoretical flip threshold $\eta_h^* = 0.55$ ($k{=}10$), and most encoders show $\Delta F1 \leq 0$ as predicted. AMLworld remains near zero due to its 1.23\% prevalence floor (baseline already at random level), while AMLNet and HOFINET show the largest drops where signal exists to reverse.}
     \label{fig:theory_inset}
 \end{figure}
 
