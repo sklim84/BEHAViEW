@@ -54,7 +54,7 @@
 
 \begin{document}
 
-% 한글 제목: BECON: 저동질성 거래 네트워크에서의 자금세탁 탐지를 위한 행동 서브그래프 대조학습
+% 한글 제목: BECON: 저동질성 거래 네트워크에서의 자금세탁방지를 위한 행동 서브그래프 대조학습
 % BECON = BEhavioral CONtrast
 % BEHAVior + ViEW = BEHAViEW  행위를 보다
 \title{\method: Behavioral Subgraph Contrast for Anti-Money Laundering in Low-Homophily Transaction Networks}
@@ -72,7 +72,7 @@
 
 
 \begin{abstract}
-자금세탁 탐지에 그래프 신경망이 활발히 적용되고 있으나, 거래 네트워크의 저동질성으로 인해 표준 메시지 패싱은 의심 신호 대신 정상 이웃의 noise 를 전파한다. 예를 들어, 한국의 은행 간 이체 결제망 HOFINET 거래 그래프에서 의심 계좌 이웃의 약 85\% 가 정상 계좌 (S-S/S-B = 1:5.7) 이므로, 동일 그래프의 확률적 증강에 의존하는 기존 그래프 대조학습은 view 가 이 결함을 그대로 보존한다. 이와 같은 문제를 완화하기 위해, 본 논문은 거래 패턴 (금액 통계, 시간적 빈도, 거래 유형 엔트로피) 의 행동적 유사도에 기반한 k-NN 그래프를 보조 view 로 도입하고 서브그래프 수준 이웃 집계로 신호를 증폭하는 자금세탁 탐지 프레임워크 \method 을 제안한다. 그 결과 행동적 k-NN view 는 S-S/S-B 비율을 1:5.7 에서 1:1.4 로, 동질성을 0.690 에서 0.981 로 회복시키고, 의심거래 탐지 $F1_{\text{susp}}$ 는 baseline 0.266 에서 0.673 으로 +152\% 향상된다. 이는 우리가 아는 한, view 구성과 contrastive level 두 독립 축을 교차한 분석으로 자금세탁 거래 그래프의 동질성 회복과 신호 증폭 메커니즘을 degree-corrected stochastic block model 기반으로 정형화한 첫 사례이다.
+자금세탁방지에 그래프 신경망이 활발히 적용되고 있으나, 거래 네트워크의 저동질성으로 인해 표준 메시지 패싱은 의심 신호 대신 정상 이웃의 noise 를 전파한다. 예를 들어, 한국의 은행 간 이체 결제망 HOFINET 거래 그래프에서 의심 계좌 이웃의 약 85\% 가 정상 계좌 (S-S/S-B = 1:5.7) 이므로, 동일 그래프의 확률적 증강에 의존하는 기존 그래프 대조학습은 view 가 이 결함을 그대로 보존한다. 이와 같은 문제를 완화하기 위해, 본 논문은 거래 패턴 (금액 통계, 시간적 빈도, 거래 유형 엔트로피) 의 행동적 유사도에 기반한 k-NN 그래프를 보조 view 로 도입하고 서브그래프 수준 이웃 집계로 신호를 증폭하는 자금세탁방지 프레임워크 \method 을 제안한다. 그 결과 행동적 k-NN view 는 S-S/S-B 비율을 1:5.7 에서 1:1.4 로, 동질성을 0.690 에서 0.981 로 회복시키고, 의심거래 탐지 $F1_{\text{susp}}$ 는 baseline 0.266 에서 0.673 으로 +152\% 향상된다. 이는 우리가 아는 한, view 구성과 contrastive level 두 독립 축을 교차한 분석으로 자금세탁 거래 그래프의 동질성 회복과 신호 증폭 메커니즘을 degree-corrected stochastic block model 기반으로 정형화한 첫 사례이다.
 \end{abstract}
 
 \keywords{anti-money laundering, graph contrastive learning, k-NN graph view, subgraph pooling, low-homophily, transaction networks}
@@ -106,7 +106,7 @@
 
 \section{Related Work}\label{sec:related_work}
 
-거래 네트워크에서 사기와 자금세탁 탐지에 GNN 을 적용한 연구는 대부분 라벨 기반 지도학습이다~\cite{wang2024aml,cheng2025graph}: GraphConsis~\cite{liu2020alleviating} 와 CARE-GNN~\cite{dou2020enhancing} 은 fraud-aware 이웃 선별, PC-GNN~\cite{liu2021pick} 은 라벨 분포 샘플링, GTAN~\cite{cheng2020graph} 과 xFraud~\cite{rao2020xfraud} 은 시공간 및 이종 패턴, FraudRE~\cite{zhang2021fraudre} 와 RioGNN~\cite{peng2021reinforced} 는 클래스 불균형과 다중 관계, LHFD~\cite{wang2023label} 는 라벨-aware 다중 클래스 fraud detection 을 제안하였다. 모두 라벨 의존도가 높아 운영 환경의 cold-start 문제를 겪는다. 저동질성 그래프 대응으로 H2GCN~\cite{zhu2020beyond}, Geom-GCN~\cite{pei2020geom}, FAGCN~\cite{bo2021beyond}, GBK-GNN~\cite{du2022gbk}, ACM-GCN~\cite{luan2022acmgcn}, GPR-GNN~\cite{chien2021adaptive}, LINKX~\cite{zhu2021linkx} 등 architecture-level 보강이 활발하나, 모두 주어진 그래프 구조 자체 는 변경하지 않는다. \method 은 이와 직교하는 접근으로 표준 GCN 을 그대로 두고 행동적 k-NN 보조 view 를 도입하여 그래프 수준에서 동질성을 회복한다 ($h_{\text{tx}}{=}0.690 \to h_{\text{knn}}{=}0.981$).
+거래 네트워크에서 사기 탐지 및 자금세탁방지에 GNN 을 적용한 연구는 대부분 라벨 기반 지도학습이다~\cite{wang2024aml,cheng2025graph}: GraphConsis~\cite{liu2020alleviating} 와 CARE-GNN~\cite{dou2020enhancing} 은 fraud-aware 이웃 선별, PC-GNN~\cite{liu2021pick} 은 라벨 분포 샘플링, GTAN~\cite{cheng2020graph} 과 xFraud~\cite{rao2020xfraud} 은 시공간 및 이종 패턴, FraudRE~\cite{zhang2021fraudre} 와 RioGNN~\cite{peng2021reinforced} 는 클래스 불균형과 다중 관계, LHFD~\cite{wang2023label} 는 라벨-aware 다중 클래스 fraud detection 을 제안하였다. 모두 라벨 의존도가 높아 운영 환경의 cold-start 문제를 겪는다. 저동질성 그래프 대응으로 H2GCN~\cite{zhu2020beyond}, Geom-GCN~\cite{pei2020geom}, FAGCN~\cite{bo2021beyond}, GBK-GNN~\cite{du2022gbk}, ACM-GCN~\cite{luan2022acmgcn}, GPR-GNN~\cite{chien2021adaptive}, LINKX~\cite{zhu2021linkx} 등 architecture-level 보강이 활발하나, 모두 주어진 그래프 구조 자체 는 변경하지 않는다. \method 은 이와 직교하는 접근으로 표준 GCN 을 그대로 두고 행동적 k-NN 보조 view 를 도입하여 그래프 수준에서 동질성을 회복한다 ($h_{\text{tx}}{=}0.690 \to h_{\text{knn}}{=}0.981$).
 
 DGI~\cite{velivckovic2018deep}, GRACE~\cite{zhu2020deep}, GraphCL~\cite{you2020graph}, GCA~\cite{zhu2021graph}, BGRL~\cite{thakoor2021large}, GBT~\cite{bielak2022graph}, MVGRL~\cite{hassani2020contrastive} 등 GCL 방법론은 모두 동일 그래프 stochastic 증강 view 에 의존하여 저동질성 결함을 view 에 보존한다. Augmentation-free 대안 (AFGRL~\cite{lee2022augmentation}, SimGRACE~\cite{xia2022simgrace}, CCA-SSG~\cite{zhang2021canonical}, GraphMAE~\cite{hou2022graphmae}, S2GAE~\cite{li2023s2gae}) 도 representation 공간에서 view 를 생성하여 그래프 수준 동질성을 직접 다루지 않는다. k-NN view 활용 MLGCL~\cite{shang2023mlgcl} 과 GCPAL~\cite{lu2024graph} 은 가용한 모든 피처로 k-NN 을 구축하여 의심 계좌 간 연결을 거래 그래프 (1:5.7) 보다 악화 (1:9.7) 시키며, k-NN 피처 선택과 contrastive level 의 체계적 분석이 부재하다. 한편 graph anomaly detection 분야에서 DOMINANT~\cite{ding2019dominant}, CoLA~\cite{liu2021anomaly}, ANEMONE~\cite{jin2021anemone}, BWGNN~\cite{tang2022rethinking}, BOND~\cite{liu2022bond} 등이 unsupervised 탐지를 연구하였으나, 의도적 evasion (분할거래/layering) 을 가진 실거래 환경의 검증은 제한적이다. Negative-sample-free 패러다임 (BYOL~\cite{grill2020bootstrap}, BarlowTwins~\cite{zbontar2021barlow}, SimSiam~\cite{chen2021exploring}) 의 collapse 회피는 BatchNorm~\cite{ioffe2015batch} 의 implicit 효과에 기인한다고 보고되었으며~\cite{tian2021understanding}, 본 연구는 이 메커니즘이 대규모 불균형 AML 환경에서 결정적임을 정량적으로 실증하고 정리로 형식화한다 (Theorem~\ref{thm:bn_collapse}). 클래스 불균형 보강 (GraphSMOTE~\cite{zhao2021graphsmote}, ReNode~\cite{chen2021renode}, TAM~\cite{song2022tam}) 도 라벨 환경에 국한되어 본 연구의 자기지도 설정과 직접 비교되지 않는다. 확장된 비교는 부록~\ref{app:rw_extended} 에 수록한다.
 
@@ -466,7 +466,7 @@ GCN       & Supervised GNN & 0.467{\scriptsize±.006} & 0.785{\scriptsize±.011}
 
 \section{Conclusion and Future Work}
 
-본 연구는 저동질성 거래 네트워크에서의 자금세탁 탐지를 위한 그래프 대조학습 프레임워크 \method 을 제안하였다. 행동적 k-NN view 와 서브그래프 풀링의 두 설계를 view $\times$ level 축에서 체계적으로 분석하고 DCSBM 기반 이론으로 정당화하였다 (Theorems~\ref{thm:knn_homophily}--\ref{thm:bn_collapse}). 행동적 k-NN view 가 거래 그래프 동질성을 0.690 → 0.981 로 복원하고, 서브그래프 풀링이 view homophily 와 정규화 깊이에 dependent 한 conditional amplifier 로 기능하며, BatchNorm 이 BYOL bootstrap loss 의 trivial constant collapse 를 차단하는 핵심 메커니즘임을 세 데이터셋 (HOFINET, AMLworld, AMLNet) 에서 검증하였다. 라벨 없는 자기지도 표현이 HOFINET 에서 supervised baseline 과 0.006 $F1_{\text{susp}}$ 이내, AMLNet 에서 LightGBM 과 0.008 이내의 경쟁력을 보이고, AMLworld 에서는 모든 GNN 지도학습 baseline 을 상회하며, 1\% 라벨에서도 HOFINET $F1_{\text{susp}}$ $= 0.654$ 를 유지한다.
+본 연구는 저동질성 거래 네트워크에서의 자금세탁방지를 위한 그래프 대조학습 프레임워크 \method 을 제안하였다. 행동적 k-NN view 와 서브그래프 풀링의 두 설계를 view $\times$ level 축에서 체계적으로 분석하고 DCSBM 기반 이론으로 정당화하였다 (Theorems~\ref{thm:knn_homophily}--\ref{thm:bn_collapse}). 행동적 k-NN view 가 거래 그래프 동질성을 0.690 → 0.981 로 복원하고, 서브그래프 풀링이 view homophily 와 정규화 깊이에 dependent 한 conditional amplifier 로 기능하며, BatchNorm 이 BYOL bootstrap loss 의 trivial constant collapse 를 차단하는 핵심 메커니즘임을 세 데이터셋 (HOFINET, AMLworld, AMLNet) 에서 검증하였다. 라벨 없는 자기지도 표현이 HOFINET 에서 supervised baseline 과 0.006 $F1_{\text{susp}}$ 이내, AMLNet 에서 LightGBM 과 0.008 이내의 경쟁력을 보이고, AMLworld 에서는 모든 GNN 지도학습 baseline 을 상회하며, 1\% 라벨에서도 HOFINET $F1_{\text{susp}}$ $= 0.654$ 를 유지한다.
 
 본 연구는 transductive 설정과 BYOL-style bootstrap loss 가정 하에서 검증되었으며 시간 기반 hold-out 평가가 아니라는 한계가 있다. 향후 동적 및 시간적 그래프 및 inductive 설정 확장, 다른 contrastive paradigm 으로의 collapse 정리 일반화, 운영 환경 shadow-run 검증, 부록~\ref{app:transfer} 의 cross-domain transfer 정교화를 계획한다.
 
