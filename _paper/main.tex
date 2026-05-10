@@ -119,7 +119,7 @@ DGI~\cite{velivckovic2018deep}, GRACE~\cite{zhu2020deep}, GraphCL~\cite{you2020g
     \label{fig:framework}
 \end{figure*}
 
-본 장은 \method 의 세부 구성을 기술한다. 문제 정의에 이어 피처 분류 (§\ref{subsec:feature_taxonomy}), 행동적 k-NN view 구축 (§\ref{subsec:knn_view}), 이중 view 대조학습 (§\ref{subsec:dual_view}), 서브그래프 풀링 (§\ref{subsec:subgraph_pool}), 이론적 정당화 (§\ref{subsec:theory}) 를 차례로 다루며, Figure~\ref{fig:framework} 가 전체 파이프라인을 도시한다.
+본 섹션은 \method 의 세부 구성을 기술한다. 문제 정의에 이어 피처 분류 (§\ref{subsec:feature_taxonomy}), 행동적 k-NN view 구축 (§\ref{subsec:knn_view}), 이중 view 대조학습 (§\ref{subsec:dual_view}), 서브그래프 풀링 (§\ref{subsec:subgraph_pool}), 이론적 정당화 (§\ref{subsec:theory}) 를 차례로 다루며, Figure~\ref{fig:framework} 가 전체 파이프라인을 도시한다.
 
 \subsection{Problem Formulation}
 거래 네트워크를 유향 그래프 $\mathcal{G}_{\text{trans}} = (\mathcal{V}, \mathcal{E}, \mathbf{X})$로 정의한다. 
@@ -220,7 +220,7 @@ $\eta_h^{\text{tx}} > 1/2 + 1/(2k)$ 와 BN-equipped 인코더 가정 하, $F1_{\
 
 \section{Experiments}\label{sec:experiments}
 
-본 장에서는 제안 프레임워크를 다음의 연구 질문을 통해 평가한다.
+본 섹션은 제안 프레임워크를 다음의 연구 질문을 통해 평가한다.
 \begin{itemize}
     \item RQ1. 행동적 k-NN view가 AML 탐지에 효과적인가? 그리고 왜 효과적인가?
     \item RQ2. 서브그래프 풀링이 추가 개선을 가져오는가? 어떤 조건에서 효과적인가?
@@ -457,9 +457,9 @@ GraphSAGE & Supervised      & Graph   & \underline{0.708}{\scriptsize±.007} & 0
 
 \section{Conclusion and Future Work}
 
-본 연구는 저동질성 거래 네트워크에서의 자금세탁방지를 위한 그래프 대조학습 프레임워크 \method 을 제안하였다. 행동적 k-NN view 와 서브그래프 풀링의 두 설계를 view $\times$ level 축에서 체계적으로 분석하고 DCSBM 기반 이론으로 정당화하였다 (Theorems~\ref{thm:knn_homophily}--\ref{thm:bn_collapse}). 행동적 k-NN view 가 거래 그래프 동질성을 0.690 → 0.981 로 복원하고, 서브그래프 풀링이 view homophily 와 정규화 깊이에 dependent 한 conditional amplifier 로 기능하며, BatchNorm 이 BYOL bootstrap loss 의 trivial constant collapse 를 차단하는 핵심 메커니즘임을 세 데이터셋 (HOFINET, AMLworld, AMLNet) 에서 검증하였다. 라벨 없는 자기지도 표현이 HOFINET 에서 supervised baseline 과 0.006 $F1_{\text{susp}}$ 이내, AMLNet 에서 LightGBM 과 0.008 이내의 경쟁력을 보이고, AMLworld 에서는 모든 GNN 지도학습 baseline 을 상회하며, 1\% 라벨에서도 HOFINET $F1_{\text{susp}}$ $= 0.654$ 를 유지한다.
+본 논문은 저동질성 거래 네트워크에서의 자금세탁방지를 위한 그래프 대조학습 프레임워크 \method 을 제안하였다. \method 은 행동적 유사도에 기반한 k-NN 그래프를 보조 view 로 도입하고 서브그래프 수준 이웃 집계로 의심 신호를 증폭하며, view 구성과 contrastive level 두 축의 효과를 DCSBM 기반 이론으로 정당화한다 (Theorems~\ref{thm:knn_homophily}--\ref{thm:bn_collapse}). 그 결과 행동적 k-NN view 가 거래 그래프 동질성을 0.690 → 0.981 로 회복시키고, 서브그래프 풀링은 view homophily 와 인코더 정규화 깊이에 의존하는 conditional amplifier 로, BatchNorm 은 BYOL bootstrap loss 의 trivial constant collapse 를 차단하는 핵심 메커니즘으로 작동함을 세 데이터셋 (HOFINET, AMLworld, AMLNet) 에서 확인하였다. 라벨 없이 학습한 자기지도 표현은 HOFINET 에서 supervised baseline 과 0.006 $F1_{\text{susp}}$ 이내, AMLNet 에서 LightGBM 과 0.008 이내의 경쟁력을 달성하고, AMLworld 에서는 모든 GNN 지도학습 baseline 을 상회하며, 1\% 라벨에서도 HOFINET $F1_{\text{susp}}$ $= 0.654$ 를 유지한다.
 
-본 연구는 transductive 설정과 BYOL-style bootstrap loss 가정 하에서 검증되었으며 시간 기반 hold-out 평가가 아니라는 한계가 있다. 향후 동적 및 시간적 그래프 및 inductive 설정 확장, 다른 contrastive paradigm 으로의 collapse 정리 일반화, 운영 환경 shadow-run 검증, 부록~\ref{app:transfer} 의 cross-domain transfer 정교화를 계획한다.
+\method 은 transductive 설정과 BYOL-style bootstrap loss 가정 하에서 검증되었으며 시간 기반 hold-out 평가가 아니라는 한계가 있다. 향후 동적 및 시간적 그래프 및 inductive 설정 확장, 다른 contrastive paradigm 으로의 collapse 정리 일반화, 운영 환경 shadow-run 검증, 부록~\ref{app:transfer} 의 cross-domain transfer 정교화를 계획한다.
 
 \clearpage
 \bibliographystyle{ACM-Reference-Format}
@@ -723,7 +723,7 @@ $\mathbf{Z} \leftarrow [\mathbf{S}^{(1)} \| \mathbf{S}^{(2)}]$\;
 
 \subsection{Label Fraction Sensitivity}
 
-자기지도 학습의 실용적 가치를 보다 엄밀히 검증하기 위해 downstream LogisticRegression 평가 시 라벨 비율을 1\%, 5\%, 10\% 로 변화시키며 \method 설정 (d) 의 성능을 측정하였다. Table~\ref{tab:label_fraction}은 GBT 인코더에 대한 결과를 보여준다.
+자기지도 학습의 실용적 가치를 보다 엄밀히 검증하기 위해 downstream LogisticRegression 평가 시 라벨 비율을 1\%, 5\%, 10\% 로 변화시키며 \method 의 성능을 측정하였다. Table~\ref{tab:label_fraction}은 GBT 인코더에 대한 결과를 보여준다.
 
 \begin{table}[t]
 \centering
@@ -745,7 +745,7 @@ $\mathbf{Z} \leftarrow [\mathbf{S}^{(1)} \| \mathbf{S}^{(2)}]$\;
 
 \subsection{Feature Ablation for k-NN Construction}
 
-행동적 피처의 k-NN view 구축에 대한 기여를 정량적으로 검증하기 위해 k-NN 그래프 구축에 사용하는 피처 범주를 변경하며 \method 설정 (d) 의 성능을 비교하였다. 특히 MLGCL~\cite{shang2023mlgcl}과 GCPAL~\cite{lu2024graph}은 가용한 모든 피처로 k-NN을 구축하므로, 이와 동일한 조건(All+Centrality)을 프록시로 포함하여 직접 비교한다. Table~\ref{tab:feature_ablation}은 다섯 가지 피처 범주로 구축한 k-NN view의 결과를 보여준다.
+행동적 피처의 k-NN view 구축에 대한 기여를 정량적으로 검증하기 위해 k-NN 그래프 구축에 사용하는 피처 범주를 변경하며 \method 의 성능을 비교하였다. 특히 MLGCL~\cite{shang2023mlgcl}과 GCPAL~\cite{lu2024graph}은 가용한 모든 피처로 k-NN을 구축하므로, 이와 동일한 조건(All+Centrality)을 프록시로 포함하여 직접 비교한다. Table~\ref{tab:feature_ablation}은 다섯 가지 피처 범주로 구축한 k-NN view의 결과를 보여준다.
 
 \begin{table}[t]
 \centering
@@ -773,7 +773,7 @@ Non-behavioral (11 feats)      & 0.286{\scriptsize±.004} & 0.963{\scriptsize±.
 
 \begin{table}[t]
 \centering
-\caption{Computational cost of \method setting (d) on HOFINET (452K nodes, GBT encoder, single NVIDIA H100 80GB GPU).}
+\caption{Computational cost of \method on HOFINET (452K nodes, GBT encoder, single NVIDIA H100 80GB GPU).}
 \label{tab:cost}
 \small
 \begin{tabular}{lc}
@@ -797,7 +797,7 @@ Inference (embedding extraction)      & 0.05s \\
 
 \begin{table}[t]
 \centering
-\caption{Cross-dataset transfer from AMLworld (source, 200-epoch self-supervised pretraining) to AMLNet (target). \method (d) GBT encoder, 4-seed mean$\pm$std on the 80\% holdout. Fine-tune mode continues training on the target for 50 epochs.}
+\caption{Cross-dataset transfer from AMLworld (source, 200-epoch self-supervised pretraining) to AMLNet (target). \method GBT encoder, 4-seed mean$\pm$std on the 80\% holdout. Fine-tune mode continues training on the target for 50 epochs.}
 \label{tab:transfer}
 \small
 \begin{tabular}{lccc}
