@@ -114,11 +114,97 @@ class SupervisedMLP(nn.Module):
         return self.net(x)
 
 
+class CAREGNN(nn.Module):
+    """CARE-GNN (Dou et al. CIKM 2020) simplified single-relation variant.
+
+    Core idea: similarity-aware neighbor filtering. Edges are weighted by
+    cosine similarity of endpoint representations, so dissimilar (likely
+    camouflage) neighbors contribute less to aggregation. Equivalent to
+    soft version of CARE-GNN's RL-learned top-theta neighbor selection.
+    """
+    def __init__(self, input_dim, hidden_dim, num_layers=2, dropout=0.2):
+        super().__init__()
+        self.layers = nn.ModuleList()
+        self.bns = nn.ModuleList()
+        self.layers.append(GCNConv(input_dim, hidden_dim, add_self_loops=False, normalize=False))
+        self.bns.append(nn.BatchNorm1d(hidden_dim))
+        for _ in range(num_layers - 1):
+            self.layers.append(GCNConv(hidden_dim, hidden_dim, add_self_loops=False, normalize=False))
+            self.bns.append(nn.BatchNorm1d(hidden_dim))
+        self.classifier = nn.Linear(hidden_dim, 2)
+        self.dropout = dropout
+
+    def forward(self, x, edge_index):
+        for conv, bn in zip(self.layers, self.bns):
+            # Compute per-edge cosine similarity (clamped to [0,1])
+            src, tgt = edge_index[0], edge_index[1]
+            sim = F.cosine_similarity(x[src], x[tgt], dim=1).clamp(min=0.0)
+            x = conv(x, edge_index, edge_weight=sim)
+            x = bn(x)
+            x = F.relu(x)
+            x = F.dropout(x, p=self.dropout, training=self.training)
+        return self.classifier(x)
+
+
+class PCGNN(nn.Module):
+    """PC-GNN (Liu et al. WWW 2021) simplified single-relation variant.
+
+    Core idea: label-distribution-aware neighborhood sampling. During
+    training, edges between two majority-class nodes are randomly dropped
+    so that the GNN sees a relatively balanced ego-neighborhood. Minority
+    nodes always keep all their neighbors (high-recall) ; majority-majority
+    edges keep with prob p_keep (default 0.3, roughly matching prevalence
+    ratio for HOFINET 2%-prevalence).
+    """
+    def __init__(self, input_dim, hidden_dim, num_layers=2, dropout=0.2, p_keep_mm=0.3):
+        super().__init__()
+        self.layers = nn.ModuleList()
+        self.bns = nn.ModuleList()
+        self.layers.append(GCNConv(input_dim, hidden_dim))
+        self.bns.append(nn.BatchNorm1d(hidden_dim))
+        for _ in range(num_layers - 1):
+            self.layers.append(GCNConv(hidden_dim, hidden_dim))
+            self.bns.append(nn.BatchNorm1d(hidden_dim))
+        self.classifier = nn.Linear(hidden_dim, 2)
+        self.dropout = dropout
+        self.p_keep_mm = p_keep_mm
+        self._y_train = None  # set externally via set_train_labels()
+
+    def set_train_labels(self, y_train, train_mask):
+        """Provide training labels (full vector, -1 for non-train) for sampling."""
+        self._y_train = y_train.clone()
+        self._y_train[~train_mask] = -1  # mark non-train as -1 to keep their edges by default
+
+    def _sample_edges(self, edge_index):
+        if self._y_train is None or not self.training:
+            return edge_index
+        src, tgt = edge_index[0], edge_index[1]
+        y_src = self._y_train[src]
+        y_tgt = self._y_train[tgt]
+        # Edge is "majority-majority" iff both endpoints labeled 0 in train
+        mm_mask = (y_src == 0) & (y_tgt == 0)
+        # Random keep mask for mm edges; non-mm edges always kept
+        rnd = torch.rand(edge_index.size(1), device=edge_index.device)
+        keep = (~mm_mask) | (rnd < self.p_keep_mm)
+        return edge_index[:, keep]
+
+    def forward(self, x, edge_index):
+        ei = self._sample_edges(edge_index)
+        for conv, bn in zip(self.layers, self.bns):
+            x = conv(x, ei)
+            x = bn(x)
+            x = F.relu(x)
+            x = F.dropout(x, p=self.dropout, training=self.training)
+        return self.classifier(x)
+
+
 MODELS = {
     'gcn': SupervisedGCN,
     'gat': SupervisedGAT,
     'sage': SupervisedSAGE,
     'mlp': SupervisedMLP,
+    'caregnn': CAREGNN,
+    'pcgnn': PCGNN,
 }
 
 
@@ -171,6 +257,9 @@ def run_gnn_model(model_name, data, device, seed, hidden_dim=256, num_layers=2, 
 
     model_cls = MODELS[model_name]
     model = model_cls(data.x.size(1), hidden_dim, num_layers).to(device)
+    # PC-GNN needs train labels for neighbor sampling
+    if model_name == 'pcgnn':
+        model.set_train_labels(data.y, train_mask)
     optimizer = Adam(model.parameters(), lr=lr, weight_decay=5e-4)
 
     best_f1 = 0
@@ -234,13 +323,15 @@ def main():
     parser.add_argument('--seeds', nargs='+', type=int, default=[2024, 2025, 2026, 2027])
     parser.add_argument('--dataset', type=str, default='hofinet', choices=['hofinet', 'amlworld', 'amlnet'])
     parser.add_argument('--result_file', type=str, default='./results/exp_results_supervised.csv')
+    parser.add_argument('--models', nargs='+', type=str, default=None,
+                        help='Specific models to run (default: all)')
     args = parser.parse_args()
 
     device = torch.device(f'cuda:{args.gpu}')
 
     if args.dataset == 'hofinet':
-        node_data = 'HOFINET_NODE_FEAT'
-        edge_data = 'HOFINET_EDGES'
+        node_data = 'hofinet/HOFINET_NODE_FEAT'
+        edge_data = 'hofinet/HOFINET_EDGES'
     elif args.dataset == 'amlworld':
         node_data = 'amlworld/AMLWORLD_NODE_FEAT'
         edge_data = 'amlworld/AMLWORLD_EDGES'
@@ -265,7 +356,7 @@ def main():
     y_all = data.y.cpu().numpy()
 
     results = []
-    all_models = ['gcn', 'gat', 'sage', 'mlp', 'lgbm', 'xgb']
+    all_models = args.models if args.models else ['gcn', 'gat', 'sage', 'mlp', 'lgbm', 'xgb', 'caregnn', 'pcgnn']
 
     for model_name in all_models:
         for seed in args.seeds:
