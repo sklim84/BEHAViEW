@@ -177,32 +177,32 @@ Negative-sample-free 패러다임(BYOL~\cite{grill2020bootstrap}, BarlowTwins~\c
 \node[view1, right=1.0cm of txgraph, yshift=+1.4cm] (v1)
   {View 1\\[{-2pt}]{Augmented $\mathcal{G}_{\text{trans}}$}\\[{-3pt}]{(edge/feat.\ drop)}};
 \node[view2, right=1.0cm of txgraph, yshift=-1.4cm] (v2)
-  {View 2\\[{-2pt}]{Behavioral k-NN}\\[{-3pt}]{ $\mathcal{G}_{\text{knn}}$ (top-$k$ sim.)}};
+  {View 2\\[{-2pt}]{Behavioral k-NN}\\[]{ $\mathcal{G}_{\text{knn}}$ (top-$k$ sim.)}};
 \draw[myarrow] (txgraph.east) -- ++(0.4,0) |- (v1.west);
 \draw[myarrow] (txgraph.east) -- ++(0.4,0) |- (v2.west);
 \node[above=0.2cm of v1, font=\bfseries, text=blue!70] (lv) {View Construction};
 % --- COLUMN 3: Encoders ---
 \node[encbox, right=1.0cm of v1] (enc1)
-  {Online Encoder $f_\theta$\\[{-3pt}]{ GCN + BN}};
+  {Online Encoder $f_\theta$\\{GCN + BN}};
 \node[encbox, right=1.0cm of v2] (enc2)
-  {Target Encoder $f_\xi$\\[{-3pt}]{EMA, stop-grad}};
+  {Target Encoder $f_\xi$\\{EMA, stop-grad}};
 \draw[myarrow] (v1.east) -- (enc1.west);
 \draw[myarrow] (v2.east) -- (enc2.west);
 \draw[emaarrow] (enc1.south) -- node[pos=0.5, right=2pt, text=purple!80]{EMA} (enc2.north -| enc1.south);
 \node[above=0.2cm of enc1, font=\bfseries, text=teal!70] {GNN Encoder};
 % --- COLUMN 4: Subgraph Pool ---
 \node[poolbox, right=1.0cm of enc1] (pool1)
-  {Subgraph Pool\\[{-3pt}]{tx-graph nbrs}};
+  {Subgraph Pool\\{tx-graph nbrs}};
 \node[poolbox, right=1.0cm of enc2] (pool2)
-  {Subgraph Pool\\[{-3pt}]{k-NN nbrs}};
+  {Subgraph Pool\\{k-NN nbrs}};
 \draw[myarrow] (enc1.east) -- (pool1.west);
 \draw[myarrow] (enc2.east) -- (pool2.west);
 \node[above=0.2cm of pool1, font=\bfseries, text=teal!50] {Subgraph Pooling};
 % --- COLUMN 5: Projectors ---
 \node[projbox, right=1.1cm of pool1] (proj1)
-  {Projector $g_\theta$\\[{-3pt}]{MLP}};
+  {Projector\\$g_\theta$};
 \node[projbox, right=1.1cm of pool2] (proj2)
-  {Projector $g_\xi$\\[{-3pt}]{MLP {\color{red!60}[sg]}}};
+  {Projector\\$g_\xi$ + stop grade};
 \draw[myarrow] (pool1.east) -- (proj1.west);
 \draw[myarrow] (pool2.east) -- (proj2.west);
 \node[above=0.2cm of proj1, font=\bfseries, text=purple!70] {Projector};
@@ -212,7 +212,10 @@ Negative-sample-free 패러다임(BYOL~\cite{grill2020bootstrap}, BarlowTwins~\c
 \draw[myarrow] (proj1.east) -| (loss.north);
 \draw[myarrow] (proj2.east) -| (loss.south);
 \node[infbox, right=0.5cm of loss] (inf)
-  {Inference\\{$\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$}{$\rightarrow$ LogReg}\\{$F1_{\text{susp}}$, AUROC}};
+  {Inference\\
+    $\mathbf{z}_i=[\mathbf{s}_i^{(1)}\|\mathbf{s}_i^{(2)}]$
+    $\downarrow$ {\scriptsize LogReg}\\
+    {$F1_{\text{susp}}$, AUROC}};
 \draw[myarrow] (loss.east) -- (inf.west);
 \node[above=0.2cm of loss, yshift=0.8cm, font=\bfseries, text=red!60] {Contrastive Learning};
 % --- Background boxes ---
