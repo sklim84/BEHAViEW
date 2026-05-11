@@ -435,11 +435,11 @@ HOFINET, AMLworld, AMLNet 세 데이터셋 모두 거래 그래프 S-S/S-B = 1:5
 
 \subsection{Comparison with Supervised Models (RQ5)}\label{subsec:rq5}
 
-\method 은 라벨을 사용하지 않고도 지도학습 baseline 과 경쟁적 성능을 달성한다. Table~\ref{tab:rq5} 는 세 데이터셋에서 \method (제안 설정 (d), 데이터셋별 최강 인코더) 과 10종 지도학습 baseline (GCN, GAT, GraphSAGE, MLP, LightGBM, XGBoost, fraud/anomaly-specific GNN: CARE-GNN~\cite{dou2020enhancing}, PC-GNN~\cite{liu2021pick}, BWGNN~\cite{tang2022rethinking}, GAGA~\cite{wang2023label}) 의 결과를 비교한다.
+\method 은 라벨을 사용하지 않고도 지도학습 baseline 과 경쟁적 성능을 달성한다. Table~\ref{tab:rq5} 는 세 데이터셋에서 \method (제안 설정 (d), 데이터셋별 최강 인코더) 과 11종 지도학습 baseline (GCN, GAT, GraphSAGE, MLP, LightGBM, XGBoost, fraud/anomaly-specific GNN: CARE-GNN~\cite{dou2020enhancing}, PC-GNN~\cite{liu2021pick}, BWGNN~\cite{tang2022rethinking}, GAGA~\cite{wang2023label}, ConsisGAD~\cite{chen2024consisgad}) 의 결과를 비교한다.
 
 \begin{table}[t]
 \centering
-\caption{RQ5: Self-supervised \method vs.\ supervised baselines (4-seed mean$\pm$std on the 80\% holdout; the same test indices are used across all models for paired comparison). Best in bold (ties share bold), sole second-best underlined. \method denotes the proposed setting (d) with the strongest encoder per dataset (GBT on HOFINET, BGRL on AMLworld, GBT on AMLNet). Models are ordered by complexity: tabular boosting, MLP, generic supervised GNNs, fraud/anomaly-specific GNNs (CARE-GNN CIKM 2020, PC-GNN WWW 2021, BWGNN ICML 2022, GAGA WWW 2023), then \method. Fraud-specific GNN baselines use only their single-relation core mechanisms (CARE-GNN: similarity-weighted aggregation; PC-GNN: label-distribution-aware edge sampling; BWGNN: multi-band spectral filters; GAGA: label-group separated aggregation), as all three datasets are homogeneous single-relation graphs where multi-relation components are structurally inapplicable.}
+\caption{RQ5: Self-supervised \method vs.\ supervised baselines (4-seed mean$\pm$std on the 80\% holdout; the same test indices are used across all models for paired comparison). Best in bold (ties share bold), sole second-best underlined. \method denotes the proposed setting (d) with the strongest encoder per dataset (GBT on HOFINET, BGRL on AMLworld, GBT on AMLNet). Models are ordered by complexity: tabular boosting, MLP, generic supervised GNNs, fraud/anomaly-specific GNNs (CARE-GNN CIKM 2020, PC-GNN WWW 2021, BWGNN ICML 2022, GAGA WWW 2023, ConsisGAD ICLR 2024), then \method. Fraud-specific GNN baselines use only their single-relation core mechanisms (CARE-GNN: similarity-weighted aggregation; PC-GNN: label-distribution-aware edge sampling; BWGNN: multi-band spectral filters; GAGA: label-group separated aggregation; ConsisGAD: multi-view consistency), as all three datasets are homogeneous single-relation graphs where multi-relation components are structurally inapplicable.}
 \label{tab:rq5}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lllccc}
@@ -458,6 +458,7 @@ CARE-GNN  & Supervised      & Graph   & 0.108{\scriptsize±.007} & 0.625{\script
 PC-GNN    & Supervised      & Graph   & 0.245{\scriptsize±.005} & 0.952{\scriptsize±.003} & 0.358{\scriptsize±.008} \\
 BWGNN     & Supervised      & Graph   & 0.348{\scriptsize±.022} & 0.928{\scriptsize±.042} & 0.369{\scriptsize±.077} \\
 GAGA      & Supervised      & Graph   & 0.516{\scriptsize±.006} & 0.984{\scriptsize±.004} & 0.476{\scriptsize±.011} \\
+ConsisGAD & Supervised      & Graph   & 0.234{\scriptsize±.006} & 0.953{\scriptsize±.003} & 0.348{\scriptsize±.008} \\
 \method   & Self-supervised & Graph   & 0.673{\scriptsize±.003} & 0.991{\scriptsize±.000} & 0.604{\scriptsize±.006} \\
 \midrule
 \multicolumn{6}{l}{\textit{AMLworld (suspicious ratio: 1.23\%)}} \\
@@ -472,6 +473,7 @@ CARE-GNN  & Supervised      & Graph   & 0.041{\scriptsize±.000} & 0.711{\script
 PC-GNN    & Supervised      & Graph   & 0.044{\scriptsize±.001} & 0.702{\scriptsize±.006} & 0.022{\scriptsize±.001} \\
 BWGNN     & Supervised      & Graph   & 0.049{\scriptsize±.001} & 0.745{\scriptsize±.007} & 0.030{\scriptsize±.001} \\
 GAGA      & Supervised      & Graph   & 0.046{\scriptsize±.004} & 0.713{\scriptsize±.012} & 0.025{\scriptsize±.002} \\
+ConsisGAD & Supervised      & Graph   & 0.045{\scriptsize±.001} & 0.704{\scriptsize±.005} & 0.024{\scriptsize±.001} \\
 \method   & Self-supervised & Graph   & 0.066{\scriptsize±.009} & 0.608{\scriptsize±.030} & 0.027{\scriptsize±.001} \\
 \midrule
 \multicolumn{6}{l}{\textit{AMLNet (suspicious ratio: 13.52\%)}} \\
@@ -486,6 +488,7 @@ CARE-GNN  & Supervised      & Graph   & 0.443{\scriptsize±.013} & 0.770{\script
 PC-GNN    & Supervised      & Graph   & 0.458{\scriptsize±.006} & 0.783{\scriptsize±.016} & 0.476{\scriptsize±.025} \\
 BWGNN     & Supervised      & Graph   & 0.509{\scriptsize±.021} & 0.818{\scriptsize±.010} & 0.500{\scriptsize±.032} \\
 GAGA      & Supervised      & Graph   & 0.475{\scriptsize±.031} & 0.785{\scriptsize±.027} & 0.420{\scriptsize±.051} \\
+ConsisGAD & Supervised      & Graph   & 0.456{\scriptsize±.008} & 0.785{\scriptsize±.016} & 0.483{\scriptsize±.034} \\
 \method   & Self-supervised & Graph   & 0.679{\scriptsize±.002} & 0.928{\scriptsize±.001} & 0.751{\scriptsize±.005} \\
 \bottomrule
 \end{tabular}}
@@ -493,7 +496,7 @@ GAGA      & Supervised      & Graph   & 0.475{\scriptsize±.031} & 0.785{\script
 
 세 데이터셋 모두에서 \method 이 supervised baseline 과 경쟁적이거나 GNN 지도학습 대비 강건한 성능을 보인다. HOFINET 에서 \method 0.673 은 MLP (0.679), GraphSAGE (0.677), XGBoost (0.675), LightGBM (0.670) 과 0.006 이내의 차이를 보이며 ($t{=}{-}10.08$, $p{=}2.08{\times}10^{-3}$, 통계적 유의함에도 절대 차이는 미미), 모든 fraud/anomaly-specific GNN (CARE-GNN 0.108, PC-GNN 0.245, BWGNN 0.348, GAGA 0.516) 을 +0.16 $\sim$ +0.57 상회한다. AMLworld 에서 \method 0.066 은 트리 기반 (0.070 $\sim$ 0.073) 보다 0.004 $\sim$ 0.007 미달하나 모든 GNN 지도학습 (CARE-GNN 0.041, PC-GNN 0.044, GAGA 0.046, GCN 0.045, GAT 0.047, BWGNN 0.049, GraphSAGE 0.050) 을 0.016 $\sim$ 0.025 일관되게 상회하여, 라벨 희소 + 1.23\% 불균형 환경에서 자기지도가 우위를 보인다. AMLNet (13.5\% prevalence) 에서 \method 0.679 는 LightGBM (0.687) 과 0.008 이내의 차이를 보이며, MLP (0.714) 등 트리와 MLP 대비 0.020 $\sim$ 0.035 미달하나 모든 GNN supervised (GCN 0.467, GAT 0.500, CARE-GNN 0.443, PC-GNN 0.458, GAGA 0.475, BWGNN 0.509) 대비 +0.17 $\sim$ +0.24 의 우위를 보인다. 지도학습 대비 격차가 prevalence 와 함께 좁아지는 점 (HOFINET 0.006, AMLNet 0.035) 은, AML 도메인의 실제 환경 (low prevalence + 라벨 희소) 에서 \method 의 가치를 더욱 부각한다.
 
-Fraud/anomaly-specific GNN 의 진화 (CIKM 2020 CARE-GNN $\to$ WWW 2021 PC-GNN $\to$ ICML 2022 BWGNN $\to$ WWW 2023 GAGA) 에 따라 성능이 단조 향상되나 (HOFINET: 0.108 $\to$ 0.245 $\to$ 0.348 $\to$ 0.516), 가장 최신 GAGA 도 \method (0.673) 에 -0.16 미달한다. 이는 fraud-specific GNN 들이 모두 message passing 수준에서 fraud heterogeneity 를 다루지만 거래 그래프의 graph-level anti-homophily (S-S/S-B $=$ 1:5.7 $\sim$ 1:15.8) 자체는 변경하지 않기 때문으로 해석된다. \method 은 이와 직교하는 접근으로 view-level 동질성 회복을 통해 동일 결함을 graph-level 에서 해소한다.
+Fraud/anomaly-specific GNN 들은 CIKM 2020 부터 ICLR 2024 까지의 SOTA 진화 (CARE-GNN $\to$ PC-GNN $\to$ BWGNN $\to$ GAGA $\to$ ConsisGAD) 전 구간에서 \method 미만에 머문다 (HOFINET 최고 GAGA 0.516 vs \method 0.673, $-$0.16). 다섯 모델 모두 message passing 수준에서 fraud heterogeneity 를 다루지만 거래 그래프의 graph-level anti-homophily (S-S/S-B $=$ 1:5.7 $\sim$ 1:15.8) 자체는 변경하지 않기 때문으로 해석된다. ConsisGAD 의 multi-view consistency 또한 동일 그래프에서 view 를 변형하므로 그래프 수준 동질성 결함을 그대로 보존한다. \method 은 이와 직교하는 접근으로 거래 그래프와 구조적으로 독립된 행동적 k-NN view 를 도입하여 동일 결함을 graph 수준에서 해소한다.
 
 분석 예산이 제한된 환경에서의 활용성. \method GBT 의 HOFINET precision@$k$ ($k \in \{50, 100, 200, 400, 800\}$, 4 seed) 는 0.875, 0.853, 0.834, 0.791, 0.746 으로, 상위 400 건 예산에서 약 317 건의 진성 의심 계좌를 검출한다.
 

@@ -283,6 +283,58 @@ class GAGA(nn.Module):
         return self.classifier(torch.cat([h_min, h_maj], dim=1))
 
 
+class ConsisGAD(nn.Module):
+    """ConsisGAD (Chen et al. ICLR 2024) simplified single-relation variant.
+
+    Core idea: consistency training between original graph view and a
+    learnably-augmented graph view. The original learns a soft edge mask
+    via attention; here we use a simpler shared-parameter dual-view setup
+    where the same GCN encodes (1) the original graph and (2) a stochastic
+    edge-perturbed view, with consistency loss between the two outputs.
+    Final classification combines both views. Captures the multi-view
+    consistency principle that distinguishes ConsisGAD.
+    """
+    def __init__(self, input_dim, hidden_dim, num_layers=2, dropout=0.2, p_edge_drop=0.2):
+        super().__init__()
+        self.layers = nn.ModuleList()
+        self.bns = nn.ModuleList()
+        self.layers.append(GCNConv(input_dim, hidden_dim))
+        self.bns.append(nn.BatchNorm1d(hidden_dim))
+        for _ in range(num_layers - 1):
+            self.layers.append(GCNConv(hidden_dim, hidden_dim))
+            self.bns.append(nn.BatchNorm1d(hidden_dim))
+        self.classifier = nn.Linear(hidden_dim * 2, 2)
+        self.dropout = dropout
+        self.p_edge_drop = p_edge_drop
+        self._consistency_loss = 0.0  # tracked externally if needed
+
+    def _encode(self, x, edge_index):
+        h = x
+        for conv, bn in zip(self.layers, self.bns):
+            h = conv(h, edge_index)
+            h = bn(h)
+            h = F.relu(h)
+            h = F.dropout(h, p=self.dropout, training=self.training)
+        return h
+
+    def forward(self, x, edge_index):
+        # View 1: original graph
+        h1 = self._encode(x, edge_index)
+        # View 2: edge-perturbed graph
+        if self.training:
+            mask = torch.rand(edge_index.size(1), device=edge_index.device) >= self.p_edge_drop
+            ei2 = edge_index[:, mask]
+        else:
+            ei2 = edge_index
+        h2 = self._encode(x, ei2)
+        # Combine both views
+        h = torch.cat([h1, h2], dim=1)
+        # Track consistency loss (L2 between h1 and h2) for external use
+        if self.training:
+            self._consistency_loss = ((h1 - h2) ** 2).mean()
+        return self.classifier(h)
+
+
 MODELS = {
     'gcn': SupervisedGCN,
     'gat': SupervisedGAT,
@@ -292,6 +344,7 @@ MODELS = {
     'pcgnn': PCGNN,
     'bwgnn': BWGNN,
     'gaga': GAGA,
+    'consisgad': ConsisGAD,
 }
 
 
@@ -300,6 +353,9 @@ def train_supervised_gnn(model, data, train_mask, optimizer, class_weight):
     optimizer.zero_grad()
     out = model(data.x, data.edge_index)
     loss = F.cross_entropy(out[train_mask], data.y[train_mask], weight=class_weight)
+    # ConsisGAD: add multi-view consistency regularization
+    if hasattr(model, '_consistency_loss') and isinstance(model._consistency_loss, torch.Tensor):
+        loss = loss + 0.1 * model._consistency_loss
     loss.backward()
     optimizer.step()
     return loss.item()
