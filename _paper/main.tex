@@ -418,62 +418,32 @@ HOFINET, AMLworld, AMLNet 세 데이터셋 모두 거래 그래프 S-S/S-B = 1:5
 
 \method 은 라벨을 사용하지 않고도 지도학습 baseline 과 경쟁적 성능을 달성한다. Table~\ref{tab:rq5} 는 세 데이터셋에서 \method (제안 설정 (d), 데이터셋별 최강 인코더) 과 11종 지도학습 baseline (GCN, GAT, GraphSAGE, MLP, LightGBM, XGBoost, fraud/anomaly-specific GNN: CARE-GNN~\cite{dou2020enhancing}, PC-GNN~\cite{liu2021pick}, BWGNN~\cite{tang2022rethinking}, GAGA~\cite{wang2023label}, ConsisGAD~\cite{chen2024consisgad}) 의 결과를 비교한다.
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
-\caption{RQ5: Self-supervised \method vs.\ supervised baselines (4-seed mean$\pm$std on the 80\% holdout; the same test indices are used across all models for paired comparison). Best in bold (ties share bold), sole second-best underlined. \method denotes the proposed setting (d) with the strongest encoder per dataset (GBT on HOFINET, BGRL on AMLworld, GBT on AMLNet). Models are ordered by complexity: tabular boosting, MLP, generic supervised GNNs, fraud/anomaly-specific GNNs (CARE-GNN CIKM 2020, PC-GNN WWW 2021, BWGNN ICML 2022, GAGA WWW 2023, ConsisGAD ICLR 2024), then \method. Fraud-specific GNN baselines use only their single-relation core mechanisms (CARE-GNN: similarity-weighted aggregation; PC-GNN: label-distribution-aware edge sampling; BWGNN: multi-band spectral filters; GAGA: label-group separated aggregation; ConsisGAD: multi-view consistency), as all three datasets are homogeneous single-relation graphs where multi-relation components are structurally inapplicable.}
+\caption{RQ5: Self-supervised \method vs.\ supervised baselines (4-seed mean$\pm$std on the 80\% holdout; the same test indices are used across all models for paired comparison). Best F1 per dataset in bold, second-best underlined. \method denotes the proposed setting (d) with the strongest encoder per dataset (GBT on HOFINET, BGRL on AMLworld, GBT on AMLNet). Models are ordered by complexity: tabular boosting, MLP, generic supervised GNNs, fraud/anomaly-specific GNNs (CARE-GNN CIKM 2020, PC-GNN WWW 2021, BWGNN ICML 2022, GAGA WWW 2023, ConsisGAD ICLR 2024), then \method. Fraud-specific GNN baselines use only their single-relation core mechanisms (CARE-GNN: similarity-weighted aggregation; PC-GNN: label-distribution-aware edge sampling; BWGNN: multi-band spectral filters; GAGA: label-group separated aggregation; ConsisGAD: multi-view consistency), as all three datasets are homogeneous single-relation graphs where multi-relation components are structurally inapplicable.}
 \label{tab:rq5}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{lllccc}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lll ccc ccc ccc}
 \toprule
-\textbf{Model} & \textbf{Sup.} & \textbf{Input} & \textbf{$F1_{\text{susp}}$} & \textbf{AUROC} & \textbf{AUPRC} \\
+& & & \multicolumn{3}{c}{\textbf{HOFINET ($\rho{=}2.13\%$)}} & \multicolumn{3}{c}{\textbf{AMLworld ($\rho{=}1.23\%$)}} & \multicolumn{3}{c}{\textbf{AMLNet ($\rho{=}13.52\%$)}} \\
+\cmidrule(lr){4-6} \cmidrule(lr){7-9} \cmidrule(lr){10-12}
+\textbf{Model} & \textbf{Sup.} & \textbf{Input} & \textbf{$F1_{\text{susp}}$} & \textbf{AUROC} & \textbf{AUPRC} & \textbf{$F1_{\text{susp}}$} & \textbf{AUROC} & \textbf{AUPRC} & \textbf{$F1_{\text{susp}}$} & \textbf{AUROC} & \textbf{AUPRC} \\
 \midrule
-\multicolumn{6}{l}{\textit{HOFINET (suspicious ratio: 2.13\%)}} \\
-\midrule
-XGBoost   & Supervised      & Tabular & 0.675{\scriptsize±.001} & \textbf{0.992}{\scriptsize±.000} & \textbf{0.665}{\scriptsize±.005} \\
-LightGBM  & Supervised      & Tabular & 0.670{\scriptsize±.001} & \textbf{0.992}{\scriptsize±.000} & \underline{0.662}{\scriptsize±.002} \\
-MLP       & Supervised      & Tabular & \textbf{0.679}{\scriptsize±.002} & 0.991{\scriptsize±.000} & 0.616{\scriptsize±.009} \\
-GCN       & Supervised      & Graph   & 0.250{\scriptsize±.007} & 0.935{\scriptsize±.017} & 0.316{\scriptsize±.045} \\
-GAT       & Supervised      & Graph   & 0.534{\scriptsize±.024} & 0.988{\scriptsize±.001} & 0.565{\scriptsize±.010} \\
-GraphSAGE & Supervised      & Graph   & \underline{0.677}{\scriptsize±.002} & 0.992{\scriptsize±.000} & 0.610{\scriptsize±.004} \\
-CARE-GNN  & Supervised      & Graph   & 0.108{\scriptsize±.007} & 0.625{\scriptsize±.005} & 0.094{\scriptsize±.003} \\
-PC-GNN    & Supervised      & Graph   & 0.245{\scriptsize±.005} & 0.952{\scriptsize±.003} & 0.358{\scriptsize±.008} \\
-BWGNN     & Supervised      & Graph   & 0.348{\scriptsize±.022} & 0.928{\scriptsize±.042} & 0.369{\scriptsize±.077} \\
-GAGA      & Supervised      & Graph   & 0.516{\scriptsize±.006} & 0.984{\scriptsize±.004} & 0.476{\scriptsize±.011} \\
-ConsisGAD & Supervised      & Graph   & 0.234{\scriptsize±.006} & 0.953{\scriptsize±.003} & 0.348{\scriptsize±.008} \\
-\method   & Self-supervised & Graph   & 0.673{\scriptsize±.003} & 0.991{\scriptsize±.000} & 0.604{\scriptsize±.006} \\
-\midrule
-\multicolumn{6}{l}{\textit{AMLworld (suspicious ratio: 1.23\%)}} \\
-\midrule
-XGBoost   & Supervised      & Tabular & \textbf{0.073}{\scriptsize±.002} & \textbf{0.753}{\scriptsize±.003} & \textbf{0.037}{\scriptsize±.001} \\
-LightGBM  & Supervised      & Tabular & \underline{0.070}{\scriptsize±.002} & 0.752{\scriptsize±.003} & \underline{0.037}{\scriptsize±.001} \\
-MLP       & Supervised      & Tabular & 0.048{\scriptsize±.002} & 0.695{\scriptsize±.014} & 0.024{\scriptsize±.001} \\
-GCN       & Supervised      & Graph   & 0.045{\scriptsize±.001} & 0.703{\scriptsize±.007} & 0.022{\scriptsize±.001} \\
-GAT       & Supervised      & Graph   & 0.047{\scriptsize±.001} & 0.701{\scriptsize±.013} & 0.023{\scriptsize±.001} \\
-GraphSAGE & Supervised      & Graph   & 0.050{\scriptsize±.001} & 0.671{\scriptsize±.013} & 0.024{\scriptsize±.001} \\
-CARE-GNN  & Supervised      & Graph   & 0.041{\scriptsize±.000} & 0.711{\scriptsize±.003} & 0.024{\scriptsize±.000} \\
-PC-GNN    & Supervised      & Graph   & 0.044{\scriptsize±.001} & 0.702{\scriptsize±.006} & 0.022{\scriptsize±.001} \\
-BWGNN     & Supervised      & Graph   & 0.049{\scriptsize±.001} & 0.745{\scriptsize±.007} & 0.030{\scriptsize±.001} \\
-GAGA      & Supervised      & Graph   & 0.046{\scriptsize±.004} & 0.713{\scriptsize±.012} & 0.025{\scriptsize±.002} \\
-ConsisGAD & Supervised      & Graph   & 0.045{\scriptsize±.001} & 0.704{\scriptsize±.005} & 0.024{\scriptsize±.001} \\
-\method   & Self-supervised & Graph   & 0.066{\scriptsize±.009} & 0.608{\scriptsize±.030} & 0.027{\scriptsize±.001} \\
-\midrule
-\multicolumn{6}{l}{\textit{AMLNet (suspicious ratio: 13.52\%)}} \\
-\midrule
-XGBoost   & Supervised      & Tabular & 0.699{\scriptsize±.007} & 0.938{\scriptsize±.002} & 0.785{\scriptsize±.012} \\
-LightGBM  & Supervised      & Tabular & 0.687{\scriptsize±.011} & 0.936{\scriptsize±.004} & 0.781{\scriptsize±.013} \\
-MLP       & Supervised      & Tabular & \textbf{0.714}{\scriptsize±.005} & \textbf{0.945}{\scriptsize±.001} & \textbf{0.797}{\scriptsize±.008} \\
-GCN       & Supervised      & Graph   & 0.467{\scriptsize±.006} & 0.785{\scriptsize±.011} & 0.476{\scriptsize±.022} \\
-GAT       & Supervised      & Graph   & 0.500{\scriptsize±.047} & 0.803{\scriptsize±.013} & 0.562{\scriptsize±.039} \\
-GraphSAGE & Supervised      & Graph   & \underline{0.708}{\scriptsize±.007} & 0.940{\scriptsize±.005} & \underline{0.806}{\scriptsize±.005} \\
-CARE-GNN  & Supervised      & Graph   & 0.443{\scriptsize±.013} & 0.770{\scriptsize±.007} & 0.418{\scriptsize±.007} \\
-PC-GNN    & Supervised      & Graph   & 0.458{\scriptsize±.006} & 0.783{\scriptsize±.016} & 0.476{\scriptsize±.025} \\
-BWGNN     & Supervised      & Graph   & 0.509{\scriptsize±.021} & 0.818{\scriptsize±.010} & 0.500{\scriptsize±.032} \\
-GAGA      & Supervised      & Graph   & 0.475{\scriptsize±.031} & 0.785{\scriptsize±.027} & 0.420{\scriptsize±.051} \\
-ConsisGAD & Supervised      & Graph   & 0.456{\scriptsize±.008} & 0.785{\scriptsize±.016} & 0.483{\scriptsize±.034} \\
-\method   & Self-supervised & Graph   & 0.679{\scriptsize±.002} & 0.928{\scriptsize±.001} & 0.751{\scriptsize±.005} \\
+XGBoost   & Supervised      & Tabular & 0.675{\scriptsize±.001} & 0.992{\scriptsize±.000} & 0.665{\scriptsize±.005} & \textbf{0.073}{\scriptsize±.002} & 0.753{\scriptsize±.003} & 0.037{\scriptsize±.001} & 0.699{\scriptsize±.007} & 0.938{\scriptsize±.002} & 0.785{\scriptsize±.012} \\
+LightGBM  & Supervised      & Tabular & 0.670{\scriptsize±.001} & 0.992{\scriptsize±.000} & 0.662{\scriptsize±.002} & \underline{0.070}{\scriptsize±.002} & 0.752{\scriptsize±.003} & 0.037{\scriptsize±.001} & 0.687{\scriptsize±.011} & 0.936{\scriptsize±.004} & 0.781{\scriptsize±.013} \\
+MLP       & Supervised      & Tabular & \textbf{0.679}{\scriptsize±.002} & 0.991{\scriptsize±.000} & 0.616{\scriptsize±.009} & 0.048{\scriptsize±.002} & 0.695{\scriptsize±.014} & 0.024{\scriptsize±.001} & \textbf{0.714}{\scriptsize±.005} & 0.945{\scriptsize±.001} & 0.797{\scriptsize±.008} \\
+GCN       & Supervised      & Graph   & 0.250{\scriptsize±.007} & 0.935{\scriptsize±.017} & 0.316{\scriptsize±.045} & 0.045{\scriptsize±.001} & 0.703{\scriptsize±.007} & 0.022{\scriptsize±.001} & 0.467{\scriptsize±.006} & 0.785{\scriptsize±.011} & 0.476{\scriptsize±.022} \\
+GAT       & Supervised      & Graph   & 0.534{\scriptsize±.024} & 0.988{\scriptsize±.001} & 0.565{\scriptsize±.010} & 0.047{\scriptsize±.001} & 0.701{\scriptsize±.013} & 0.023{\scriptsize±.001} & 0.500{\scriptsize±.047} & 0.803{\scriptsize±.013} & 0.562{\scriptsize±.039} \\
+GraphSAGE & Supervised      & Graph   & \underline{0.677}{\scriptsize±.002} & 0.992{\scriptsize±.000} & 0.610{\scriptsize±.004} & 0.050{\scriptsize±.001} & 0.671{\scriptsize±.013} & 0.024{\scriptsize±.001} & \underline{0.708}{\scriptsize±.007} & 0.940{\scriptsize±.005} & 0.806{\scriptsize±.005} \\
+CARE-GNN  & Supervised      & Graph   & 0.108{\scriptsize±.007} & 0.625{\scriptsize±.005} & 0.094{\scriptsize±.003} & 0.041{\scriptsize±.000} & 0.711{\scriptsize±.003} & 0.024{\scriptsize±.000} & 0.443{\scriptsize±.013} & 0.770{\scriptsize±.007} & 0.418{\scriptsize±.007} \\
+PC-GNN    & Supervised      & Graph   & 0.245{\scriptsize±.005} & 0.952{\scriptsize±.003} & 0.358{\scriptsize±.008} & 0.044{\scriptsize±.001} & 0.702{\scriptsize±.006} & 0.022{\scriptsize±.001} & 0.458{\scriptsize±.006} & 0.783{\scriptsize±.016} & 0.476{\scriptsize±.025} \\
+BWGNN     & Supervised      & Graph   & 0.348{\scriptsize±.022} & 0.928{\scriptsize±.042} & 0.369{\scriptsize±.077} & 0.049{\scriptsize±.001} & 0.745{\scriptsize±.007} & 0.030{\scriptsize±.001} & 0.509{\scriptsize±.021} & 0.818{\scriptsize±.010} & 0.500{\scriptsize±.032} \\
+GAGA      & Supervised      & Graph   & 0.516{\scriptsize±.006} & 0.984{\scriptsize±.004} & 0.476{\scriptsize±.011} & 0.046{\scriptsize±.004} & 0.713{\scriptsize±.012} & 0.025{\scriptsize±.002} & 0.475{\scriptsize±.031} & 0.785{\scriptsize±.027} & 0.420{\scriptsize±.051} \\
+ConsisGAD & Supervised      & Graph   & 0.234{\scriptsize±.006} & 0.953{\scriptsize±.003} & 0.348{\scriptsize±.008} & 0.045{\scriptsize±.001} & 0.704{\scriptsize±.005} & 0.024{\scriptsize±.001} & 0.456{\scriptsize±.008} & 0.785{\scriptsize±.016} & 0.483{\scriptsize±.034} \\
+\method   & Self-supervised & Graph   & 0.673{\scriptsize±.003} & 0.991{\scriptsize±.000} & 0.604{\scriptsize±.006} & 0.066{\scriptsize±.009} & 0.608{\scriptsize±.030} & 0.027{\scriptsize±.001} & 0.679{\scriptsize±.002} & 0.928{\scriptsize±.001} & 0.751{\scriptsize±.005} \\
 \bottomrule
 \end{tabular}}
-\end{table}
+\end{table*}
 
 \method 은 representation 학습 단계에서 라벨을 사용하지 않음에도, 동일 10\% 라벨 downstream 예산 하에서 fully-supervised baseline 과 0.006 $\sim$ 0.035 이내의 동등 성능을 달성한다. HOFINET 에서 \method 0.673 은 MLP (0.679), GraphSAGE (0.677), XGBoost (0.675), LightGBM (0.670) 과 0.006 이내의 차이로 통계적으로 사실상 동등하며, 모든 fraud/anomaly-specific GNN (CARE-GNN 0.108, PC-GNN 0.245, BWGNN 0.348, GAGA 0.516) 을 +0.16 $\sim$ +0.57 상회한다. AMLworld 에서 \method 0.066 은 트리 기반 (0.070 $\sim$ 0.073) 보다 0.004 $\sim$ 0.007 미달하나 모든 GNN 지도학습 (CARE-GNN 0.041, PC-GNN 0.044, GAGA 0.046, GCN 0.045, GAT 0.047, BWGNN 0.049, GraphSAGE 0.050) 을 0.016 $\sim$ 0.025 일관되게 상회한다. AMLNet (13.5\% prevalence) 에서 \method 0.679 는 LightGBM (0.687) 과 0.008 이내의 차이를 보이며, MLP (0.714) 대비 0.035 미달하나 모든 GNN supervised (GCN 0.467, GAT 0.500, CARE-GNN 0.443, PC-GNN 0.458, GAGA 0.475, BWGNN 0.509) 대비 +0.17 $\sim$ +0.24 의 우위를 보인다.
 
