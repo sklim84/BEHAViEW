@@ -20,6 +20,7 @@
 \usepackage{enumitem}
 \usepackage{makecell}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{amsthm}
 \newtheorem{theorem}{Theorem}
 \newtheorem{corollary}[theorem]{Corollary}
@@ -211,7 +212,7 @@ Negative-sample-free 패러다임(BYOL~\cite{grill2020bootstrap}, BarlowTwins~\c
 \draw[myarrow] (proj1.east) -| (loss.north);
 \draw[myarrow] (proj2.east) -| (loss.south);
 \node[infbox, right=0.5cm of loss] (inf)
-  {Inference\\{\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]}{$\rightarrow$ LogReg}\\{$F1_{\text{susp}}$, AUROC}};
+  {Inference\\{$\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$}{$\rightarrow$ LogReg}\\{$F1_{\text{susp}}$, AUROC}};
 \draw[myarrow] (loss.east) -- (inf.west);
 \node[above=0.2cm of loss, yshift=0.8cm, font=\bfseries, text=red!60] {Contrastive Learning};
 % --- Background boxes ---
