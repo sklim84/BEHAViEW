@@ -198,6 +198,91 @@ class PCGNN(nn.Module):
         return self.classifier(x)
 
 
+class BWGNN(nn.Module):
+    """BWGNN (Tang et al. ICML 2022) simplified single-relation variant.
+
+    Core idea: multi-band spectral filtering via polynomial graph filters
+    of different orders. The original uses Beta-wavelet basis to cover
+    distinct frequency bands; here we use a fixed multi-hop polynomial
+    approximation: stack representations from K propagation orders, then
+    concatenate. This captures the multi-frequency spectral coverage
+    that distinguishes BWGNN from single-band GCN.
+    """
+    def __init__(self, input_dim, hidden_dim, num_layers=2, dropout=0.2, num_filters=4):
+        super().__init__()
+        self.input_proj = nn.Linear(input_dim, hidden_dim)
+        self.bn_in = nn.BatchNorm1d(hidden_dim)
+        self.filters = nn.ModuleList()
+        self.bns = nn.ModuleList()
+        for _ in range(num_filters):
+            self.filters.append(GCNConv(hidden_dim, hidden_dim))
+            self.bns.append(nn.BatchNorm1d(hidden_dim))
+        self.classifier = nn.Linear(hidden_dim * num_filters, 2)
+        self.dropout = dropout
+        self.num_filters = num_filters
+
+    def forward(self, x, edge_index):
+        h0 = F.relu(self.bn_in(self.input_proj(x)))
+        outs = []
+        h = h0
+        # Each filter = one more hop of propagation; concatenate multi-hop reprs
+        for conv, bn in zip(self.filters, self.bns):
+            h = conv(h, edge_index)
+            h = bn(h)
+            h = F.relu(h)
+            h = F.dropout(h, p=self.dropout, training=self.training)
+            outs.append(h)
+        h_cat = torch.cat(outs, dim=1)
+        return self.classifier(h_cat)
+
+
+class GAGA(nn.Module):
+    """GAGA (Wang et al. WWW 2023) simplified single-relation variant.
+
+    Core idea: group neighbors by their (training) class label and apply
+    separate aggregation per group. The original uses transformer-based
+    aggregation over group representations; here we use two parallel
+    GCN channels (minority-class neighbors, majority-class neighbors)
+    with concatenation, faithfully capturing the label-group separation.
+    """
+    def __init__(self, input_dim, hidden_dim, num_layers=2, dropout=0.2):
+        super().__init__()
+        # Two relational paths: minority-class neighbors, majority-class neighbors
+        self.conv_min = nn.ModuleList([GCNConv(input_dim if l == 0 else hidden_dim, hidden_dim) for l in range(num_layers)])
+        self.conv_maj = nn.ModuleList([GCNConv(input_dim if l == 0 else hidden_dim, hidden_dim) for l in range(num_layers)])
+        self.bn_min = nn.ModuleList([nn.BatchNorm1d(hidden_dim) for _ in range(num_layers)])
+        self.bn_maj = nn.ModuleList([nn.BatchNorm1d(hidden_dim) for _ in range(num_layers)])
+        self.classifier = nn.Linear(hidden_dim * 2, 2)
+        self.dropout = dropout
+        self._y_train = None
+        self._train_mask = None
+
+    def set_train_labels(self, y_train, train_mask):
+        self._y_train = y_train.clone()
+        self._train_mask = train_mask.clone()
+
+    def _group_edges(self, edge_index):
+        if self._y_train is None:
+            return edge_index, edge_index
+        src, tgt = edge_index[0], edge_index[1]
+        # Group by source (the neighbor sending message): minority (label=1) vs majority (label=0)
+        # For non-train nodes (-1), treat as majority by default
+        y_src = self._y_train[src].clone()
+        if self._train_mask is not None:
+            y_src[~self._train_mask[src]] = 0
+        ei_min = edge_index[:, y_src == 1]
+        ei_maj = edge_index[:, y_src == 0]
+        return ei_min, ei_maj
+
+    def forward(self, x, edge_index):
+        ei_min, ei_maj = self._group_edges(edge_index)
+        h_min, h_maj = x, x
+        for c_min, c_maj, bn_min, bn_maj in zip(self.conv_min, self.conv_maj, self.bn_min, self.bn_maj):
+            h_min = F.dropout(F.relu(bn_min(c_min(h_min, ei_min))), p=self.dropout, training=self.training)
+            h_maj = F.dropout(F.relu(bn_maj(c_maj(h_maj, ei_maj))), p=self.dropout, training=self.training)
+        return self.classifier(torch.cat([h_min, h_maj], dim=1))
+
+
 MODELS = {
     'gcn': SupervisedGCN,
     'gat': SupervisedGAT,
@@ -205,6 +290,8 @@ MODELS = {
     'mlp': SupervisedMLP,
     'caregnn': CAREGNN,
     'pcgnn': PCGNN,
+    'bwgnn': BWGNN,
+    'gaga': GAGA,
 }
 
 
@@ -257,8 +344,8 @@ def run_gnn_model(model_name, data, device, seed, hidden_dim=256, num_layers=2, 
 
     model_cls = MODELS[model_name]
     model = model_cls(data.x.size(1), hidden_dim, num_layers).to(device)
-    # PC-GNN needs train labels for neighbor sampling
-    if model_name == 'pcgnn':
+    # PC-GNN, GAGA need train labels for label-aware neighbor sampling/grouping
+    if model_name in ('pcgnn', 'gaga'):
         model.set_train_labels(data.y, train_mask)
     optimizer = Adam(model.parameters(), lr=lr, weight_decay=5e-4)
 
