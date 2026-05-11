@@ -119,7 +119,7 @@
 
 이러한 한계를 완화하기 위해 그래프 대조 학습(GCL)이 제안되었으나, DGI~\cite{velivckovic2018deep}, GRACE~\cite{zhu2020deep}, GraphCL~\cite{you2020graph}, GCA~\cite{zhu2021graph}, BGRL~\cite{thakoor2021large}, GBT~\cite{bielak2022graph}, MVGRL~\cite{hassani2020contrastive} 등 다수의 방법은 동일 그래프에 대한 확률적 증강 view에 의존하므로, anti-homophily가 심한 입력에서는 그 결함이 view에도 그대로 남는다. Augmentation-free 계열(AFGRL~\cite{lee2022augmentation}, SimGRACE~\cite{xia2022simgrace}, CCA-SSG~\cite{zhang2021canonical}, GraphMAE~\cite{hou2022graphmae}, S2GAE~\cite{li2023s2gae}) 또한 view를 입력 그래프가 아니라 표현(embedding) 수준에서 생성하기 때문에, 엣지 구조에서의 동질성(의심–의심 연결 부족)을 직접 보정하기는 어렵다.
 
-한편 k-NN view를 도입한 MLGCL~\cite{shang2023mlgcl} 및 GCPAL~\cite{lu2024graph}은 모든 피처를 사용하여 k-NN 그래프를 구축함으로써 거래 그래프와의 직교성(거래 그래프의 구조적 단서, 예: degree/centrality를 재활용하지 않고 \emph{독립적인} 보조 view를 유지한다는 의미)이 약화되었고, 의심 계좌 간 연결성이 거래 그래프(1:5.7)보다 오히려 악화된 수준(1:9.7)으로 보고되었다. 또한 k-NN 구축 피처 선택과 contrastive level(노드 vs. 서브그래프)에 대한 체계적 분석이 이루어지지 않았다.
+한편 k-NN view를 도입한 MLGCL~\cite{shang2023mlgcl} 및 GCPAL~\cite{lu2024graph}은 모든 피처를 사용하여 k-NN 그래프를 구축함으로써 거래 그래프와의 직교성(거래 그래프의 구조적 단서, 예: degree, centrality를 재활용하지 않고 독립적인 보조 view를 유지한다는 의미)이 약화되었고, 의심 계좌 간 연결성이 거래 그래프(1:5.7)보다 오히려 악화된 수준(1:9.7)으로 보고되었다. 또한 k-NN 구축 피처 선택과 contrastive level(노드 vs. 서브그래프)에 대한 체계적 분석이 이루어지지 않았다.
 
 \method 은 표준 GCN 구조를 유지하면서도, 거래 구조에서 분리된 행동 피처로 k-NN 보조 view를 구축해 관측된 동질성을 증대시키고($h_{\text{tx}}{=}0.690 \to h_{\text{knn}}{=}0.981$), view 구성과 contrastive level을 교차한 분석으로 이 한계를 정면으로 다룬다.
 
@@ -420,7 +420,7 @@ GRACE     &            & 0.044{\scriptsize±.001} & 0.054{\scriptsize±.005} & 0
 \end{tabular}}
 \end{table}
 
-메커니즘 측면에서 거래 그래프의 S/S-S-B = 1:5.7 (Table~\ref{tab:ss_sb}) 에서 행동적 k-NN 그래프는 1:1.4로 개선되며 (Figure~\ref{fig:intro_homophily}), 동질성도 0.690 → 0.981로 상승한다 (동질성 $h$ 는 전체 엣지 중 양 끝 노드 라벨이 같은 비율). 자금세탁 계좌들이 분할 거래와 다단계 이체로 유사한 거래 패턴을 공유하므로 행동적 유사도 기반 k-NN이 자연스럽게 의심 계좌끼리 연결한다. 반면, 구조적 k-NN은 1:9.7로 오히려 악화되는데, 이는 degree와 centrality가 의심 여부보다는 네트워크 위치를 반영하기 때문이다.
+메커니즘 측면에서 거래 그래프의 S-S/S-B = 1:5.7 (Table~\ref{tab:ss_sb}) 에서 행동적 k-NN 그래프는 1:1.4로 개선되며 (Figure~\ref{fig:intro_homophily}), 동질성도 0.690 → 0.981로 상승한다 (동질성 $h$ 는 전체 엣지 중 양 끝 노드 라벨이 같은 비율). 자금세탁 계좌들이 분할 거래와 다단계 이체로 유사한 거래 패턴을 공유하므로 행동적 유사도 기반 k-NN이 자연스럽게 의심 계좌끼리 연결한다. 반면, 구조적 k-NN은 1:9.7로 오히려 악화되는데, 이는 degree와 centrality가 의심 여부보다는 네트워크 위치를 반영하기 때문이다.
 
 \begin{table}[t]
 \centering
