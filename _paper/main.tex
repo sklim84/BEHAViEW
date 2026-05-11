@@ -743,19 +743,19 @@ AMLNet~\cite{huda2025amlnet} 은 공개된 소규모 합성 AML 벤치마크로,
 
 \subsection{Transaction-to-Account Label Aggregation}\label{app:dataset_label}
 
-세 데이터셋 모두 라벨이 거래 단위 (HOFINET: 이상거래여부, AMLworld: Is Laundering, AMLNet: isMoneyLaundering) 로 부여된다. 본 연구의 노드 분류 task 는 계좌 단위 라벨을 요구하므로 다음과 같이 변환한다. 거래 $e = (u, v, t)$ 의 라벨을 $\ell(e) \in \{0, 1\}$ 라 할 때, 계좌 $a$ 의 라벨은
+세 데이터셋 모두 라벨이 거래 단위 (HOFINET: 이상거래여부, AMLworld: Is Laundering, AMLNet: isMoneyLaundering) 로 부여된다. 본 연구의 노드 분류 task는 계좌 단위 라벨을 요구하므로 다음과 같이 변환한다. 거래 $e = (u, v, t)$ 의 라벨을 $\ell(e) \in \{0, 1\}$ 라 할 때, 계좌 $a$ 의 라벨은
 \begin{equation}\label{eq:label_agg}
     y_a \;=\; \max_{e \in \mathcal{E}_a^{\text{out}} \cup \mathcal{E}_a^{\text{in}}} \ell(e),
 \end{equation}
-즉 계좌 $a$ 가 출금 또는 입금 측으로 관여한 모든 거래 중 한 번이라도 의심 라벨이 부여된 경우 $y_a = 1$, 아니면 $y_a = 0$ 이다. 이 max-aggregation 은 graph-based fraud detection 표준 관행~\cite{dou2020enhancing,liu2021pick} 으로, 의심 계좌의 conservative definition (false negative 최소화) 을 채택한다. 변환 후 라벨 분포는 Table~\ref{tab:datasets} 의 prevalence ($\rho$) 와 일치한다.
+즉 계좌 $a$ 가 출금 또는 입금 측으로 관여한 모든 거래 중 한 번이라도 의심 라벨이 부여된 경우 $y_a = 1$, 아니면 $y_a = 0$ 이다. 이 max-aggregation은 graph-based fraud detection의 표준 관행~\cite{dou2020enhancing,liu2021pick} 으로, 의심 계좌의 conservative definition (false negative 최소화) 을 채택한다. 변환 후 라벨 분포는 Table~\ref{tab:datasets} 의 prevalence ($\rho$) 와 일치한다.
 
-실제 AML 운영에서 SAR (Suspicious Activity Report) 는 거래 단위로 보고되나, 분석가는 우선 의심 계좌를 식별한 뒤 해당 계좌의 거래 시퀀스를 검토하여 SAR 결정을 내린다 (FATF guidance). 본 연구의 계좌-수준 risk scoring 은 이 분석가 단계에 직접 input 을 제공하는 형태이며, 거래-수준 isolated review 와는 직교한다.
+실제 AML 운영에서 SAR (Suspicious Activity Report) 는 거래 단위로 보고되나, 분석가는 우선 의심 계좌를 식별한 뒤 해당 계좌의 거래 시퀀스를 검토하여 SAR 결정을 내린다 (FATF guidance). 본 연구의 계좌-수준 risk scoring은 이 분석가 단계에 직접 input을 제공하는 형태이며, 거래-수준 isolated review와는 직교한다.
 
 \section{BN-Conditional Collapse: Formalization}\label{app:bn_proof}
 
-본 절은 §\ref{subsec:rq3} Theorem~\ref{thm:bn_collapse} 의 증명 sketch 를 제공한다.
+본 절은 §\ref{subsec:rq3} Theorem~\ref{thm:bn_collapse} 의 증명 스케치를 제공한다.
 
-BYOL-style bootstrap loss (식~\eqref{eq:loss}) 는 negative-sample-free 이므로 임의의 trivial constant solution $f_\theta(\cdot) \equiv c$ 에서 $\mathcal{L} = 0$ 을 달성한다 (online == target 일 때 $\cos = 1$)~\cite{tian2021understanding,chen2021exploring}. BN~\cite{ioffe2015batch} 의 batch-level zero-mean/unit-variance 제약은 $\hat{x} = (x - \mu_B)/\sqrt{\sigma_B^2 + \epsilon}$ 으로 정의되며, batch 통계 $\mu_B$, $\sigma_B$ 가 입력 batch 에서 계산되므로 모든 batch 원소가 동일 값 $c$ 인 zero-variance 입력은 numerically 차단된다 ($\sigma_B^2 \to 0$ 시 0 으로 나누는 상황 발생 → forward pass 자체가 NaN). 따라서 BN-equipped 인코더에서는 trivial constant 가 attainable global minimum 이 아니다.
+BYOL-style bootstrap loss (식~\eqref{eq:loss}) 는 negative-sample-free이므로 임의의 trivial constant solution $f_\theta(\cdot) \equiv c$ 에서 $\mathcal{L} = 0$ 을 달성한다 (online == target일 때 $\cos = 1$)~\cite{tian2021understanding,chen2021exploring}. BN~\cite{ioffe2015batch} 의 batch-level zero-mean/unit-variance 제약은 $\hat{x} = (x - \mu_B)/\sqrt{\sigma_B^2 + \epsilon}$ 으로 정의되며, batch 통계 $\mu_B$, $\sigma_B$ 가 입력 batch에서 계산되므로 모든 batch 원소가 동일 값 $c$ 인 zero-variance 입력은 numerically 차단된다 ($\sigma_B^2 \to 0$ 시 0으로 나누는 상황 발생 → forward pass 자체가 NaN). 따라서 BN-equipped 인코더에서는 trivial constant가 attainable global minimum이 아니다.
 
 이 정리는 paper 의 두 BN-equipped family (per-layer, final-only BGRL) 가 모두 collapse-free 임을 함의하며, 측정값 (per-layer (a) 0.27, BGRL (a) 0.31, BN-less (a) 0.04) 과 정확히 일치한다. AMLNet (13.5\% prevalence) 에서는 BN-less 인코더 (DGI) 도 collapse 영역을 벗어나 (a) $F1_{\text{susp}}$ $\approx 0.40$ 을 달성하는데, 이는 prevalence 가 충분히 높을 때 random-classifier upper bound $2\rho/(1+\rho)$ 자체가 0.24 로 상승하여 collapse 의 절대 영향이 약화되기 때문으로 해석된다.
 
@@ -852,13 +852,13 @@ $\mathbf{z}_i$ & Final concatenated embedding $[\mathbf{s}_i^{(1)} \| \mathbf{s}
 
 \section{Implementation Details}\label{app:impl}
 
-GNN 인코더는 $L$-layer GCNConv~\cite{kipf2016semi} 를 기본으로 하며, 각 층에 BatchNorm, 활성 함수, dropout 을 적용한다.
+GNN 인코더는 $L$-layer GCNConv~\cite{kipf2016semi} 를 기본으로 하며, 각 층에 BatchNorm, 활성 함수, dropout을 적용한다.
 \begin{equation}\label{eq:gnn_layer}
     \mathbf{H}^{(l)} = \text{Dropout}\left(\sigma\left(\text{BN}\left(\hat{\mathbf{A}}\mathbf{H}^{(l-1)}\mathbf{W}^{(l)}\right)\right)\right)
 \end{equation}
-여기서 $\hat{\mathbf{A}}$ 는 정규화된 인접 행렬, $\mathbf{W}^{(l)}$ 은 $l$ 번째 층의 학습 가능한 가중치, $\sigma$ 는 활성 함수 (PReLU 또는 ReLU), BN 은 BatchNorm 이다. 실제 거래 네트워크는 멱법칙 차수 분포와 극심한 클래스 불균형 (HOFINET 2.13\%, AMLworld 1.23\%) 을 가지며, 정규화 없이는 차수가 큰 정상 계좌가 그래디언트를 지배하여 의심 계좌의 학습 신호가 희석된다. Per-layer BatchNorm 은 배치 차원 활성값 분포를 정규화함으로써 의심 계좌가 대조 목표에 비례적으로 기여하도록 보장한다 (Theorem~\ref{thm:bn_collapse} 의 trivial constant collapse 차단 메커니즘).
+여기서 $\hat{\mathbf{A}}$ 는 정규화된 인접 행렬, $\mathbf{W}^{(l)}$는 $l$ 번째 층의 학습 가능한 가중치, $\sigma$ 는 활성 함수 (PReLU 또는 ReLU), BN은 BatchNorm이다. 실제 거래 네트워크는 멱법칙 차수 분포와 극심한 클래스 불균형 (HOFINET 2.13\%, AMLworld 1.23\%) 을 가지며, 정규화 없이는 차수가 큰 정상 계좌가 그래디언트를 지배하여 의심 계좌의 학습 신호가 희석된다. Per-layer BatchNorm은 배치 차원 활성값 분포를 정규화함으로써 의심 계좌가 대조 목표에 비례적으로 기여하도록 보장한다 (Theorem~\ref{thm:bn_collapse} 의 trivial constant collapse 차단 메커니즘).
 
-추론 단계에서는 학습된 인코더의 파라미터를 고정하고, 두 view 의 서브그래프 표현을 결합하여 최종 임베딩을 생성한다: $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$. 학습과 추론 의사코드는 부록~\ref{app:algorithm} 에 수록한다.
+추론 단계에서는 학습된 인코더의 파라미터를 고정하고, 두 view의 서브그래프 표현을 결합하여 최종 임베딩을 생성한다: $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$. 학습과 추론 의사코드는 부록~\ref{app:algorithm} 에 수록한다.
 
 \section{Training and Inference Algorithm}\label{app:algorithm}
 
@@ -887,7 +887,7 @@ $\mathbf{Z} \leftarrow [\mathbf{S}^{(1)} \| \mathbf{S}^{(2)}]$\;
 
 \subsection{Label Fraction Sensitivity}
 
-자기지도 학습의 실용적 가치를 보다 엄밀히 검증하기 위해 downstream LogisticRegression 평가 시 라벨 비율을 1\%, 5\%, 10\% 로 변화시키며 \method 의 성능을 측정하였다. Table~\ref{tab:label_fraction}은 GBT 인코더에 대한 결과를 보여준다.
+자기지도 학습의 실용적 가치를 보다 엄밀히 검증하기 위해 downstream Logistic Regression 평가 시 라벨 비율을 1\%, 5\%, 10\% 로 변화시키며 \method 의 성능을 측정하였다. Table~\ref{tab:label_fraction}은 GBT 인코더에 대한 결과를 보여준다.
 
 \begin{table}[t]
 \centering
@@ -957,7 +957,7 @@ Inference (embedding extraction)      & 0.05s \\
 
 \subsection{Cross-Dataset Transfer}\label{app:transfer}
 
-\method 의 자기지도 표현이 도메인 간 전이 가능한지 검증하기 위해 AMLworld 에서 사전학습한 인코더를 AMLNet 에 적용하는 두 가지 시나리오를 비교한다 (Table~\ref{tab:transfer}). 두 데이터셋은 동일한 22개 행동 변수 스키마를 공유하나, prevalence (1.23\% vs 13.52\%) 와 그래프 규모 (515K vs 11K 노드) 에서 큰 차이를 보인다.
+\method 의 자기 지도 표현이 도메인 간 전이 가능한지를 검증하기 위해 AMLworld에서 사전 학습한 인코더를 AMLNet에 적용하는 두 가지 시나리오를 비교한다 (Table~\ref{tab:transfer}). 두 데이터셋은 동일한 22개 행동 변수 스키마를 공유하나, prevalence (1.23\% vs 13.52\%) 와 그래프 규모 (515K vs 11K 노드) 에서 큰 차이를 보인다.
 
 \begin{table}[t]
 \centering
@@ -975,11 +975,11 @@ Linear probe (frozen)              & 0.218{\scriptsize±.011} & 0.510{\scriptsiz
 \end{tabular}
 \end{table}
 
-Linear probe 모드 (source 인코더 동결, target 에서 LR 만 학습) 는 $F1_{\text{susp}}$ 0.218 로 collapse 영역에 머문다. Source 와 target 의 분포 격차가 frozen representation 의 transferability 한계를 노출한다. 반면 fine-tune 모드 (source pretrained encoder 를 target 에서 50 epoch 추가 학습) 는 0.690 으로 from-scratch (0.679) 대비 +0.011 $F1_{\text{susp}}$ 개선을 보인다 (paired 4-seed 비교). 이는 source 도메인 의 자기지도 표현이 target 도메인 의 학습을 가속할 수 있음을 시사하나, frozen transfer 는 도메인 간 prevalence 와 그래프 규모 차이로 인해 효과적이지 않다. 본 실험은 \method 의 cross-domain 전이 가능성을 보이는 preliminary evidence 로, 보다 정교한 domain adaptation 기법은 향후 과제로 남긴다.
+Linear probe 모드 (source 인코더 동결, target 에서 LR 만 학습) 는 $F1_{\text{susp}}$ 0.218로 collapse 영역에 머문다. Source와 target의 분포 격차가 frozen representation의 transferability 한계를 노출한다. 반면 fine-tune 모드 (source pretrained encoder를 target 에서 50 epoch 추가 학습) 는 0.690으로 from-scratch (0.679) 대비 +0.011 $F1_{\text{susp}}$ 개선을 보인다 (paired 4-seed 비교). 이는 source 도메인의 자기지도 표현이 target 도메인의 학습을 가속할 수 있음을 시사하나, frozen transfer는 도메인 간 prevalence와 그래프 규모 차이로 인해 효과적이지 않다. 본 실험은 \method 의 cross-domain 전이 가능성을 보이는 preliminary evidence로, 보다 정교한 domain adaptation 기법은 향후 과제로 남긴다.
 
 \subsection{Pool Variant Comparison}\label{app:pool_variants}
 
-§\ref{subsec:subgraph_pool} 의 mean pool (식~\eqref{eq:subgraph_pool}) 에 대한 두 대안 변형, 즉 heterophily-aware pool (HAP, Theorem~\ref{thm:hap}) 과 cycle-aware pool (HAP + triangle membership boost, $\alpha{=}2$) 의 성능을 4 인코더 (GBT, BGRL, GIN, DGI) $\times$ 2 view 설정 (transaction graph, behavioral k-NN) 에 대해 비교한다 (Table~\ref{tab:pool_variants}). HOFINET 만 triangle 피처를 제공하므로 본 비교도 HOFINET 에 한정한다.
+§\ref{subsec:subgraph_pool} 의 mean pool (식~\eqref{eq:subgraph_pool}) 에 대한 두 대안 변형, 즉 heterophily-aware pool (HAP, Theorem~\ref{thm:hap}) 과 cycle-aware pool (HAP + triangle membership boost, $\alpha{=}2$) 의 성능을 4 인코더 (GBT, BGRL, GIN, DGI) $\times$ 2 view 설정 (transaction graph, behavioral k-NN) 에 대해 비교한다 (Table~\ref{tab:pool_variants}). HOFINET 만 triangle 피처를 제공하므로 본 비교는 HOFINET 에 한정한다.
 
 \begin{table}[h]
 \centering
@@ -1001,11 +1001,11 @@ DGI  & 0.048{\scriptsize±.004} & 0.047{\scriptsize±.003} & 0.047{\scriptsize±
 \end{table}
 
 네 가지 패턴이 관찰된다.
-(i) 거래 그래프 + per-layer BN 인코더 (GBT, GIN) 에서 HAP/Cycle 가 mean pool 대비 큰 회복을 보인다 (GBT $+0.046$, GIN $+0.059$). 이는 정리~\ref{thm:hap} 의 HAP signal preservation lower bound 가 mean pool 의 signal flip 영역 ($\eta_h > 0.55$) 에서 의미 있게 활성화됨을 실증한다.
-(ii) 거래 그래프 + final-only BN 인코더 (BGRL) 에서 세 변형이 모두 noise 범위 내에서 동등하다 (mean 0.253, HAP 0.240, Cycle 0.243; 모두 std $\approx 0.02$). Final BN 이 pool 직후 적용되어 mean pool 의 heterophily noise 를 이미 흡수하기 때문으로 해석된다.
-(iii) BN 미포함 인코더 (DGI) 는 전 설정에서 random-classifier 영역 ($F1_{\text{susp}} \approx 0.04$--$0.07$) 에 머무르며 (Theorem~\ref{thm:bn_collapse}), pool 변형 차이가 무의미하다. HAP/Cycle 의 회복 효과는 인코더 자체가 신호를 학습한 경우에만 활성화된다.
-(iv) Behavioral k-NN view + 모든 인코더에서 세 변형이 거의 동일하다. 회복된 동질성 ($\eta_h \approx 0.04$) 으로 인해 정리~\ref{thm:hap} 의 $-4\epsilon^2 \eta_h$ 항이 무시 가능하여 mean pool 도 신호를 보존하기 때문이다.
+(i) 거래 그래프 + per-layer BN 인코더 (GBT, GIN) 에서 HAP/Cycle이 mean pool 대비 큰 회복을 보인다 (GBT $+0.046$, GIN $+0.059$). 이는 정리~\ref{thm:hap} 의 HAP signal preservation lower bound가 mean pool의 signal flip 영역 ($\eta_h > 0.55$) 에서 의미 있게 활성화됨을 실증한다.
+(ii) 거래 그래프 + final-only BN 인코더 (BGRL) 에서 세 변형이 모두 noise 범위 내에서 동등하다 (mean 0.253, HAP 0.240, Cycle 0.243; 모두 std $\approx 0.02$). Final BN이 pool 직후 적용되어 mean pool의 heterophily noise를 이미 흡수하기 때문으로 해석된다.
+(iii) BN 미포함 인코더 (DGI) 는 전 설정에서 random-classifier 영역 ($F1_{\text{susp}} \approx 0.04$--$0.07$) 에 머무르며 (Theorem~\ref{thm:bn_collapse}), pool 변형 차이가 무의미하다. HAP/Cycle의 회복 효과는 인코더 자체가 신호를 학습한 경우에만 활성화된다.
+(iv) Behavioral k-NN view + 모든 인코더에서 세 변형이 거의 동일하다. 회복된 동질성 ($\eta_h \approx 0.04$) 으로 인해 정리~\ref{thm:hap} 의 $-4\epsilon^2 \eta_h$ 항이 무시 가능하여 mean pool도 신호를 보존하기 때문이다.
 
-종합하면, HAP 의 이론적 신호 보존 보장은 mean pool 의 catastrophic flip 영역 ($\eta_h > 0.55$) + per-layer normalization 인코더 조합에서 가장 의미있게 활성화되며, 그 외 영역에서는 mean pool 이 sufficient 하다. 이는 \method 의 default 설정이 mean pool 인 합리성을 뒷받침하는 한편, BN 깊이가 낮은 인코더 변형 시에는 HAP 가 의미있는 robustness 를 제공할 수 있음을 시사한다.
+종합하면, HAP의 이론적 신호 보존 보장은 mean pool의 catastrophic flip 영역 ($\eta_h > 0.55$)과 per-layer normalization 인코더 조합에서 가장 의미 있게 활성화되며, 그 외 영역에서는 mean pool이 충분하다. 이는 \method 의 default 설정이 mean pool의 합리성을 뒷받침하는 한편, BN 깊이가 낮은 인코더 변형 시에는 HAP가 의미 있는 robustness를 제공할 수 있음을 시사한다.
 
 \end{document}
