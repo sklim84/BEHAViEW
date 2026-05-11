@@ -161,7 +161,7 @@ Negative-sample-free 패러다임(BYOL~\cite{grill2020bootstrap}, BarlowTwins~\c
   },
   infbox/.style={
     draw=green!60!black, fill=green!6, rounded corners=4pt,
-    minimum width=2.0cm, minimum height=1.5cm, align=center, thick
+    minimum width=2.0cm, align=center, thick
   },
   secbox/.style={
     draw=black!30, dashed, rounded corners=6pt,
@@ -174,9 +174,9 @@ Negative-sample-free 패러다임(BYOL~\cite{grill2020bootstrap}, BarlowTwins~\c
 \node[inputbox] (txgraph) {Transaction\\Graph $\mathcal{G}_{\text{trans}}$};
 % --- COLUMN 2: Views ---
 \node[view1, right=1.0cm of txgraph, yshift=+1.4cm] (v1)
-  {View 1\\[{-2pt}]{Augmented $\mathcal{G}_{\text{trans}}$}\\[{-3pt}]{(edge/feat.\ drop)}};
+  {View 1\\{Augmented $\mathcal{G}_{\text{trans}}$}\\{(edge/feat.\ drop)}};
 \node[view2, right=1.0cm of txgraph, yshift=-1.4cm] (v2)
-  {View 2\\[{-2pt}]{Behavioral k-NN}\\[]{ $\mathcal{G}_{\text{knn}}$ (top-$k$ sim.)}};
+  {View 2\\{Behavioral k-NN}\\{ $\mathcal{G}_{\text{knn}}$ (top-$k$ sim.)}};
 \draw[myarrow] (txgraph.east) -- ++(0.4,0) |- (v1.west);
 \draw[myarrow] (txgraph.east) -- ++(0.4,0) |- (v2.west);
 \node[above=0.2cm of v1, font=\bfseries, text=blue!70] (lv) {View Construction};
@@ -211,10 +211,9 @@ Negative-sample-free 패러다임(BYOL~\cite{grill2020bootstrap}, BarlowTwins~\c
 \draw[myarrow] (proj1.east) -| (loss.north);
 \draw[myarrow] (proj2.east) -| (loss.south);
 \node[infbox, right=0.5cm of loss] (inf)
-  {Inference\\
-    \mathbf{z}_i=[\mathbf{s}_i^{(1)}\|\mathbf{s}_i^{(2)}]
-    $\downarrow$ {\scriptsize LogReg}\\
-    {$F1_{\text{susp}}$, AUROC}};
+{
+    Inference\\{\mathbf{z}_i=[\mathbf{s}_i^{(1)}\|\mathbf{s}_i^{(2)}]}{$\downarrow$ {\scriptsize LogReg}}\\{$F1_{\text{susp}}$, AUROC}
+};
 \draw[myarrow] (loss.east) -- (inf.west);
 \node[above=0.2cm of loss, yshift=0.8cm, font=\bfseries, text=red!60] {Contrastive Learning};
 % --- Background boxes ---
