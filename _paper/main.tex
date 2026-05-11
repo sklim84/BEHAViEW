@@ -94,7 +94,7 @@
 
 자금세탁 거래는 전 세계 GDP의 2--5\% 규모로 추정되며~\cite{teichmann2020recent}, UNODC의 추산에 따르면 연간 \$800B--2T의 불법 자금이 국제 금융 시스템을 통해 이동하고 있다~\cite{unodc_ml}. 자금세탁 행위가 분할 거래 (structuring), 다단계 이체 (layering), mule-network 운영 등 정교한 수법으로 진화함에 따라, rule-based 탐지의 한계를 보완하기 위해 거래 네트워크의 구조적 패턴을 학습하는 GNN 기반 접근 방식이 활발히 연구되고 있다~\cite{drezewski2015application,cheng2025graph}. 본 논문은 이러한 연구 흐름 위에서, 거래 네트워크의 두 가지 본질적 특성 (저동질성과 라벨 희소성) 이 표준 GNN 가정과 어떻게 상호작용하는지를 분석하고, 이를 view-level 접근으로 완화하는 방안을 제시한다.
 
-첫째, 저동질성 (low-homophily) 문제가 있다. 자금세탁 계좌는 탐지 회피를 위해 의도적으로 정상 계좌와 거래하여 mule-network를 형성한다. 우리는 HOFINET 거래 그래프에서 의심 계좌 이웃의 약 85\% 가 정상 계좌임을 확인하였으며 (S-S/S-B = 1:5.7, Figure~\ref{fig:intro_homophily}), 표준 GNN의 핵심 가정인 이웃 라벨 유사성~\cite{zhu2020beyond} 이 성립하지 않는다. H2GCN~\cite{zhu2020beyond}, FAGCN~\cite{bo2021beyond}, GBK-GNN~\cite{du2022gbk} 등 architecture-level 보강은 그래프 구조 자체를 그대로 두고 message passing만 수정하기 때문에, 이웃에 의심 신호가 없는 거래 네트워크에서는 동질성 결함을 회복하지 못한다. 둘째, 극심한 클래스 불균형과 라벨 희소성의 문제가 있다. 의심 계좌는 전체의 2\% 미만에 불과하며~\cite{hilal2022financial}, 라벨은 수사기관과 금융기관의 사후 조사 결과에 의존하므로 수개월의 지연을 동반한다. 그 결과 CARE-GNN~\cite{dou2020enhancing}, PC-GNN~\cite{liu2021pick}, RioGNN~\cite{peng2021reinforced} 등 fraud-specific 지도학습 모델은 운영 환경에서 cold-start 문제를 겪는다. 더욱이 본 연구의 실험은 CARE-GNN, PC-GNN, BWGNN~\cite{tang2022rethinking}, GAGA~\cite{wang2023label}, ConsisGAD~\cite{chen2024consisgad} 등 message passing 수준에서 heterophily 를 다루는 fraud/anomaly-specific GNN 들이 거래 그래프의 graph-level anti-homophily 자체는 변경하지 못해 모두 vanilla GCN 과 유사하거나 못 미치는 성능을 보임을 실증한다 (§\ref{subsec:rq5}).
+첫째, 저동질성 (low-homophily) 문제가 있다. 자금세탁 계좌는 탐지 회피를 위해 의도적으로 정상 계좌와 거래하여 mule-network를 형성한다. 우리는 Home/Firm Banking Network(HOFINET)\footnote{Psuedonymized actual transaction data from the Home/Firm Banking Network (HOFINET) processed by the Korea Financial Telecommunications \& Clearings Institute (KFTC)}을 통해 과거에 실제로 발생한 거래의 그래프에서 의심 계좌 이웃의 약 85\% 가 정상 계좌임을 확인하였으며 (S-S/S-B = 1:5.7, Figure~\ref{fig:intro_homophily}), 표준 GNN의 핵심 가정인 이웃 라벨 유사성~\cite{zhu2020beyond} 이 성립하지 않는다. H2GCN~\cite{zhu2020beyond}, FAGCN~\cite{bo2021beyond}, GBK-GNN~\cite{du2022gbk} 등 architecture-level 보강은 그래프 구조 자체를 그대로 두고 message passing만 수정하기 때문에, 이웃에 의심 신호가 없는 거래 네트워크에서는 동질성 결함을 회복하지 못한다. 둘째, 극심한 클래스 불균형과 라벨 희소성의 문제가 있다. 의심 계좌는 전체의 2\% 미만에 불과하며~\cite{hilal2022financial}, 라벨은 수사기관과 금융기관의 사후 조사 결과에 의존하므로 수개월의 지연을 동반한다. 그 결과 CARE-GNN~\cite{dou2020enhancing}, PC-GNN~\cite{liu2021pick}, RioGNN~\cite{peng2021reinforced} 등 fraud-specific 지도학습 모델은 운영 환경에서 cold-start 문제를 겪는다. 더욱이 본 연구의 실험은 CARE-GNN, PC-GNN, BWGNN~\cite{tang2022rethinking}, GAGA~\cite{wang2023label}, ConsisGAD~\cite{chen2024consisgad} 등 message passing 수준에서 heterophily를 다루는 fraud/anomaly-specific GNN들이 거래 그래프의 graph-level anti-homophily 자체는 변경하지 못해 모두 vanilla GCN과 유사하거나 못 미치는 성능을 보임을 실증한다 (§\ref{subsec:rq5}).
 
 이러한 환경에서 Graph Contrastive Learning(GCL)은 라벨 없이 표현을 학습할 수 있다는 점에서 적합한 대안으로 부각되고 있다\cite{you2020graph,velivckovic2018deep,thakoor2021large,bielak2022graph}. 그러나 기존 GCL은 거래 그래프의 저동질성 결함을 view 단계에서 그대로 보존한다. 동일 그래프를 서로 다른 확률적 증강 (예: edge removal, feature masking) 으로 두 개의 입력-공간 view로 만든 뒤~\cite{zhu2020deep,zhu2021graph,hassani2020contrastive}, 각 view를 인코더에 통과시켜 얻은 표현을 가깝게 학습하기 때문이다. 
 
@@ -131,7 +131,7 @@ Negative-sample-free 패러다임(BYOL~\cite{grill2020bootstrap}, BarlowTwins~\c
 
 \begin{figure*}[t!]
 \centering
-\scalebox{0.75}{
+\scalebox{0.7}{
 \begin{tikzpicture}[
   scale=1.0, transform shape, >=Stealth,
   node distance=0.4cm and 0.6cm,
@@ -147,11 +147,11 @@ Negative-sample-free 패러다임(BYOL~\cite{grill2020bootstrap}, BarlowTwins~\c
   view2/.style={viewbox, draw=orange!70, fill=orange!8},
   encbox/.style={
     draw=teal!70, fill=teal!7, rounded corners=4pt,
-    minimum width=2.0cm, minimum height=1.2cm, align=center, thick
+    minimum width=3.0cm, minimum height=1.2cm, align=center, thick
   },
   poolbox/.style={
     draw=teal!50, fill=teal!5, rounded corners=4pt,
-    minimum width=2.4cm, minimum height=1.2cm, align=center, thick
+    minimum width=3.0cm, minimum height=1.2cm, align=center, thick
   },
   projbox/.style={
     draw=purple!60, fill=purple!6, rounded corners=4pt,
@@ -184,18 +184,18 @@ Negative-sample-free 패러다임(BYOL~\cite{grill2020bootstrap}, BarlowTwins~\c
 \node[above=0.2cm of v1, font=\bfseries, text=blue!70] (lv) {View Construction};
 % --- COLUMN 3: Encoders ---
 \node[encbox, right=1.0cm of v1] (enc1)
-  {Online Encoder $f_\theta$\\{GCN + BN}};
+  {Online Encoder\\$f_\theta$ {GCN + BN}};
 \node[encbox, right=1.0cm of v2] (enc2)
-  {Target Encoder $f_\xi$\\{EMA, stop-grad}};
+  {Target Encoder\\$f_\xi$ (EMA, stop-grad)};
 \draw[myarrow] (v1.east) -- (enc1.west);
 \draw[myarrow] (v2.east) -- (enc2.west);
 \draw[emaarrow] (enc1.south) -- node[pos=0.5, right=2pt, text=purple!80]{EMA} (enc2.north -| enc1.south);
 \node[above=0.2cm of enc1, font=\bfseries, text=teal!70] {GNN Encoder};
 % --- COLUMN 4: Subgraph Pool ---
 \node[poolbox, right=1.0cm of enc1] (pool1)
-  {Subgraph Pool\\{tx-graph nbrs}};
+  {Subgraph Pool\\{tx-graph neighbors}};
 \node[poolbox, right=1.0cm of enc2] (pool2)
-  {Subgraph Pool\\{k-NN nbrs}};
+  {Subgraph Pool\\{k-NN neighbors}};
 \draw[myarrow] (enc1.east) -- (pool1.west);
 \draw[myarrow] (enc2.east) -- (pool2.west);
 \node[above=0.2cm of pool1, font=\bfseries, text=teal!50] {Subgraph Pooling};
@@ -203,29 +203,29 @@ Negative-sample-free 패러다임(BYOL~\cite{grill2020bootstrap}, BarlowTwins~\c
 \node[projbox, right=1.1cm of pool1] (proj1)
   {Projector\\$g_\theta$};
 \node[projbox, right=1.1cm of pool2] (proj2)
-  {Projector\\$g_\xi$ + stop grade};
+  {Projector\\$g_\xi$ (stop grade)};
 \draw[myarrow] (pool1.east) -- (proj1.west);
 \draw[myarrow] (pool2.east) -- (proj2.west);
 \node[above=0.2cm of proj1, font=\bfseries, text=purple!70] {Projector};
 % --- COLUMN 6: Loss + Inference ---
 \node[lossbox, right=1.0cm of proj1, yshift=-1.4cm] (loss)
-  {BYOL Loss $\mathcal{L}_B$\\[{-2pt}]{symmetric, no neg.}};
+  {BYOL Loss $\mathcal{L}_B$\\{symmetric, no neg.}};
 \draw[myarrow] (proj1.east) -| (loss.north);
 \draw[myarrow] (proj2.east) -| (loss.south);
 \node[infbox, right=0.5cm of loss] (inf)
   {Inference\\
     $\mathbf{z}_i=[\mathbf{s}_i^{(1)}\|\mathbf{s}_i^{(2)}]$
     $\downarrow$ {\scriptsize LogReg}\\
-    {$F1_{\text{susp}}$, AUROC}};
+    {$F1_{\text{susp}}$/AUROC}};
 \draw[myarrow] (loss.east) -- (inf.west);
 \node[above=0.2cm of loss, yshift=0.8cm, font=\bfseries, text=red!60] {Contrastive Learning};
 % --- Background boxes ---
 \begin{scope}[on background layer]
-  \node[secbox, fit=(v1)(v2), fill=blue!3] {};
-  \node[secbox, fit=(enc1)(enc2), fill=teal!3] {};
-  \node[secbox, fit=(pool1)(pool2), fill=teal!2] {};
-  \node[secbox, fit=(proj1)(proj2), fill=purple!3] {};
-  \node[secbox, fit=(loss)(inf), fill=red!2] {};
+  \node[secbox, fit=(v1)(v2), fill=blue!3, inner xsep=4pt, inner ysep=2pt] {};
+  \node[secbox, fit=(enc1)(enc2), fill=teal!3, inner xsep=4pt, inner ysep=4pt] {};
+  \node[secbox, fit=(pool1)(pool2), fill=teal!2, inner xsep=4pt, inner ysep=4pt] {};
+  \node[secbox, fit=(proj1)(proj2), fill=purple!3, inner xsep=4pt, inner ysep=4pt] {};
+  \node[secbox, fit=(loss)(inf), fill=red!2, inner xsep=4pt, inner ysep=4pt] {};
 \end{scope}
 % --- Ablation table ---
 \node[below=1.0cm of loss, xshift=2.7cm,
