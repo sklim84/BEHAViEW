@@ -88,24 +88,47 @@
     \label{fig:intro_homophily}
 \end{figure}
 
-자금세탁 거래는 전 세계 GDP 의 2--5\% 규모로 추정되며~\cite{teichmann2020recent}, UNODC 의 추산에 따르면 연간 \$800B--2T 의 불법 자금이 국제 금융 시스템을 통해 이동한다~\cite{unodc_ml}. 자금세탁 행위가 분할거래 (structuring), 다단계 이체 (layering), mule-network 운영 등 정교한 수법으로 진화함에 따라, rule-based 탐지의 한계를 보완하기 위해 거래 네트워크의 구조적 패턴을 학습하는 GNN 기반 접근이 활발히 연구되고 있다~\cite{drezewski2015application,cheng2025graph}. 그러나 금융 거래 네트워크는 두 가지 본질적 특성으로 인해 표준 GNN 가정과 근본적으로 충돌하며, 이를 직접 다루지 않으면 탐지 성능이 회복되지 않는다.
+자금세탁 거래는 전 세계 GDP의 2--5\% 규모로 추정되며~\cite{teichmann2020recent}, UNODC의 추산에 따르면 연간 \$800B--2T의 불법 자금이 국제 금융 시스템을 통해 이동한다~\cite{unodc_ml}. 자금세탁 행위가 분할거래 (structuring), 다단계 이체 (layering), mule-network 운영 등 정교한 수법으로 진화함에 따라, rule-based 탐지의 한계를 보완하기 위해 거래 네트워크의 구조적 패턴을 학습하는 GNN 기반 접근이 활발히 연구되고 있다~\cite{drezewski2015application,cheng2025graph}. 그러나 금융 거래 네트워크는 두 가지 본질적 특성으로 인해 표준 GNN 가정과 근본적으로 충돌하며, 이를 직접 다루지 않으면 탐지 성능이 회복되지 않는다.
 
-첫째, 저동질성 (low-homophily) 의 문제이다. 자금세탁 계좌는 탐지 회피를 위해 의도적으로 정상 계좌와 거래하여 mule-network 를 형성한다. 우리는 HOFINET 거래 그래프에서 의심 계좌 이웃의 약 85\% 가 정상 계좌임을 확인하였으며 (S-S/S-B = 1:5.7, Figure~\ref{fig:intro_homophily}), 표준 GNN 의 핵심 가정인 이웃 라벨 유사성~\cite{zhu2020beyond} 이 성립하지 않는다. H2GCN~\cite{zhu2020beyond}, FAGCN~\cite{bo2021beyond}, GBK-GNN~\cite{du2022gbk} 등 architecture-level 보강은 그래프 구조 자체를 그대로 두고 message passing 만 수정하기 때문에, 이웃에 의심 신호가 없는 거래 네트워크에서는 동질성 결함을 회복하지 못한다. 둘째, 극심한 클래스 불균형과 라벨 희소성의 문제이다. 의심 계좌는 전체의 2\% 미만에 불과하며~\cite{hilal2022financial}, 라벨은 수사기관과 금융기관의 사후 조사 결과에 의존하므로 수개월의 지연을 동반한다. 그 결과 CARE-GNN~\cite{dou2020enhancing}, PC-GNN~\cite{liu2021pick}, RioGNN~\cite{peng2021reinforced} 등 fraud-specific 지도학습 모델은 운영 환경에서 cold-start 문제를 겪는다.
+첫째, 저동질성 (low-homophily) 의 문제이다. 자금세탁 계좌는 탐지 회피를 위해 의도적으로 정상 계좌와 거래하여 mule-network를 형성한다. 우리는 HOFINET 거래 그래프에서 의심 계좌 이웃의 약 85\% 가 정상 계좌임을 확인하였으며 (S/S-S-B = 1:5.7, Figure~\ref{fig:intro_homophily}), 표준 GNN의 핵심 가정인 이웃 라벨 유사성~\cite{zhu2020beyond} 이 성립하지 않는다. H2GCN~\cite{zhu2020beyond}, FAGCN~\cite{bo2021beyond}, GBK-GNN~\cite{du2022gbk} 등 architecture-level 보강은 그래프 구조 자체를 그대로 두고 message passing만 수정하기 때문에, 이웃에 의심 신호가 없는 거래 네트워크에서는 동질성 결함을 회복하지 못한다. 둘째, 극심한 클래스 불균형과 라벨 희소성의 문제이다. 의심 계좌는 전체의 2\% 미만에 불과하며~\cite{hilal2022financial}, 라벨은 수사기관과 금융기관의 사후 조사 결과에 의존하므로 수개월의 지연을 동반한다. 그 결과 CARE-GNN~\cite{dou2020enhancing}, PC-GNN~\cite{liu2021pick}, RioGNN~\cite{peng2021reinforced} 등 fraud-specific 지도학습 모델은 운영 환경에서 cold-start 문제를 겪는다.
 
-이러한 환경에서 그래프 대조학습 (GCL) 은 라벨 없이 표현을 학습 가능하다는 점에서 적합한 대안으로 부각되고 있다~\cite{you2020graph,velivckovic2018deep,thakoor2021large,bielak2022graph}. 그러나 기존 GCL 은 거래 그래프의 저동질성 결함을 view 단계에서 그대로 보존한다. 동일 그래프에 대한 확률적 증강 (edge removal, feature masking) 으로 contrastive view 를 생성하기 때문이며~\cite{zhu2020deep,zhu2021graph,hassani2020contrastive}, 그 결과 view 가 의심 계좌를 둘러싼 정상 이웃의 noise 까지 그대로 전파한다. AFGRL~\cite{lee2022augmentation} / SimGRACE~\cite{xia2022simgrace} 등 augmentation-free GCL 역시 표현 공간에서 view 를 생성하므로 그래프 수준 동질성 결함은 손대지 못한다. k-NN view 를 도입한 MLGCL~\cite{shang2023mlgcl} 과 GCPAL~\cite{lu2024graph} 은 가장 가까운 관련 연구이나, 가용한 모든 피처를 k-NN 구축에 사용하여 거래 그래프와의 직교성을 잃고, 의심 계좌 간 연결 비율이 거래 그래프 (1:5.7) 보다 오히려 악화된 1:9.7 로 측정된다. 또한 (i) k-NN 구축 피처 선택과 (ii) contrastive level (노드 vs 서브그래프) 두 핵심 설계 축에 대한 체계적 분석이 이루어지지 않았다.
+이러한 환경에서 그래프 대조 학습(GCL)은 라벨 없이 표현을 학습할 수 있다는 점에서 적합한 대안으로 부각되고 있다\cite{you2020graph,velivckovic2018deep,thakoor2021large,bielak2022graph}. 그러나 기존 GCL은 거래 그래프의 저동질성 결함을 view 단계에서 그대로 보존한다. 동일 그래프를 서로 다른 확률적 증강 (예: edge removal, feature masking) 으로 두 개의 \emph{입력-공간} view로 만든 뒤~\cite{zhu2020deep,zhu2021graph,hassani2020contrastive}, 각 view를 인코더에 통과시켜 얻은 표현을 가깝게 학습하기 때문이다. 
+
+반면 AFGRL~\cite{lee2022augmentation} / SimGRACE~\cite{xia2022simgrace} 등 augmentation-free GCL의 ``view'' 는 입력 그래프를 바꾼 결과물이 아니라, \emph{같은 입력을} (i) dropout/노이즈가 다른 두 번의 forward, (ii) teacher--student(EMA) 쌍, (iii) 모델/표현 perturbation 등으로 인코딩해 얻는 두 개의 \emph{표현(embedding)} 이다. 따라서 그래프 엣지 구조에서의 동질성(의심--의심 연결 부족) 자체를 직접 보정하진 못한다. k-NN view를 도입한 MLGCL~\cite{shang2023mlgcl} 과 GCPAL~\cite{lu2024graph} 은 가장 가까운 관련 연구이나, 가용한 모든 피처를 k-NN 구축에 사용하여 거래 그래프와의 직교성을 잃고, 의심 계좌 간 연결 비율이 거래 그래프 (1:5.7) 보다 오히려 악화된 1:9.7로 측정된다. 또한 (i) k-NN 구축 피처 선택과 (ii) contrastive level (노드 vs 서브그래프) 두 핵심 설계 축에 대한 체계적 분석이 이루어지지 않았다.
 
 본 논문은 이 한계를 view 구성과 contrastive level 두 측면에서 다룬다. View 측면에서, 자금세탁 계좌들은 분할거래와 다단계 이체 같은 공통 수법을 사용하기 때문에 행동적 거래 패턴 (금액 분포, 시간적 빈도, 거래 유형 엔트로피) 을 공유한다. 이 행동적 유사도에 기반해 k-NN 그래프를 구축하면 의심 계좌끼리 자연스럽게 연결되어, 거래 그래프에서 단절되어 있던 동질성이 view 수준에서 회복된다. Level 측면에서, 서브그래프 풀링은 회복된 view 와 결합할 때 의심 신호를 정상 noise 보다 강하게 증폭한다.
 
-본 논문은 \method 을 제안한다 (Figure~\ref{fig:framework}). \method 은 두 독립 축 (행동과 구조 피처 분류에 기반한 view 구성, 노드 및 서브그래프 수준의 contrastive level) 을 교차한 4가지 설정에서 10종 GCL 인코더로 체계적 실험을 수행하고, degree-corrected stochastic block model (DCSBM)~\cite{karrer2011stochastic} 기반 분석으로 그 메커니즘을 정량적으로 정당화한다. 그 결과 행동적 k-NN view 는 S-S/S-B 비율을 1:5.7 에서 1:1.4 로, 동질성을 0.690 에서 0.981 로 회복시키고, 서브그래프 풀링과의 결합으로 추가 성능 향상을 달성한다. 한국의 은행 간 이체 결제망 HOFINET 기반 합성 데이터, AMLworld~\cite{amlpatterns2024realistic} (대규모 합성), AMLNet (소규모 high-prevalence) 의 세 데이터셋에서 일관된 효과를 검증한다. 본 연구의 기여는 다음과 같다.
+본 논문은 \method 을 제안한다 (Figure~\ref{fig:framework}). \method 은 두 독립 축 (행동과 구조 피처 분류에 기반한 view 구성, 노드 및 서브그래프 수준의 contrastive level) 을 교차한 4가지 설정에서 10종 GCL 인코더로 체계적 실험을 수행하고, degree-corrected stochastic block model (DCSBM)~\cite{karrer2011stochastic} 기반 분석으로 그 메커니즘을 정량적으로 정당화한다. 그 결과 행동적 k-NN view는 S/S-S-B 비율을 1:5.7에서 1:1.4로, 동질성을 0.690에서 0.981로 회복시키고, 서브그래프 풀링과의 결합으로 추가 성능 향상을 달성한다. 한국의 은행 간 이체 결제망 HOFINET 기반 합성 데이터, AMLworld~\cite{amlpatterns2024realistic} (대규모 합성), AMLNet (소규모 high-prevalence) 의 세 데이터셋에서 일관된 효과를 검증한다. 본 연구의 기여는 다음과 같다.
 \begin{itemize}
-    \item \textbf{행동적 k-NN view 에 의한 동질성 회복.} 거래 구조적 특징과 행동적 피처를 분류하고, 순수 행동 피처만으로 k-NN 보조 view 를 구축하여 거래 그래프의 동질성을 0.690 에서 0.981 로 회복한다. DCSBM 기반 분석으로 회복의 정량적 하한을 형식화한다 (Theorems~\ref{thm:knn_homophily}--\ref{thm:combined}).
-    \item \textbf{View $\times$ Level 교차 분석 프레임워크.} view 구성 (거래 그래프 vs.\ 행동 k-NN) 과 contrastive level (노드 vs.\ 서브그래프) 두 축을 교차한 4-setting ablation 을 10종 GCL 인코더에 인코더-비종속적으로 적용하고, 서브그래프 풀링의 신호 역전 조건 (Theorem~\ref{thm:meanpool}) 과 BatchNorm 의 collapse 차단 메커니즘 (Theorem~\ref{thm:bn_collapse}) 을 형식화한다.
-    \item \textbf{라벨 희소 AML 환경에서의 실용적 검증.} 상이한 prevalence regime 의 세 AML 벤치마크 (2.1\% / 1.2\% / 13.5\%) 에서 핵심 패턴이 일관되게 재현되며, 라벨 없는 자기지도 표현이 지도학습 baseline 과 경쟁적 성능을 달성한다 ($F1_{\text{susp}}$ 격차 0.006 이내, HOFINET).
+    \item \textbf{행동적 k-NN view에 의한 동질성 회복.} 거래 구조적 특징과 행동적 피처를 분류하고, 순수 행동 피처만으로 k-NN 보조 view를 구축하여 거래 그래프의 동질성을 0.690에서 0.981로 회복한다. DCSBM 기반 분석으로 회복의 정량적 하한을 형식화한다 (Theorems~\ref{thm:knn_homophily}--\ref{thm:combined}).
+    \item \textbf{View $\times$ Level 교차 분석 프레임워크.} view 구성 (거래 그래프 vs. 행동 k-NN) 과 contrastive level (노드 vs. 서브그래프) 두 축을 교차한 4-setting ablation을 10종 GCL 인코더에 인코더-비종속적으로 적용하고, 서브그래프 풀링의 신호 역전 조건 (Theorem~\ref{thm:meanpool}) 과 BatchNorm의 collapse 차단 메커니즘 (Theorem~\ref{thm:bn_collapse}) 을 형식화한다.
+    \item \textbf{라벨 희소 AML 환경에서의 실용적 검증.} 상이한 prevalence regime의 세 AML 벤치마크 (2.1\% / 1.2\% / 13.5\%) 에서 핵심 패턴이 일관되게 재현되며, 라벨 없는 자기지도 표현이 지도학습 baseline과 경쟁적 성능을 달성한다 ($F1_{\text{susp}}$ 격차 0.006 이내, HOFINET).
 \end{itemize}
 
 \section{Related Work}\label{sec:related_work}
 
-거래 네트워크에서 사기 탐지 및 자금 세탁 방지에 GNN을 적용한 연구는 대부분 라벨 기반 지도 학습이다~\cite{cheng2025graph}: GraphConsis~\cite{liu2020alleviating} 와 CARE-GNN~\cite{dou2020enhancing} 은 fraud-aware 이웃 선별, PC-GNN~\cite{liu2021pick} 은 라벨 분포 샘플링, GTAN~\cite{cheng2020graph} 과 xFraud~\cite{rao2020xfraud} 은 시공간 및 이종 패턴, FraudRE~\cite{zhang2021fraudre} 와 RioGNN~\cite{peng2021reinforced} 는 클래스 불균형과 다중 관계, LHFD~\cite{wang2023label} 는 라벨-aware 다중 클래스 fraud detection을 제안하였다. 모두 라벨 의존도가 높아 운영 환경의 cold-start 문제를 겪는다. 저동질성 그래프 대응으로 H2GCN~\cite{zhu2020beyond}, Geom-GCN~\cite{pei2020geom}, FAGCN~\cite{bo2021beyond}, GBK-GNN~\cite{du2022gbk}, ACM-GCN~\cite{luan2022acmgcn}, GPR-GNN~\cite{chien2021adaptive}, LINKX~\cite{zhu2021linkx} 등 architecture-level 보강이 활발하나, 모두 주어진 그래프 구조 자체는 변경하지 않는다. \method 은 이와 직교하는 접근으로 표준 GCN을 그대로 두고 행동적 k-NN 보조 view를 통해 실험에서 관측된 범위 내에서 동질성을 상당히 향상시키는 것으로 나타났다($h_{\text{tx}}{=}0.690 \to h_{\text{knn}}{=}0.981$).
+거래 네트워크에서 사기 탐지와 자금 세탁 방지를 위해 GNN을 활용한 기존 연구들은 대부분 라벨을 활용한 지도 학습에 기반한다\cite{cheng2025graph}. 대표적으로 라벨 분포 샘플링을 사용하는 PC-GNN\cite{liu2021pick}, fraud-aware 이웃 선택을 수행하는 GraphConsis\cite{liu2020alleviating}와 CARE-GNN\cite{dou2020enhancing}, 불균형·다중 관계 데이터를 다루는 FraudRE\cite{zhang2021fraudre}와 RioGNN\cite{peng2021reinforced}, 시공간·이종 패턴을 모델링하는 GTAN\cite{cheng2020graph}과 xFraud\cite{rao2020xfraud}, 라벨-aware 다중 클래스 문제를 다루는 LHFD\cite{wang2023label} 등이 있다. 그러나 이들 방법은 라벨 의존도가 높아 실제 운영 환경에서 cold-start 문제를 피하기 어렵다. 또한 저동질성 문제를 완화하기 위해 H2GCN\cite{zhu2020beyond}, Geom-GCN\cite{pei2020geom}, FAGCN\cite{bo2021beyond}, GBK-GNN\cite{du2022gbk}, ACM-GCN\cite{luan2022acmgcn}, GPR-GNN\cite{chien2021adaptive}, LINKX\cite{zhu2021linkx} 등 다양한 아키텍처 기반의 보강 기법이 제안되어 왔으나, 이들 방법은 입력 그래프의 구조 자체는 변경하지 않기 때문에 ``거래 그래프에서 의심–의심 엣지가 희소하다''는 형태의 동질성 결함을 근본적으로 해소하기는 어렵다.
+
+\begin{table}[t]
+\centering
+\small
+\caption{기존 기법(지도학습/구조-고정 저동질성 GNN)과 \method 비교}
+\label{tab:rw_vs_ours}
+\begin{tabular}{p{2.6cm}p{5.6cm}p{5.6cm}}
+\hline
+\textbf{비교 항목} & \textbf{기존 기법 (line~110)} & \textbf{\method (본 연구)} \\
+\hline
+학습 패러다임 & 라벨 기반 지도학습 중심 (fraud label 필요) & 라벨 없이 자기지도 학습 가능 (contrastive 설정) \\
+입력 그래프 구조 & 거래 그래프 구조를 그대로 사용; message passing/아키텍처만 수정 & 거래 그래프는 유지하되, 행동 유사도 기반 k-NN \emph{보조 view}를 추가 \\
+저동질성(anti-homophily) 대응 & 구조가 anti-homophily이면 근본 신호 부족 문제 지속 & k-NN view에서 의심 계좌 간 연결을 강화해 동질성(관측치) 회복 \\
+Cold-start 적합성 & 라벨 희소/지연 환경에서 제약 큼 & 라벨 없이 사전학습 가능하여 cold-start에 유리 \\
+핵심 가정/신호원 & 거래 엣지 이웃에 유의미한 라벨/패턴 신호 존재 & 행동 패턴 유사도(금액/시간/빈도/엔트로피 등)에서 대조 신호를 확보 \\
+출력/활용 & 감독 신호로 직접 분류 성능 최적화 & 사후 다운스트림(분류기)에서 활용 가능한 일반 표현 학습 \\
+\hline
+\end{tabular}
+\end{table}
+
+\method 은 이와는 독립적으로, 표준 GCN 구조는 그대로 유지하면서도 행동 기반 k-NN 보조 view를 통해 관측된 동질성을 크게 증대시킨다($h_{\text{tx}}{=}0.690 \to h_{\text{knn}}{=}0.981$).
 
 DGI~\cite{velivckovic2018deep}, GRACE~\cite{zhu2020deep}, GraphCL~\cite{you2020graph}, GCA~\cite{zhu2021graph}, BGRL~\cite{thakoor2021large}, GBT~\cite{bielak2022graph}, MVGRL~\cite{hassani2020contrastive} 등 GCL 방법론은 모두 동일한 그래프 확률적 증강 뷰에 의존하여 저동질성 결함을 뷰에 보존한다. 
 
