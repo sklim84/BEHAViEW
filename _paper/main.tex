@@ -107,40 +107,21 @@
 
 \section{Related Work}\label{sec:related_work}
 
-거래 네트워크에서 사기 탐지와 자금 세탁 방지를 위해 GNN을 활용한 기존 연구들은 대부분 라벨을 활용한 지도 학습에 기반한다\cite{cheng2025graph}. 대표적으로 라벨 분포 샘플링을 사용하는 PC-GNN\cite{liu2021pick}, fraud-aware 이웃 선택을 수행하는 GraphConsis\cite{liu2020alleviating}와 CARE-GNN\cite{dou2020enhancing}, 불균형·다중 관계 데이터를 다루는 FraudRE\cite{zhang2021fraudre}와 RioGNN\cite{peng2021reinforced}, 시공간·이종 패턴을 모델링하는 GTAN\cite{cheng2020graph}과 xFraud\cite{rao2020xfraud}, 라벨-aware 다중 클래스 문제를 다루는 LHFD\cite{wang2023label} 등이 있다. 그러나 이들 방법은 라벨 의존도가 높아 실제 운영 환경에서 cold-start 문제를 피하기 어렵다. 또한 저동질성 문제를 완화하기 위해 H2GCN\cite{zhu2020beyond}, Geom-GCN\cite{pei2020geom}, FAGCN\cite{bo2021beyond}, GBK-GNN\cite{du2022gbk}, ACM-GCN\cite{luan2022acmgcn}, GPR-GNN\cite{chien2021adaptive}, LINKX\cite{zhu2021linkx} 등 다양한 아키텍처 기반의 보강 기법이 제안되어 왔으나, 이들 방법은 입력 그래프의 구조 자체는 변경하지 않기 때문에 ``거래 그래프에서 의심–의심 엣지가 희소하다''는 형태의 동질성 결함을 근본적으로 해소하기는 어렵다.
+거래 네트워크에서 사기 탐지와 자금 세탁 방지를 위해 GNN을 활용한 기존 연구들은 대부분 라벨을 활용한 지도 학습에 기반한다\cite{cheng2025graph}. 대표적으로 PC-GNN\cite{liu2021pick}(라벨 분포 샘플링), GraphConsis\cite{liu2020alleviating}/CARE-GNN\cite{dou2020enhancing}(fraud-aware 이웃 선택), FraudRE\cite{zhang2021fraudre}/RioGNN\cite{peng2021reinforced}(불균형·다중 관계), GTAN\cite{cheng2020graph}/xFraud\cite{rao2020xfraud}(시공간·이종 패턴), LHFD\cite{wang2023label}(라벨-aware 다중 클래스) 등이 있다. 그러나 이들 방법은 라벨 의존도가 높아 실제 운영 환경에서 cold-start 문제를 피하기 어렵다.
 
-\begin{table}[t]
-\centering
-\small
-\caption{기존 기법(지도학습/구조-고정 저동질성 GNN)과 \method 비교}
-\label{tab:rw_vs_ours}
-\begin{tabular}{p{2.6cm}p{5.6cm}p{5.6cm}}
-\hline
-\textbf{비교 항목} & \textbf{기존 기법 (line~110)} & \textbf{\method (본 연구)} \\
-\hline
-학습 패러다임 & 라벨 기반 지도학습 중심 (fraud label 필요) & 라벨 없이 자기지도 학습 가능 (contrastive 설정) \\
-입력 그래프 구조 & 거래 그래프 구조를 그대로 사용; message passing/아키텍처만 수정 & 거래 그래프는 유지하되, 행동 유사도 기반 k-NN \emph{보조 view}를 추가 \\
-저동질성(anti-homophily) 대응 & 구조가 anti-homophily이면 근본 신호 부족 문제 지속 & k-NN view에서 의심 계좌 간 연결을 강화해 동질성(관측치) 회복 \\
-Cold-start 적합성 & 라벨 희소/지연 환경에서 제약 큼 & 라벨 없이 사전학습 가능하여 cold-start에 유리 \\
-핵심 가정/신호원 & 거래 엣지 이웃에 유의미한 라벨/패턴 신호 존재 & 행동 패턴 유사도(금액/시간/빈도/엔트로피 등)에서 대조 신호를 확보 \\
-출력/활용 & 감독 신호로 직접 분류 성능 최적화 & 사후 다운스트림(분류기)에서 활용 가능한 일반 표현 학습 \\
-\hline
-\end{tabular}
-\end{table}
+저동질성 그래프를 다루기 위해 H2GCN\cite{zhu2020beyond}, Geom-GCN\cite{pei2020geom}, FAGCN\cite{bo2021beyond}, GBK-GNN\cite{du2022gbk}, ACM-GCN\cite{luan2022acmgcn}, GPR-GNN\cite{chien2021adaptive}, LINKX\cite{zhu2021linkx} 등 message passing/아키텍처를 보강하는 접근이 활발하나, 입력 그래프의 구조 자체는 변경하지 않는다. 따라서 거래 그래프에서 의심--의심 엣지가 희소한 경우에는, 이웃에서 획득 가능한 감독 신호가 약해 동질성 결함을 근본적으로 해소하기 어렵다.
 
-\method 은 이와는 독립적으로, 표준 GCN 구조는 그대로 유지하면서도 행동 기반 k-NN 보조 view를 통해 관측된 동질성을 크게 증대시킨다($h_{\text{tx}}{=}0.690 \to h_{\text{knn}}{=}0.981$).
+이러한 한계를 완화하기 위해 그래프 대조 학습(GCL)이 제안되었으나, DGI~\cite{velivckovic2018deep}, GRACE~\cite{zhu2020deep}, GraphCL~\cite{you2020graph}, GCA~\cite{zhu2021graph}, BGRL~\cite{thakoor2021large}, GBT~\cite{bielak2022graph}, MVGRL~\cite{hassani2020contrastive} 등 다수의 방법은 동일 그래프에 대한 확률적 증강 view에 의존하므로, anti-homophily가 심한 입력에서는 그 결함이 view에도 그대로 남는다. Augmentation-free 계열(AFGRL~\cite{lee2022augmentation}, SimGRACE~\cite{xia2022simgrace}, CCA-SSG~\cite{zhang2021canonical}, GraphMAE~\cite{hou2022graphmae}, S2GAE~\cite{li2023s2gae}) 또한 view를 입력 그래프가 아니라 표현(embedding) 수준에서 생성하기 때문에, 엣지 구조에서의 동질성(의심–의심 연결 부족)을 직접 보정하기는 어렵다.
 
-DGI~\cite{velivckovic2018deep}, GRACE~\cite{zhu2020deep}, GraphCL~\cite{you2020graph}, GCA~\cite{zhu2021graph}, BGRL~\cite{thakoor2021large}, GBT~\cite{bielak2022graph}, MVGRL~\cite{hassani2020contrastive} 등 GCL 방법론은 모두 동일한 그래프 확률적 증강 뷰에 의존하여 저동질성 결함을 뷰에 보존한다. 
+한편 k-NN view를 도입한 MLGCL~\cite{shang2023mlgcl} 및 GCPAL~\cite{lu2024graph}은 모든 피처를 사용하여 k-NN 그래프를 구축함으로써 거래 그래프와의 직교성이 약화되었고, 의심 계좌 간 연결성이 거래 그래프(1:5.7)보다 오히려 악화된 수준(1:9.7)으로 보고되었다. 또한 k-NN 구축 피처 선택과 contrastive level(노드 vs. 서브그래프)에 대한 체계적 분석이 이루어지지 않았다.
 
-Augmentation-free 대안 (AFGRL~\cite{lee2022augmentation}, SimGRACE~\cite{xia2022simgrace}, CCA-SSG~\cite{zhang2021canonical}, GraphMAE~\cite{hou2022graphmae}, S2GAE~\cite{li2023s2gae})는 입력 그래프의 구조적 동질성(예: 동일 라벨/클래스 노드가 엣지로 연결될 확률·비율)을 보정하기보다는, representation 공간에서 view를 생성하는 방식으로 학습한다. 
+\method 은 표준 GCN 구조를 유지하면서도, 거래 구조에서 분리된 행동 피처로 k-NN \emph{보조 view를} 구축해 관측된 동질성을 크게 증대시키고($h_{\text{tx}}{=}0.690 \to h_{\text{knn}}{=}0.981$), view 구성과 contrastive level을 교차한 분석으로 이 한계를 정면으로 다룬다.
 
-k-NN view를 활용한 MLGCL~\cite{shang2023mlgcl} 과 GCPAL~\cite{lu2024graph} 은 가용한 모든 피처로 k-NN을 구축하여 의심 계좌 간 연결을 거래 그래프 (1:5.7) 보다 악화 (1:9.7) 시키며, k-NN 피처 선택과 contrastive level의 체계적 분석이 이루어지지 않았다. 
+또한 graph anomaly detection 분야에서는 DOMINANT~\cite{ding2019dominant}, CoLA~\cite{liu2021anomaly}, ANEMONE~\cite{jin2021anemone}, BWGNN~\cite{tang2022rethinking}, BOND~\cite{liu2022bond} 등이 unsupervised 탐지 기법을 제안했으나, 의도적인 evasion(분할 거래/layering)이 존재하는 실거래 환경을 대상으로 한 검증은 여전히 제한적이다.
 
-한편 graph anomaly detection 분야에서 DOMINANT~\cite{ding2019dominant}, CoLA~\cite{liu2021anomaly}, ANEMONE~\cite{jin2021anemone}, BWGNN~\cite{tang2022rethinking}, BOND~\cite{liu2022bond} 등이 unsupervised 탐지를 연구하였으나, 의도적인 evasion(분할 거래/layering) 을 가진 실거래 환경의 검증은 제한적이다.
+Negative-sample-free 패러다임(BYOL~\cite{grill2020bootstrap}, BarlowTwins~\cite{zbontar2021barlow}, SimSiam~\cite{chen2021exploring})에서 collapse를 방지하는 핵심 요인이 BatchNorm~\cite{ioffe2015batch}의 암묵적 효과라는 점이 보고되었으며~\cite{tian2021understanding}, 본 연구는 이 메커니즘이 대규모 심각 불균형 AML 환경에서 특히 결정적임을 정량적으로 입증하고, 이를 정리(Theorem~\ref{thm:bn_collapse})로 엄밀히 정식화한다. 
 
-Negative-sample-free 패러다임 (BYOL~\cite{grill2020bootstrap}, BarlowTwins~\cite{zbontar2021barlow}, SimSiam~\cite{chen2021exploring}) 의 collapse 회피는 BatchNorm~\cite{ioffe2015batch} 의 implicit 효과에 기인한다고 보고되었으며~\cite{tian2021understanding}, 본 연구는 이 메커니즘이 대규모 불균형 AML 환경에서 결정적임을 정량적으로 실증하고 정리로 형식화한다 (Theorem~\ref{thm:bn_collapse}). 
-
-클래스 불균형 보강 (GraphSMOTE~\cite{zhao2021graphsmote}, ReNode~\cite{chen2021renode}, TAM~\cite{song2022tam}) 도 라벨 환경에 국한되어 본 연구의 자기지도 설정과 직접 비교되지 않는다. 확장된 비교는 부록~\ref{app:rw_extended} 에 수록한다.
+클래스 불균형을 다루는 보강 기법(GraphSMOTE~\cite{zhao2021graphsmote}, ReNode~\cite{chen2021renode}, TAM~\cite{song2022tam}) 역시 라벨이 주어진 환경에 한정되어 있어, 본 연구의 자기지도 설정과 직접적인 비교는 불가능하다. 보다 확장된 비교 결과는 부록~\ref{app:rw_extended}에 제시한다.
 
 \section{Proposed Method}\label{sec:method}
 
