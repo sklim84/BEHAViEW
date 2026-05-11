@@ -660,7 +660,7 @@ $V = V_S \cup V_B$ 는 의심 ($S$) 과 정상 ($B$) 노드 집합. 각 노드 $
 \begin{equation}\label{eq:sep}
     \Pr\big[\|x - X'\| < \|x - X''\|\big] \;\geq\; 1 - \epsilon.
 \end{equation}
-즉, same-class 이웃이 cross-class 이웃보다 가까울 확률이 $1 - \epsilon$ 이상이며, $\epsilon = 0$ 은 deterministic separation 에 해당한다. $G_{\text{knn}, k}$ 는 Euclidean 거리 기준 k-NN graph 로, 각 노드가 가장 가까운 $k$ 노드와 연결된다.
+즉, same-class 이웃이 cross-class 이웃보다 가까울 확률이 $1 - \epsilon$ 이상이며, $\epsilon = 0$는 deterministic separation에 해당한다. $G_{\text{knn}, k}$ 는 Euclidean 거리 기준 k-NN graph로, 각 노드가 가장 가까운 $k$ 노드와 연결된다.
 
 \subsection{View-level Homophily Recovery}\label{app:theory_view}
 
@@ -668,7 +668,7 @@ $V = V_S \cup V_B$ 는 의심 ($S$) 과 정상 ($B$) 노드 집합. 각 노드 $
     h(G_{\text{knn}, k}) \;\geq\; 1 - \frac{N - 1}{k} \exp\!\left(-\frac{\big((N_{\min}-1)(1-\epsilon) - k\big)^2}{2(N_{\min}-1)(1-\epsilon)}\right).
 \end{equation}
 
-source $u$ 의 cross-class 후보 $B_j$ 가 top-$k$ 에 들어가려면 $Z_j := |\{i : \|x_u - x_{S_i}\| < \|x_u - x_{B_j}\|\}| < k$ 이어야 한다. 가정~\eqref{eq:sep} 에 의해 $Z_j \succeq \text{Binom}(N_S{-}1, 1{-}\epsilon)$. Chernoff 하한 + union bound 적용으로 식~\eqref{eq:knn_bound}. $\epsilon=0$ 일 때 $h(G_{\text{knn},k}) = 1$ (deterministic limit).
+source $u$ 의 cross-class 후보 $B_j$ 가 top-$k$ 에 들어가려면 $Z_j := |\{i : \|x_u - x_{S_i}\| < \|x_u - x_{B_j}\|\}| < k$ 이어야 한다. 가정~\eqref{eq:sep} 에 의해 $Z_j \succeq \text{Binom}(N_S{-}1, 1{-}\epsilon)$. Chernoff 하한과 union bound 적용으로 식~\eqref{eq:knn_bound}. $\epsilon=0$ 일 때 $h(G_{\text{knn},k}) = 1$ (deterministic limit).
 
 거래 그래프 $G_{\text{tx}}$ 에 대한 생성 모델로 DCSBM~\cite{karrer2011stochastic} 을 구축한다. 각 노드 $v$ 의 activity factor $\theta_v > 0$ 와 class-pair coupling $\omega_{y_u, y_v}$ 에 대해
 \begin{equation}\label{eq:dcsbm}
@@ -678,36 +678,36 @@ $\Theta_c := \sum_{v: y_v = c} \theta_v$ 라 두면
 \[
     h(G_{\text{tx}}) = \frac{\Theta_S^2 \omega_{SS} + \Theta_B^2 \omega_{BB}}{\Theta_S^2 \omega_{SS} + 2\Theta_S\Theta_B \omega_{SB} + \Theta_B^2 \omega_{BB}}.
 \]
-HOFINET 에서 의심 계좌가 high-activity hubs 이므로 $\Theta_S / \Theta_B$ 가 inflate 되어 $h(G_{\text{tx}}) < \rho^2 + (1-\rho)^2$ (random baseline) 이 성립한다.
+HOFINET에서 의심 계좌가 high-activity hubs이므로 $\Theta_S / \Theta_B$가 inflate 되어 $h(G_{\text{tx}}) < \rho^2 + (1-\rho)^2$ (random baseline) 이 성립한다.
 
 \begin{equation}\label{eq:gap}
     h(G_{\text{knn}, k}) - h(G_{\text{tx}}) \;\geq\; 1 - \alpha - \tfrac{N - 1}{k} \exp\!\left(-\tfrac{((N_{\min}-1)(1-\epsilon) - k)^2}{2(N_{\min}-1)(1-\epsilon)}\right).
 \end{equation}
-HOFINET ($N = 452{,}816$, $N_{\min} = 9{,}644$, $k = 10$, $\alpha = 0.690$) 에서 $\epsilon = 0.05$ 가정 시 식~\eqref{eq:gap} 의 하한은 $1 - 0.690 - 10^{-1986} \approx 0.310$. 측정 gap $0.981 - 0.690 = 0.291$ 는 이를 약 $0.019$ 미달한다. 미달 폭은 (i) $\epsilon$ 의 비균일성 (cluster boundary 노드의 ambiguity), (ii) DCSBM 의 i.i.d.\ 가정 위배 (mule-network 등 의도적 구조) 에 기인한다. 본 정리의 하한이 보수적 (수치적으로 거의 $1 - \alpha$ 에 수렴) 이라는 점은, $\epsilon \in (0, 1)$ 가 충분히 작으면 추가 보정 없이도 측정 gap 이 하한 근방을 통과함을 의미한다.
+HOFINET ($N = 452{,}816$, $N_{\min} = 9{,}644$, $k = 10$, $\alpha = 0.690$) 에서 $\epsilon = 0.05$ 가정 시 식~\eqref{eq:gap} 의 하한은 $1 - 0.690 - 10^{-1986} \approx 0.310$입니다. 측정 gap $0.981 - 0.690 = 0.291$ 는 이를 약 $0.019$ 미달한다. 미달 폭은 (i) $\epsilon$ 의 비균일성 (cluster boundary 노드의 ambiguity), (ii) DCSBM의 i.i.d. 가정 위배 (mule-network 등 의도적 구조) 에 기인한다. 본 정리의 하한이 보수적 (수치적으로 거의 $1 - \alpha$ 에 수렴) 이라는 점은, $\epsilon \in (0, 1)$ 가 충분히 작으면 추가 보정 없이도 측정 gap이 하한 근방을 통과함을 의미한다.
 
 \subsection{Aggregation-level Signal Preservation}\label{app:theory_pool}
 
-노드 $v$ 의 hidden representation 을 $z_v = s_v \mu + \eta_v \in \mathbb{R}^d$ 로 표기. $s_v \in \{+1, -1\}$ 은 의심과 정상의 signed signal, $\mu \in \mathbb{R}^d$ 는 class-discriminative direction, $\eta_v \perp \mu$ 는 i.i.d.\ zero-mean noise with $\|\eta_v\| \leq \epsilon \|\mu\|$. 두 pool variant 비교: mean pool (식~\eqref{eq:subgraph_pool}) vs heterophily-aware pool $z_v^{(\text{hap})} = (z_v + \sum_u w_{uv} z_u) / (1 + \sum_u w_{uv})$, $w_{uv} = \max(\cos(z_u, z_v), 0)$. Post-pool signal $\rho^{(\cdot)} := \langle z_v^{(\cdot)}, \mu\rangle / \|\mu\|^2$.
+노드 $v$ 의 hidden representation을 $z_v = s_v \mu + \eta_v \in \mathbb{R}^d$로 표기한다. $s_v \in \{+1, -1\}$는 의심과 정상의 signed signal이며, $\mu \in \mathbb{R}^d$ 는 class-discriminative direction이고, $\eta_v \perp \mu$ 는 i.i.d.\ zero-mean noise with $\|\eta_v\| \leq \epsilon \|\mu\|$이다. 두 pool variant 비교: mean pool (식~\eqref{eq:subgraph_pool})과 heterophily-aware pool $z_v^{(\text{hap})} = (z_v + \sum_u w_{uv} z_u) / (1 + \sum_u w_{uv})$, $w_{uv} = \max(\cos(z_u, z_v), 0)$. Post-pool signal $\rho^{(\cdot)} := \langle z_v^{(\cdot)}, \mu\rangle / \|\mu\|^2$.
 
-직접 계산: $\mathbb{E}[\rho^{(\text{mean})}] = (s_v + \sum_{u \in \mathcal{N}(v)} \mathbb{E}[s_u]) / (k+1) = (1 + k(1 - 2\eta_h)) / (k+1)$. 분산은 $\eta_v$ 의 i.i.d.\ 가정과 $\|\eta_v\|^2 \leq \epsilon^2 \|\mu\|^2$ 으로부터 $\leq \epsilon^2 / (k+1)$.
+직접 계산: $\mathbb{E}[\rho^{(\text{mean})}] = (s_v + \sum_{u \in \mathcal{N}(v)} \mathbb{E}[s_u]) / (k+1) = (1 + k(1 - 2\eta_h)) / (k+1)$. 분산은 $\eta_v$ 의 i.i.d.\ 가정과 $\|\eta_v\|^2 \leq \epsilon^2 \|\mu\|^2$ 으로부터 $\leq \epsilon^2 / (k+1)$이다.
 
-cross-class neighbor $u$ 에 대해 $\cos(z_u, z_v) = -1 + O(\epsilon^2) < 0$ 이므로 $w_{uv} = \max(\cos, 0) = 0$. Same-class neighbor 에 대해 $\cos = 1 - O(\epsilon^2)$. 따라서 cross-class 기여가 차단되어 $\mu$-projection 하한이 명제식.
+cross-class neighbor $u$ 에 대해 $\cos(z_u, z_v) = -1 + O(\epsilon^2) < 0$ 이므로 $w_{uv} = \max(\cos, 0) = 0$. Same-class neighbor에 대해 $\cos = 1 - O(\epsilon^2)$. 따라서 cross-class 기여가 차단되어 $\mu$-projection 하한이 명제식이다.
 
 \begin{corollary}[Pool-level gap]\label{cor:gap_pool}
 $\eta_h \in [1/2, 1]$ 에서 $\mathbb{E}[\rho^{(\text{hap})} - \rho^{(\text{mean})}] \geq 2 \eta_h k/(k+1) - O(\epsilon^2)$.
 \end{corollary}
 
-DCSBM~\eqref{eq:dcsbm} 하 의심 source $v$ 의 ego-neighborhood heterophily 는
+DCSBM~\eqref{eq:dcsbm} The source of suspicion $v$ is ego-neighborhood heterophily.
 \begin{equation}\label{eq:eta_dcsbm}
     \eta_h^{(v)} \;=\; \frac{1}{1 + (\Theta_S' / \Theta_B)(\omega_{SS} / \omega_{SB})}, \quad \Theta_S' = \Theta_S - \theta_v.
 \end{equation}
-HOFINET 파라미터 ($\Theta_S \approx 6.94 \times 10^4$, $\Theta_B \approx 6.20 \times 10^5$, $\omega_{SS}/\omega_{SB} \approx 3.45$) 대입 시 typical 의심 source 는 $\eta_h \approx 0.72$, high-activity hub 는 $0.95$. 측정 $\eta_h \approx 0.85$ (S-S/S-B = 1{:}5.7) 와 2\% 이내 일치.
+HOFINET 파라미터 ($\Theta_S \approx 6.94 \times 10^4$, $\Theta_B \approx 6.20 \times 10^5$, $\omega_{SS}/\omega_{SB} \approx 3.45$) 대입 시 typical 의심 source는 $\eta_h \approx 0.72$, high-activity hub는 $0.95$. 측정 $\eta_h \approx 0.85$ (S-S/S-B = 1{:}5.7) 와 2\% 이내 일치.
 
-$\eta_h = 0.85$, $k = 10$, $\epsilon = 0.2$ 대입: $\mathbb{E}[\rho^{(\text{mean})}] \approx -0.545$ (signal 역전), $\mathbb{E}[\rho^{(\text{hap})}] \geq 0.93$. 즉 setting~(c) (transaction graph + mean pool) 에서 의심 신호가 sign 자체가 뒤집히는 반면, HAP 은 $\sim 95\%$ 수준 보존.
+$\eta_h = 0.85$, $k = 10$, $\epsilon = 0.2$ 대입: $\mathbb{E}[\rho^{(\text{mean})}] \approx -0.545$ (signal 역전), $\mathbb{E}[\rho^{(\text{hap})}] \geq 0.93$. 즉 setting~(c) (transaction graph + mean pool) 에서 의심 신호가 sign 자체가 뒤집히는 반면, HAP은 $\sim 95\%$ 수준이 보존된다.
 
 \subsection{Cross-Dataset Verification}\label{app:theory_verify}
 
-세 데이터셋 모두에서 정리~\ref{thm:combined} 하한과 식~\eqref{eq:eta_dcsbm} 의 DCSBM 예측을 검증한다 (Table~\ref{tab:theory_verify}). (i) HOFINET 과 AMLworld 의 측정 동질성 격차는 $\epsilon = 0.05$ 가정 하한과 $\sim 0.02$ 이내로 일치 (작은 미달 폭은 separability $\epsilon$ 의 비균일성으로 설명) 하나, AMLNet 의 측정 gap (0.109) 은 하한 (0.209) 을 0.10 만큼 유의미하게 미달하는데 이는 작은 그래프 규모 (11K nodes) 와 높은 prevalence (13.5\%) 가 class-separability 가정을 가장 약화시키기 때문이다. (ii) 측정 ego-heterophily 가 mean-pool flip threshold $1/2 + 1/(2k) = 0.55$ ($k=10$) 를 세 데이터셋 모두에서 초과한다. DCSBM 예측은 측정된 aggregated $\eta_h$ 를 5--11\% 만큼 과소 예측하는데, 이는 degree heterogeneity 만으로 설명되지 않는 추가 anti-homophily 메커니즘 (의도적 layering, mule-network) 의 존재를 시사한다.
+세 데이터셋 모두에서 정리~\ref{thm:combined} 하한과 식~\eqref{eq:eta_dcsbm} 의 DCSBM 예측을 검증한다 (Table~\ref{tab:theory_verify}). (i) HOFINET과 AMLworld의 측정 동질성 격차는 $\epsilon = 0.05$ 가정 하한과 $\sim 0.02$ 이내로 일치하며 (작은 미달 폭은 separability $\epsilon$ 의 비균일성으로 설명됨) 다만, AMLNet의 측정 gap (0.109) 은 하한 (0.209) 을 0.10 만큼 유의미하게 미달하는데, 이는 작은 그래프 규모 (11K nodes) 와 높은 prevalence (13.5\%) 가 class-separability 가정을 가장 약화시키기 때문이다. (ii) 측정된 ego-heterophily는 mean-pool flip threshold $1/2 + 1/(2k) = 0.55$ ($k=10$) 를 세 데이터셋 모두에서 초과한다. DCSBM 예측은 측정된 aggregated $\eta_h$ 를 5--11\% 만큼 과소 예측하는데, 이는 degree heterogeneity만으로 설명되지 않는 추가적인 anti-homophily 메커니즘 (의도적 layering, mule-network) 의 존재를 시사한다.
 
 \begin{table}[h]
 \centering
@@ -731,15 +731,15 @@ AMLNet   & 0.791 & 0.900 & 0.109 & $\geq$0.209 & 0.878 & 0.783 & \cmark \\
 
 \subsection{HOFINET}\label{app:dataset_hofinet}
 
-HOFINET 데이터셋은 한국의 은행 간 이체 결제망인 Home and Firm Banking Network 를 기반으로 구축한 합성 거래 데이터이다. Home and Firm Banking Network 는 금융결제원 (Korea Financial Telecommunications \& Clearings Institute, KFTC) 이 운영하는 은행간 이체 공동망으로, 인터넷·모바일뱅킹 등 가계 채널과 펌뱅킹 등 기업 채널의 타행 이체를 통합 처리한다. 본 연구가 사용한 스냅샷은 452,816개 계좌 (노드) 와 약 470만 건 (4,732,130건) 의 유향 멀티엣지로 구성되며, 의심 계좌 비율은 2.13\% (9,644 suspicious accounts) 이다. 합성 시뮬레이션은 분할거래 (structuring), 다단계 이체 (layering), mule-network 등 6가지 AML 유형을 모델링하며, 데이터 기간은 2021년 3분기부터 2024년 4분기까지 40개월에 해당한다.
+HOFINET 데이터셋은 한국의 은행 간 이체 결제망인 Home and Firm Banking Network를 기반으로 구축한 합성 거래 데이터이다. Home and Firm Banking Network는 금융결제원 (Korea Financial Telecommunications \& Clearings Institute, KFTC) 이 운영하는 은행 간 이체 공동망으로, 인터넷·모바일뱅킹 등 가계 채널과 펌뱅킹 등 기업 채널의 타행 이체를 통합 처리한다. 본 연구가 사용한 스냅샷은 452,816개 계좌 (노드) 와 약 470만 건 (4,732,130건) 의 유향 멀티엣지로 구성되며, 의심 계좌 비율은 2.13\% (9,644 suspicious accounts)이다. 합성 시뮬레이션은 분할거래 (structuring), 다단계 이체 (layering), mule-network 등 6가지 AML 유형을 모델링하며, 데이터 기간은 2021년 3분기부터 2024년 4분기까지 40개월에 해당한다.
 
 \subsection{AMLworld}\label{app:dataset_amlworld}
 
-AMLworld~\cite{amlpatterns2024realistic} 는 NeurIPS 2023 Datasets \& Benchmarks Track 에서 공개된 합성 AML 벤치마크이다. 본 연구는 HI-Small (high illicit ratio, small size) 변형을 사용하며, 515,088개 계좌와 5,078,345건의 유향 멀티엣지로 구성된다. 거래 수준의 laundering 비율은 0.10\% 이며, 계좌 수준의 의심 비율은 1.23\% 로 HOFINET (2.13\%) 보다 낮다. 시뮬레이션은 fan-out, fan-in, scatter-gather, gather-scatter, cycle, bipartite, stack, random 8가지 AML 패턴을 모델링한다.
+AMLworld~\cite{amlpatterns2024realistic} 는 NeurIPS 2023 Datasets \& Benchmarks Track에서 공개된 합성 AML 벤치마크이다. 본 연구는 HI-Small (high illicit ratio, small size) 변형을 사용하며, 515,088개 계좌와 5,078,345건의 유향 멀티엣지로 구성된다. 거래 수준의 laundering 비율은 0.10\% 이며, 계좌 수준의 의심 비율은 1.23\% 로 HOFINET (2.13\%) 보다 낮다. 시뮬레이션은 fan-out, fan-in, scatter-gather, gather-scatter, cycle, bipartite, stack, random 8가지 AML 패턴을 모델링한다.
 
 \subsection{AMLNet}\label{app:dataset_amlnet}
 
-AMLNet~\cite{huda2025amlnet} 은 공개된 소규모 합성 AML 벤치마크로, 11,000개 계좌와 1,090,172건의 유향 멀티엣지로 구성된다. 계좌 수준의 의심 비율은 13.52\% (1,487 suspicious) 로 HOFINET 및 AMLworld 보다 한 자릿수 이상 높아 high-prevalence regime 의 검증을 가능하게 한다. AMLworld 와 동일한 22개 행동 변수 피처 스키마를 공유하여 cross-dataset 비교 (부록~\ref{app:transfer}) 에 적합하다.
+AMLNet~\cite{huda2025amlnet} 은 공개된 소규모 합성 AML 벤치마크로, 11,000개 계좌와 1,090,172건의 유향 멀티엣지로 구성된다. 계좌 수준의 의심 비율은 13.52\% (1,487 suspicious) 로 HOFINET 및 AMLworld보다 한 자릿수 이상 높아 high-prevalence regime의 검증을 가능하게 한다. AMLworld와 동일한 22개 행동 변수 피처 스키마를 공유하여 cross-dataset 비교 (부록~\ref{app:transfer}) 에 적합하다.
 
 \subsection{Transaction-to-Account Label Aggregation}\label{app:dataset_label}
 
