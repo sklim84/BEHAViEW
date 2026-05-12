@@ -1,7 +1,7 @@
-# BECON: Behavioral Subgraph Contrast for Anti-Money Laundering in Low-Homophily Transaction Networks
+# BehaView: Behavioral Subgraph Contrast for Anti-Money Laundering in Low-Homophily Transaction Networks
 
 거래 네트워크의 **저동질성**(low-homophily)과 **극심한 클래스 불균형**(~2% 의심 비율)으로 인해 기존 GNN 및 그래프 대조학습(GCL) 기반 자금세탁(AML) 탐지는 한계를 보입니다.
-**BECON**은 행동적 유사도 기반 k-NN 그래프를 contrastive view로 구축하여 의심 계좌 간 연결 비율(S-S/S-B)을 1:5.7에서 1:1.4로 크게 개선하고, 서브그래프 풀링과의 결합을 통해 GCL 성능을 극대화합니다.
+**BehaView**은 행동적 유사도 기반 k-NN 그래프를 contrastive view로 구축하여 의심 계좌 간 연결 비율(S-S/S-B)을 1:5.7에서 1:1.4로 크게 개선하고, 서브그래프 풀링과의 결합을 통해 GCL 성능을 극대화합니다.
 실제 은행간 이체 데이터(HOFINET)에서 **라벨 없이** 학습한 자기지도 표현만으로 지도학습 모델(MLP, XGBoost)과 동등한 탐지 성능(F1_susp 0.682)을 달성합니다.
 
 ---
@@ -12,7 +12,7 @@
 
 **두 축:**
 
-| 축 | 기존 GCL | BECON |
+| 축 | 기존 GCL | BehaView |
 |----|---------|-------|
 | **View 구성** | 동일 그래프에 확률적 증강 | **Behavioral k-NN graph** (행동적 유사 계좌끼리 연결) |
 | **Contrastive Level** | Node-level 대조 | **Subgraph pooling** (이웃 포함 집계) |
@@ -91,7 +91,7 @@
 | MLP | 0.679 | 0.991 | 0.616 | Supervised |
 | GraphSAGE | 0.677 | 0.992 | 0.610 | Supervised GNN |
 | XGBoost | 0.675 | 0.992 | 0.665 | Tabular |
-| **BECON (d)** | **0.673** | 0.991 | 0.604 | **Self-supervised** |
+| **BehaView (d)** | **0.673** | 0.991 | 0.604 | **Self-supervised** |
 | LightGBM | 0.670 | 0.992 | 0.662 | Tabular |
 | GAT | 0.534 | 0.988 | 0.565 | Supervised GNN |
 | GCN | 0.250 | 0.935 | 0.316 | Supervised GNN |
@@ -102,7 +102,7 @@
 |------|---------|-------|-------|------|
 | XGBoost | 0.073 | 0.753 | 0.037 | Tabular |
 | LightGBM | 0.070 | 0.752 | 0.037 | Tabular |
-| **BECON (d)** | **0.066** | 0.608 | 0.027 | **Self-supervised** |
+| **BehaView (d)** | **0.066** | 0.608 | 0.027 | **Self-supervised** |
 | GraphSAGE | 0.050 | 0.671 | 0.024 | Supervised GNN |
 | MLP | 0.048 | 0.695 | 0.024 | Supervised |
 | GAT | 0.047 | 0.701 | 0.023 | Supervised GNN |
@@ -115,13 +115,13 @@
 3. **BatchNorm이 결정적**: ~10배 성능 격차, per-layer BN encoder 4종 모두 0.673~0.674 수렴
 4. **k=10 최적, 강건**: k=5~50 범위에서 안정적
 5. **일반성 확인**: HOFINET + AMLworld 두 데이터셋에서 동일 패턴
-6. **라벨 없이 Supervised에 경쟁적**: HOFINET BECON 0.673 vs MLP 0.679 (Δ=0.005, paired t-test 통계 유의하나 std 범위 내), AMLworld에서 모든 GNN supervised baseline (0.045~0.050) 일관 상회
+6. **라벨 없이 Supervised에 경쟁적**: HOFINET BehaView 0.673 vs MLP 0.679 (Δ=0.005, paired t-test 통계 유의하나 std 범위 내), AMLworld에서 모든 GNN supervised baseline (0.045~0.050) 일관 상회
 
 ---
 
 ## Reproducibility & Known Issue: PyGCL `get_split` Semantics
 
-`models/subgraph_cl.py` 의 이전 버전(`v0.x` 이하)은 PyGCL의 `GCL.eval.get_split` 을 사용했습니다. 이 함수는 인자 `(train_ratio=0.1, test_ratio=0.8)` 호출 시 dictionary key 의미가 어긋나, BECON 논문 §4.1의 의도된 10/10/80 분할이 **실제로는 train 10% / valid 80% / test 10%** 로 적용되어 모든 평가가 `split['test']` (trailing 10%) 에서 수행되었습니다. 결과적으로 paper Tables 1–3의 모든 셀은 80% holdout이 아닌 10% holdout 산출물이었습니다.
+`models/subgraph_cl.py` 의 이전 버전(`v0.x` 이하)은 PyGCL의 `GCL.eval.get_split` 을 사용했습니다. 이 함수는 인자 `(train_ratio=0.1, test_ratio=0.8)` 호출 시 dictionary key 의미가 어긋나, BehaView 논문 §4.1의 의도된 10/10/80 분할이 **실제로는 train 10% / valid 80% / test 10%** 로 적용되어 모든 평가가 `split['test']` (trailing 10%) 에서 수행되었습니다. 결과적으로 paper Tables 1–3의 모든 셀은 80% holdout이 아닌 10% holdout 산출물이었습니다.
 
 **Fix (release `v1.0-cikm2026-rebuttal`)**:
 

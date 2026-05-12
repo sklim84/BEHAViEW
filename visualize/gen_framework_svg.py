@@ -1,5 +1,5 @@
 """
-Generate BECON framework figure as SVG → PDF (horizontal layout).
+Generate BehaView framework figure as SVG → PDF (horizontal layout).
 Usage: python visualize/gen_framework_svg.py
 """
 import cairosvg

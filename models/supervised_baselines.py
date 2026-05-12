@@ -382,7 +382,7 @@ def run_gnn_model(model_name, data, device, seed, hidden_dim=256, num_layers=2, 
     N = data.num_nodes
     y = data.y.cpu().numpy()
 
-    # 10/10/80 train/val/test split via make_split (paired with BECON SSL evaluation)
+    # 10/10/80 train/val/test split via make_split (paired with BehaView SSL evaluation)
     split = make_split(N, train_ratio=0.1, val_ratio=0.1, seed=seed)
     train_idx = split['train'].numpy()
     test_idx = split['test'].numpy()
@@ -422,7 +422,7 @@ def run_gnn_model(model_name, data, device, seed, hidden_dim=256, num_layers=2, 
 # Tabular Baselines (LightGBM, XGBoost)
 # ============================================================
 def run_tabular_model(model_name, X, y, seed):
-    # 10/10/80 split via make_split — same accounts as GNN supervised and BECON SSL
+    # 10/10/80 split via make_split — same accounts as GNN supervised and BehaView SSL
     split = make_split(len(y), train_ratio=0.1, val_ratio=0.1, seed=seed)
     train_idx = split['train'].numpy()
     test_idx = split['test'].numpy()

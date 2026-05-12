@@ -3,7 +3,7 @@
 Transaction CSV → Node features + Edge list (HOFINET/AMLworld와 동일 schema)
 
 PaySim은 FFD task (isMoneyLaundering 라벨 없음, isFraud만 존재).
-BECON 의 (γ) AML vs FFD transfer test 용으로 추출.
+BehaView 의 (γ) AML vs FFD transfer test 용으로 추출.
 
 - step: 1 step = 1 hour, 743 steps = ~30.96 days
 - Amount stats: out/in × {mean, max, std, count}
@@ -49,7 +49,7 @@ def main():
     print('[INFO] Building entropy feature (type only — no category column)...')
     type_entropy = df.groupby('source')['type'].apply(compute_entropy_feat).rename('payment_entropy')
     node_features = node_features.join(type_entropy, how='left')
-    # Add zero column to preserve schema parity (BECON expects 2 entropy features)
+    # Add zero column to preserve schema parity (BehaView expects 2 entropy features)
     node_features['currency_entropy'] = 0.0
     node_features.fillna(0, inplace=True)
 

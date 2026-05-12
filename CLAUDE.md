@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-BECON: Behavioral Subgraph Contrast for Anti-Money Laundering in Low-Homophily Transaction Networks.
+BehaView: Behavioral Subgraph Contrast for Anti-Money Laundering in Low-Homophily Transaction Networks.
 
 Core idea: Construct a **behavioral k-NN graph** as a contrastive view (instead of standard graph augmentation) and apply **subgraph-level pooling** to amplify suspicious signals. Two independent axes — view construction and contrastive level — are systematically analyzed across 10 GCL encoders.
 
@@ -55,7 +55,7 @@ Key arguments (defined in `config.py`):
 
 ## Architecture
 
-### BECON Pipeline
+### BehaView Pipeline
 
 1. **Data loading** (`data_loader.py`): CSV → behavioral features (x_behav, 22 vars) + edge_index + optional k-NN graph
 2. **k-NN view**: Behavioral features → StandardScaler → L2-norm → ball_tree k-NN → G_knn
@@ -131,8 +131,8 @@ results/                         # Experiment result CSVs
 
 ## Paper
 
-- Title: BECON: Behavioral Subgraph Contrast for Anti-Money Laundering in Low-Homophily Transaction Networks
-- Framework name: `\method` (BECON\xspace) in LaTeX
+- Title: BehaView: Behavioral Subgraph Contrast for Anti-Money Laundering in Low-Homophily Transaction Networks
+- Framework name: `\method` (BehaView\xspace) in LaTeX
 - Style: Korean draft body, English section names and captions
 - No `\textbf` in body text; `\texttt` only for framework name
 - Terminology: suspicious (not fraud), F1_susp (not F1_fraud), S-S/S-B (not F-F/F-B)

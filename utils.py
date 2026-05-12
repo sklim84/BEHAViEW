@@ -34,7 +34,7 @@ def make_split(n, train_ratio, val_ratio, seed):
     """NumPy-seeded train/valid/test split (test_ratio = 1 - train - val).
 
     Replaces PyGCL's GCL.eval.get_split, which silently swaps the 'valid' and
-    'test' slice semantics when train_ratio + test_ratio < 1 (the BECON
+    'test' slice semantics when train_ratio + test_ratio < 1 (the BehaView
     paper's intended 10/10/80 = train/val/test partition was therefore
     evaluated on the trailing 10% slice instead of the middle 80% one).
 

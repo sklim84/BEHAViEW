@@ -1,6 +1,6 @@
 """Build behavioral k-NN graphs for AMLNet and PaySim.
 
-Behavioral feature selection follows BECON convention:
+Behavioral feature selection follows BehaView convention:
   - Use amount stats + temporal + entropy
   - Exclude count features (consistent with HOFINET/AMLworld pure behavioral)
 
@@ -20,7 +20,7 @@ def build_behav_knn(node_csv, out_csv, k=10):
     df = pd.read_csv(node_csv)
     structural = {'in_dc', 'out_dc'}  # not present in AMLNet/PaySim, kept for symmetry
     excluded = {'account', 'label'}
-    # Behavioral k-NN: drop count + structural columns (BECON pure-behavioral convention)
+    # Behavioral k-NN: drop count + structural columns (BehaView pure-behavioral convention)
     behav_knn_cols = [c for c in df.columns
                       if c not in excluded
                       and c not in structural

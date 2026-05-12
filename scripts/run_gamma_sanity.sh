@@ -1,11 +1,11 @@
 #!/bin/bash
 # =============================================================
-# (γ) sanity check — does BECON pattern transfer AML → FFD?
+# (γ) sanity check — does BehaView pattern transfer AML → FFD?
 #
 # AMLNet (AML, AUSTRAC-compliant, 1.09M tx, 0.16% laundering)
 # PaySim (FFD only, 6M tx, 0.13% fraud, no AML label)
 #
-# Run BECON GBT × 4 settings × 4 seeds × 2 datasets = 32 runs.
+# Run BehaView GBT × 4 settings × 4 seeds × 2 datasets = 32 runs.
 # Compare (b)→(d) effect, (a)/(c) ordering, absolute F1 floor.
 #
 # Output:

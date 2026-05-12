@@ -492,6 +492,105 @@ def fig1_framework():
     print(f'Saved: {path}')
 
 
+def fig_rq5_baseline():
+    """RQ5: Self-supervised BehaView vs 11 supervised baselines across 3 datasets.
+
+    Values mirror Table tab:rq5 exactly (4-seed mean, std for errorbars).
+    BehaView uses setting (d) with the strongest encoder per dataset
+    (GBT on HOFINET/AMLNet, BGRL on AMLworld).
+    """
+    datasets = [
+        ('HOFINET',  r'HOFINET ($\rho{=}2.13\%$)',  0.85),
+        ('AMLworld', r'AMLworld ($\rho{=}1.23\%$)', 0.10),
+        ('AMLNet',   r'AMLNet ($\rho{=}13.52\%$)',  0.85),
+    ]
+
+    # (model, category, HOFINET[mean,std], AMLworld[mean,std], AMLNet[mean,std])
+    rows = [
+        ('XGBoost',   'Tabular',  (0.675, 0.001), (0.073, 0.002), (0.699, 0.007)),
+        ('LightGBM',  'Tabular',  (0.670, 0.001), (0.070, 0.002), (0.687, 0.011)),
+        ('MLP',       'Tabular',  (0.679, 0.002), (0.048, 0.002), (0.714, 0.005)),
+        ('GCN',       'Generic',  (0.250, 0.007), (0.045, 0.001), (0.467, 0.006)),
+        ('GAT',       'Generic',  (0.534, 0.024), (0.047, 0.001), (0.500, 0.047)),
+        ('GraphSAGE', 'Generic',  (0.677, 0.002), (0.050, 0.001), (0.708, 0.007)),
+        ('CARE-GNN',  'Fraud',    (0.108, 0.007), (0.041, 0.000), (0.443, 0.013)),
+        ('PC-GNN',    'Fraud',    (0.245, 0.005), (0.044, 0.001), (0.458, 0.006)),
+        ('BWGNN',     'Fraud',    (0.348, 0.022), (0.049, 0.001), (0.509, 0.021)),
+        ('GAGA',      'Fraud',    (0.516, 0.006), (0.046, 0.004), (0.475, 0.031)),
+        ('ConsisGAD', 'Fraud',    (0.234, 0.006), (0.045, 0.001), (0.456, 0.008)),
+        ('BehaView',  'Ours',     (0.673, 0.003), (0.066, 0.009), (0.679, 0.002)),
+    ]
+
+    cat_color = {
+        'Tabular':  '#a8c5e6',
+        'Generic':  '#bdbdbd',
+        'Fraud':    '#fcae91',
+        'Ours':     '#1f4e79',
+    }
+    cat_edge = {
+        'Tabular':  '#5b9bd5',
+        'Generic':  '#8c8c8c',
+        'Fraud':    '#d94801',
+        'Ours':     'black',
+    }
+
+    fig, axes = plt.subplots(1, 3, figsize=(13.5, 3.6))
+    x = np.arange(len(rows))
+
+    for ax, (key, title, ymax) in zip(axes, datasets):
+        col = {'HOFINET': 2, 'AMLworld': 3, 'AMLNet': 4}[key]
+        means = [r[col][0] for r in rows]
+        stds  = [r[col][1] for r in rows]
+        colors = [cat_color[r[1]] for r in rows]
+        edges  = [cat_edge[r[1]]  for r in rows]
+        lws    = [1.8 if r[1] == 'Ours' else 0.8 for r in rows]
+
+        bars = ax.bar(x, means, yerr=stds, color=colors, edgecolor=edges,
+                      linewidth=lws, capsize=2.5, error_kw={'elinewidth': 0.9})
+
+        # Highlight BehaView value on top
+        ours_idx = len(rows) - 1
+        ax.text(ours_idx, means[ours_idx] + stds[ours_idx] + ymax * 0.025,
+                f'{means[ours_idx]:.3f}', ha='center', fontsize=9,
+                fontweight='bold', color='#1f4e79')
+
+        # Reference line at BehaView value
+        ax.axhline(means[ours_idx], color='#1f4e79', linestyle=':',
+                   linewidth=0.8, alpha=0.5, zorder=0)
+
+        ax.set_xticks(x)
+        ax.set_xticklabels([r[0] for r in rows], rotation=35, ha='right', fontsize=9)
+        ax.set_ylim(0, ymax)
+        ax.set_title(title, fontsize=12)
+        ax.set_ylabel(r'$F1_{\mathrm{susp}}$', fontsize=11)
+        ax.tick_params(axis='y', labelsize=10)
+        ax.grid(axis='y', alpha=0.25, zorder=0)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+    # Shared legend at top
+    legend_handles = [
+        mpatches.Patch(facecolor=cat_color['Tabular'], edgecolor=cat_edge['Tabular'],
+                       label='Tabular (XGB, LGBM, MLP)'),
+        mpatches.Patch(facecolor=cat_color['Generic'], edgecolor=cat_edge['Generic'],
+                       label='Generic GNN (GCN, GAT, SAGE)'),
+        mpatches.Patch(facecolor=cat_color['Fraud'],   edgecolor=cat_edge['Fraud'],
+                       label='Fraud-specific GNN (CIKM\'20--ICLR\'24)'),
+        mpatches.Patch(facecolor=cat_color['Ours'],    edgecolor=cat_edge['Ours'],
+                       linewidth=1.5, label='BehaView (self-supervised, ours)'),
+    ]
+    fig.legend(handles=legend_handles, loc='upper center',
+               bbox_to_anchor=(0.5, 1.04), ncol=4, fontsize=10,
+               framealpha=0.95, edgecolor='#cccccc')
+
+    plt.tight_layout(rect=(0, 0, 1, 0.97))
+    path = os.path.join(OUT_DIR, 'fig_rq5_baseline.pdf')
+    plt.savefig(path, bbox_inches='tight', dpi=300)
+    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
+    plt.close()
+    print(f'Saved: {path}')
+
+
 if __name__ == '__main__':
     print('Generating paper figures...')
     fig_intro_homophily()
@@ -500,4 +599,5 @@ if __name__ == '__main__':
     fig3_susp_connectivity()
     fig4_bn_effect()
     fig5_setting_comparison()
+    fig_rq5_baseline()
     print(f'\nAll figures saved to {OUT_DIR}/')

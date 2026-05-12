@@ -3,7 +3,7 @@
 # Supervised baselines (RQ5) on corrected 10/10/80 split via make_split
 #
 # 6 models (gcn/gat/sage/mlp/lgbm/xgb) × 4 seeds × 2 datasets = 48 runs
-# Identical test set as BECON SSL (paired comparison enabled).
+# Identical test set as BehaView SSL (paired comparison enabled).
 #
 # Output:
 #   - HOFINET  → results/exp_results_supervised_hofinet.csv
