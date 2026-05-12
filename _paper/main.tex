@@ -149,38 +149,38 @@ Building on the discussion above, we propose \method (Figure~\ref{fig:framework}
 % Korean drafts below are kept inside \iffalse blocks for reference and are not compiled.
 
 \iffalse
-\paragraph{저동질성 그래프 학습.}
+\subsection{저동질성 그래프 학습}
 H2GCN~\cite{zhu2020beyond}, Geom-GCN~\cite{pei2020geom}, FAGCN~\cite{bo2021beyond}, GBK-GNN~\cite{du2022gbk}, ACM-GCN~\cite{luan2022acmgcn}, GPR-GNN~\cite{chien2021adaptive}, LINKX~\cite{zhu2021linkx} 등 저동질성 대응 GNN은 ego와 이웃 임베딩 분리, propagation channel 조정, 구조와 속성의 분리 처리 등을 통해 low-homophily 환경의 message passing을 개선한다. 그러나 이들 방법은 기본적으로 주어진 그래프 구조를 유지한 채 집계 방식을 조정한다. AML 거래 네트워크에서는 의심 계좌가 탐지 회피를 위해 정상 계좌와 의도적으로 거래하므로, 집계 가능한 의심-의심 이웃 엣지 자체가 부족하다. 따라서 propagation 수준의 보강만으로는 부족한 same-class neighborhood를 회복하기 어렵다. 본 연구는 거래 행동이 유사한 의심 계좌들이 서로 연결될 수 있도록, 대조학습에 사용하는 view를 행동 기반 k-NN 보조 그래프로 새로 구성한다.
 \fi
-\paragraph{\textbf{Heterophily-aware graph learning.}}
+\subsection{Heterophily-aware graph learning}
 Heterophily-aware GNN such as H2GCN~\cite{zhu2020beyond}, Geom-GCN~\cite{pei2020geom}, FAGCN~\cite{bo2021beyond}, GBK-GNN~\cite{du2022gbk}, ACM-GCN~\cite{luan2022acmgcn}, GPR-GNN~\cite{chien2021adaptive}, and LINKX~\cite{zhu2021linkx} improve message passing under low homophily by separating ego and neighbor embeddings, adjusting propagation channels, or decoupling structure from attributes. These methods adjust how aggregation is done while keeping the input graph fixed. In AML transaction networks, suspicious accounts deliberately transact with benign ones to evade detection, so suspicious-to-suspicious neighbor edges are rare. Propagation-level remedies alone are unlikely to restore the missing same-class neighborhood. We instead build the contrastive view as a behavior-based k-NN auxiliary graph so that suspicious accounts with similar transaction behavior become directly connected.
 
 \iffalse
-\paragraph{그래프 대조학습과 view 구성.}
+\subsection{그래프 대조학습과 view 구성}
 Graph Contrastive Learning (GCL)은 여러 view 간 일관성을 학습해 그래프 표현을 얻는 대표적인 자기지도 학습 방법이다. 그러나 DGI~\cite{velivckovic2018deep}, GRACE~\cite{zhu2020deep}, GraphCL~\cite{you2020graph}, GCA~\cite{zhu2021graph}, BGRL~\cite{thakoor2021large}, GBT~\cite{bielak2022graph}, MVGRL~\cite{hassani2020contrastive} 등은 대체로 동일 입력 그래프에 확률적 perturbation을 적용하여 view를 구성한다. AFGRL~\cite{lee2022augmentation}, SimGRACE~\cite{xia2022simgrace}, CCA-SSG~\cite{zhang2021canonical}, GraphMAE~\cite{hou2022graphmae}, S2GAE~\cite{li2023s2gae} 등 augmentation-free 변형은 명시적 그래프 증강을 사용하지 않지만, view를 거래 엣지 구조의 보정이 아니라 표현 또는 모델 수준에서 생성한다. 따라서 입력 거래 그래프가 anti-homophilous한 경우, 기존 GCL의 view는 저동질성 구조를 완화하기보다 그대로 유지할 가능성이 크다. 본 연구는 거래 행동의 유사성에 기반한 보조 그래프를 한쪽 view로 구성하여 graph 수준의 동질성을 회복하면서, GCL의 자기지도 학습 장점은 유지한다.
 \fi
-\paragraph{\textbf{Graph contrastive learning and view design.}}
+\subsection{Graph contrastive learning and view design.}
 Graph Contrastive Learning (GCL) is a self-supervised framework that derives graph representations by enforcing consistency across multiple views. Representative approaches, including DGI~\cite{velivckovic2018deep}, GRACE~\cite{zhu2020deep}, GraphCL~\cite{you2020graph}, GCA~\cite{zhu2021graph}, BGRL~\cite{thakoor2021large}, GBT~\cite{bielak2022graph}, and MVGRL~\cite{hassani2020contrastive}, typically obtain such views through stochastic perturbations of a single input graph. Augmentation-free approaches, including AFGRL~\cite{lee2022augmentation}, SimGRACE~\cite{xia2022simgrace}, CCA-SSG~\cite{zhang2021canonical}, GraphMAE~\cite{hou2022graphmae}, and S2GAE~\cite{li2023s2gae}, eliminate the need for explicit graph augmentations. However, they still generate views at the representation or model level, not on the transaction edge structure. On anti-homophilous transaction graphs, their views thus preserve rather than alleviate low homophily. We instead use a behavioral-similarity auxiliary graph as one view, restoring homophily at the graph level while retaining the self-supervised benefits of GCL.
 
 \iffalse
-\paragraph{Fraud GNN과 라벨 지연 문제.}
+\subsection{Fraud GNN과 라벨 지연 문제}
 GNN 기반 fraud 및 AML 모델은 fraud-aware 이웃 선택, 라벨 분포 기반 샘플링, reweighting, 시간 패턴 모델링, 다중 관계 추론 등을 통해 거래 네트워크 탐지 성능을 개선해 왔다~\cite{liu2020alleviating,dou2020enhancing,liu2021pick,peng2021reinforced,zhang2021fraudre,cheng2020graph,rao2020xfraud,wang2023label,cheng2025graph}. 이러한 방법들은 라벨이 충분히 확보된 상황에서는 효과적이지만, 학습 시점에 의심 사례 라벨이 존재한다는 전제를 둔다. AML에서 의심 라벨은 사후 조사에 의존하므로 거래 발생 후 수개월이 지나서야 확정되는 경우가 많다. 따라서 실제 AML 운영에서는 의심 라벨이 확정되기 전에도 거래 네트워크로부터 자금세탁 의심 패턴을 모델링할 수 있는 방법이 필요하다. 이 때문에 AML에서는 라벨 없이 거래 표현을 먼저 학습하는 자기지도/비지도 접근이 선택적 보강이 아니라 운영상 필요한 대안이 된다. 본 연구는 표현 학습 단계에서 라벨을 사용하지 않고, downstream 평가 head에서만 라벨을 사용함으로써 이러한 라벨 지연 문제를 완화한다.
 \fi
-\paragraph{\textbf{Fraud GNNs and label delay.}}
+\subsection{Fraud GNNs and label delay}
 GNN-based fraud and AML models have improved detection on transaction networks through fraud-aware neighbor selection, label-distribution-based sampling, reweighting, temporal-pattern modeling, and multi-relation inference~\cite{liu2020alleviating,dou2020enhancing,liu2021pick,peng2021reinforced,zhang2021fraudre,cheng2020graph,rao2020xfraud,wang2023label,cheng2025graph}. These methods work well when labels are abundant, but they assume that suspicious labels are available at training time. In AML, suspicious labels depend on retrospective investigations and are often confirmed only several months after the transaction. In production AML settings, it is therefore desirable to model suspicious patterns from the transaction network even before such labels arrive. For this reason, label-free representation learning serves as a practical alternative under operational constraints rather than an optional enhancement. We use labels only at the downstream evaluation head, which mitigates this label-delay issue.
 
 \iffalse
-\paragraph{비지도 graph anomaly detection.}
+\subsection{비지도 graph anomaly detection}
 DOMINANT~\cite{ding2019dominant}, CoLA~\cite{liu2021anomaly}, ANEMONE~\cite{jin2021anemone}, BWGNN~\cite{tang2022rethinking}, BOND~\cite{liu2022bond} 등 비지도 graph anomaly detection 연구는 노드 속성과 그래프 구조의 재구성 오차, 또는 노드-서브그래프 대조학습 등을 활용해 이상 노드를 탐지해 왔다. 그러나 이들 방법은 주로 일반 그래프 벤치마크에서 검증되었으며, 라벨 지연, 낮은 prevalence, mule-network 기반 회피, 저동질성 거래 엣지가 동시에 나타나는 AML 거래 네트워크를 중심으로 설계된 것은 아니다. 본 연구는 이러한 AML 특성을 반영하여 행동 기반 view를 구성하고, 서브그래프 풀링이 의심 신호를 증폭하는 조건과 반대로 신호를 희석할 수 있는 조건을 함께 분석한다. 또한 극심한 클래스 불균형에서 발생하는 collapse 동작까지 다룬다. 더 넓은 비교는 Appendix~\ref{app:rw_extended}에 제시한다.
 \fi
-\paragraph{\textbf{Unsupervised graph anomaly detection.}}
+\subsection{Unsupervised graph anomaly detection}
 Unsupervised graph anomaly detection methods such as DOMINANT~\cite{ding2019dominant}, CoLA~\cite{liu2021anomaly}, ANEMONE~\cite{jin2021anemone}, BWGNN~\cite{tang2022rethinking}, and BOND~\cite{liu2022bond} detect anomalous nodes through reconstruction errors over node attributes and graph structures or through node-subgraph contrastive learning. These methods are primarily evaluated on general graph benchmarks and are not specifically designed for AML transaction networks, where label delay, low prevalence, mule-network-based evasion, and low-homophily transaction edges co-occur. We tailor the view to these AML characteristics by constructing it from behavioral features, and we analyze both when subgraph pooling amplifies suspicious signals and when it instead dilutes them. We also examine the collapse behavior that arises under severe class imbalance. A broader comparison is given in Appendix~\ref{app:rw_extended}.
 
 \iffalse
 \paragraph{k-NN view 기반 그래프 대조학습.}
 MLGCL~\cite{shang2023mlgcl} 과 GCPAL~\cite{lu2024graph} 은 k-NN view를 명시적으로 도입한다는 점에서 본 연구와 가장 가깝다. AML 관점에서 중요한 쟁점은 k-NN 사용 여부 자체가 아니라, k-NN 그래프를 어떤 피처로 구성할 것인가이다. 모든 가용 피처를 함께 사용하면 degree나 centrality처럼 원 거래 그래프의 연결 구조에서 계산된 피처가 보조 그래프 구성에 다시 반영되어, 거래 topology와 독립적인 보조 view를 만들기 어렵다. 또한 기존 k-NN view 연구는 피처 선택 효과와 contrastive level 효과를 체계적으로 분리해 분석하지 않았다. 본 연구는 행동 피처만으로 k-NN view를 구성하고, view 구성 (거래 그래프 vs.\ 행동 k-NN) 과 contrastive level (노드 vs.\ 서브그래프) 을 교차한 4가지 설정을 통해 두 효과를 함께 검증한다.
 \fi
-\paragraph{\textbf{k-NN view based graph contrastive learning.}}
+\subsection{k-NN view based graph contrastive learning}
 MLGCL~\cite{shang2023mlgcl} and GCPAL~\cite{lu2024graph} are the closest prior works in that they explicitly introduce a k-NN view. From an AML perspective, the central issue is which features should define the k-NN view, not whether to use one. Using all available features lets quantities computed from the original transaction connectivity, such as degree or centrality, leak back into the auxiliary graph, which makes it hard to obtain an auxiliary view that is independent of the transaction topology. Existing k-NN view studies also do not separate the effect of feature choice from the effect of contrastive level. We build the k-NN view from behavioral features alone and validate both effects jointly through four settings that cross view construction (transaction graph vs. behavioral k-NN) and contrastive level (node vs. subgraph).
 
 \iffalse
