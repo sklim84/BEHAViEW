@@ -1,0 +1,477 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{57}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Altman et~al\mbox{.}(2023)]%
+        {amlpatterns2024realistic}
+\bibfield{author}{\bibinfo{person}{Erik Altman}, \bibinfo{person}{Jovan Blanu{\v{s}}a}, \bibinfo{person}{Luc Von~Niederh{\"a}usern}, \bibinfo{person}{B{\'e}ni Egressy}, \bibinfo{person}{Andreea Anghel}, {and} \bibinfo{person}{Kubilay Atasu}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Realistic synthetic financial transactions for anti-money laundering models}.
+\newblock \bibinfo{journal}{\emph{Advances in Neural Information Processing Systems}}  \bibinfo{volume}{36} (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Bielak et~al\mbox{.}(2022)]%
+        {bielak2022graph}
+\bibfield{author}{\bibinfo{person}{Piotr Bielak}, \bibinfo{person}{Tomasz Kajdanowicz}, {and} \bibinfo{person}{Nitesh~V Chawla}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Graph barlow twins: A self-supervised representation learning framework for graphs}.
+\newblock \bibinfo{journal}{\emph{Knowledge-Based Systems}}  \bibinfo{volume}{256} (\bibinfo{year}{2022}), \bibinfo{pages}{109631}.
+\newblock
+
+
+\bibitem[Bo et~al\mbox{.}(2021)]%
+        {bo2021beyond}
+\bibfield{author}{\bibinfo{person}{Deyu Bo}, \bibinfo{person}{Xiao Wang}, \bibinfo{person}{Chuan Shi}, {and} \bibinfo{person}{Huawei Shen}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Beyond low-frequency information in graph convolutional networks}. In \bibinfo{booktitle}{\emph{AAAI Conference on Artificial Intelligence (AAAI)}}, Vol.~\bibinfo{volume}{35}. \bibinfo{pages}{3950--3957}.
+\newblock
+
+
+\bibitem[Cardoso et~al\mbox{.}(2022)]%
+        {cardoso2022laundrograph}
+\bibfield{author}{\bibinfo{person}{M{\'a}rio Cardoso}, \bibinfo{person}{Pedro Saleiro}, {and} \bibinfo{person}{Pedro Bizarro}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{{LaundroGraph}: Self-Supervised Graph Representation Learning for Anti-Money Laundering}. In \bibinfo{booktitle}{\emph{Proceedings of the 3rd ACM International Conference on AI in Finance (ICAIF)}}. \bibinfo{pages}{130--138}.
+\newblock
+\href{https://doi.org/10.1145/3533271.3561727}{doi:\nolinkurl{10.1145/3533271.3561727}}
+
+
+\bibitem[Chen et~al\mbox{.}(2024)]%
+        {chen2024consisgad}
+\bibfield{author}{\bibinfo{person}{Nan Chen}, \bibinfo{person}{Zemin Liu}, \bibinfo{person}{Bryan Hooi}, \bibinfo{person}{Bingsheng He}, \bibinfo{person}{Rizal Fathony}, \bibinfo{person}{Jun Hu}, {and} \bibinfo{person}{Jia Chen}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Consistency Training with Learnable Data Augmentation for Graph Anomaly Detection}. In \bibinfo{booktitle}{\emph{International Conference on Learning Representations (ICLR)}}.
+\newblock
+
+
+\bibitem[Chen and Guestrin(2016)]%
+        {xgboost2016}
+\bibfield{author}{\bibinfo{person}{Tianqi Chen} {and} \bibinfo{person}{Carlos Guestrin}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Xgboost: A scalable tree boosting system}. In \bibinfo{booktitle}{\emph{Proceedings of the 22nd acm sigkdd international conference on knowledge discovery and data mining}}. \bibinfo{pages}{785--794}.
+\newblock
+
+
+\bibitem[Chen and He(2021)]%
+        {chen2021exploring}
+\bibfield{author}{\bibinfo{person}{Xinlei Chen} {and} \bibinfo{person}{Kaiming He}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Exploring simple {S}iamese representation learning}. In \bibinfo{booktitle}{\emph{IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}}. \bibinfo{pages}{15750--15758}.
+\newblock
+
+
+\bibitem[Cheng et~al\mbox{.}(2020)]%
+        {cheng2020graph}
+\bibfield{author}{\bibinfo{person}{Dawei Cheng}, \bibinfo{person}{Xiaoyang Wang}, \bibinfo{person}{Ying Zhang}, {and} \bibinfo{person}{Liqing Zhang}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Graph neural network for fraud detection via spatial-temporal attention}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Knowledge and Data Engineering}} \bibinfo{volume}{34}, \bibinfo{number}{8} (\bibinfo{year}{2020}), \bibinfo{pages}{3800--3813}.
+\newblock
+
+
+\bibitem[Cheng et~al\mbox{.}(2025)]%
+        {cheng2025graph}
+\bibfield{author}{\bibinfo{person}{Dawei Cheng}, \bibinfo{person}{Yao Zou}, \bibinfo{person}{Sheng Xiang}, {and} \bibinfo{person}{Changjun Jiang}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Graph neural networks for financial fraud detection: a review}.
+\newblock \bibinfo{journal}{\emph{Frontiers of Computer Science}} \bibinfo{volume}{19}, \bibinfo{number}{9} (\bibinfo{year}{2025}), \bibinfo{pages}{199609}.
+\newblock
+
+
+\bibitem[Chien et~al\mbox{.}(2021)]%
+        {chien2021adaptive}
+\bibfield{author}{\bibinfo{person}{Eli Chien}, \bibinfo{person}{Jianhao Peng}, \bibinfo{person}{Pan Li}, {and} \bibinfo{person}{Olgica Milenkovic}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Adaptive universal generalized {P}age{R}ank graph neural network}. In \bibinfo{booktitle}{\emph{International Conference on Learning Representations (ICLR)}}.
+\newblock
+
+
+\bibitem[Ding et~al\mbox{.}(2019)]%
+        {ding2019dominant}
+\bibfield{author}{\bibinfo{person}{Kaize Ding}, \bibinfo{person}{Jundong Li}, \bibinfo{person}{Rohit Bhanushali}, {and} \bibinfo{person}{Huan Liu}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Deep anomaly detection on attributed networks}. In \bibinfo{booktitle}{\emph{SIAM International Conference on Data Mining (SDM)}}. \bibinfo{pages}{594--602}.
+\newblock
+
+
+\bibitem[Dou et~al\mbox{.}(2020)]%
+        {dou2020enhancing}
+\bibfield{author}{\bibinfo{person}{Yingtong Dou}, \bibinfo{person}{Zhiwei Liu}, \bibinfo{person}{Li Sun}, \bibinfo{person}{Yutong Deng}, \bibinfo{person}{Hao Peng}, {and} \bibinfo{person}{Philip~S Yu}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Enhancing graph neural network-based fraud detectors against camouflaged fraudsters}. In \bibinfo{booktitle}{\emph{Proceedings of the 29th ACM international conference on information \& knowledge management}}. \bibinfo{pages}{315--324}.
+\newblock
+
+
+\bibitem[Dre{\.z}ewski et~al\mbox{.}(2015)]%
+        {drezewski2015application}
+\bibfield{author}{\bibinfo{person}{Rafa{\l} Dre{\.z}ewski}, \bibinfo{person}{Jan Sepielak}, {and} \bibinfo{person}{Wojciech Filipkowski}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{The application of social network analysis algorithms in a system supporting money laundering detection}.
+\newblock \bibinfo{journal}{\emph{Information Sciences}}  \bibinfo{volume}{295} (\bibinfo{year}{2015}), \bibinfo{pages}{18--32}.
+\newblock
+
+
+\bibitem[Du et~al\mbox{.}(2022)]%
+        {du2022gbk}
+\bibfield{author}{\bibinfo{person}{Lun Du}, \bibinfo{person}{Xiaozhou Shi}, \bibinfo{person}{Qiang Fu}, \bibinfo{person}{Xiaojun Ma}, \bibinfo{person}{Hengyu Liu}, \bibinfo{person}{Shi Han}, {and} \bibinfo{person}{Dongmei Zhang}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{GBK-GNN: Gated bi-kernel graph neural networks for modeling both homophily and heterophily}. In \bibinfo{booktitle}{\emph{ACM Web Conference (WWW)}}. \bibinfo{pages}{1550--1558}.
+\newblock
+
+
+\bibitem[(FATF)(2013)]%
+        {fatf2013guidance}
+\bibfield{author}{\bibinfo{person}{Financial Action Task~Force (FATF)}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Guidance for Financial Institutions on Detecting Terrorist Financing}}.
+\newblock \bibinfo{type}{{T}echnical {R}eport}. \bibinfo{institution}{OECD/Financial Action Task Force}.
+\newblock
+
+
+\bibitem[Grill et~al\mbox{.}(2020)]%
+        {grill2020bootstrap}
+\bibfield{author}{\bibinfo{person}{Jean-Bastien Grill}, \bibinfo{person}{Florian Strub}, \bibinfo{person}{Florent Altch{\'e}}, \bibinfo{person}{Corentin Tallec}, \bibinfo{person}{Pierre Richemond}, \bibinfo{person}{Elena Buchatskaya}, \bibinfo{person}{Carl Doersch}, \bibinfo{person}{Bernardo Avila~Pires}, \bibinfo{person}{Zhaohan Guo}, \bibinfo{person}{Mohammad Gheshlaghi~Azar}, {et~al\mbox{.}}} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Bootstrap your own latent-a new approach to self-supervised learning}.
+\newblock \bibinfo{journal}{\emph{Advances in neural information processing systems}}  \bibinfo{volume}{33} (\bibinfo{year}{2020}), \bibinfo{pages}{21271--21284}.
+\newblock
+
+
+\bibitem[Hamilton et~al\mbox{.}(2017)]%
+        {hamilton2017inductive}
+\bibfield{author}{\bibinfo{person}{Will Hamilton}, \bibinfo{person}{Zhitao Ying}, {and} \bibinfo{person}{Jure Leskovec}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Inductive representation learning on large graphs}.
+\newblock \bibinfo{journal}{\emph{Advances in neural information processing systems}}  \bibinfo{volume}{30} (\bibinfo{year}{2017}).
+\newblock
+
+
+\bibitem[Hassani and Khasahmadi(2020)]%
+        {hassani2020contrastive}
+\bibfield{author}{\bibinfo{person}{Kaveh Hassani} {and} \bibinfo{person}{Amir~Hosein Khasahmadi}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Contrastive multi-view representation learning on graphs}. In \bibinfo{booktitle}{\emph{International conference on machine learning}}. PMLR, \bibinfo{pages}{4116--4126}.
+\newblock
+
+
+\bibitem[Hilal et~al\mbox{.}(2022)]%
+        {hilal2022financial}
+\bibfield{author}{\bibinfo{person}{Waleed Hilal}, \bibinfo{person}{S~Andrew Gadsden}, {and} \bibinfo{person}{John Yawney}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Financial fraud: a review of anomaly detection techniques and recent advances}.
+\newblock \bibinfo{journal}{\emph{Expert systems With applications}}  \bibinfo{volume}{193} (\bibinfo{year}{2022}), \bibinfo{pages}{116429}.
+\newblock
+
+
+\bibitem[Hou et~al\mbox{.}(2022)]%
+        {hou2022graphmae}
+\bibfield{author}{\bibinfo{person}{Zhenyu Hou}, \bibinfo{person}{Xiao Liu}, \bibinfo{person}{Yukuo Cen}, \bibinfo{person}{Yuxiao Dong}, \bibinfo{person}{Hongxia Yang}, \bibinfo{person}{Chunjie Wang}, {and} \bibinfo{person}{Jie Tang}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{GraphMAE: Self-supervised masked graph autoencoders}. In \bibinfo{booktitle}{\emph{ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD)}}. \bibinfo{pages}{594--604}.
+\newblock
+
+
+\bibitem[Huda et~al\mbox{.}(2025)]%
+        {huda2025amlnet}
+\bibfield{author}{\bibinfo{person}{Shamsul Huda}, \bibinfo{person}{Ernest Foo}, \bibinfo{person}{Zahra Jadidi}, \bibinfo{person}{M.~A.~Hakim Newton}, {and} \bibinfo{person}{Abdul Sattar}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{{AMLNet}: A Knowledge-Based Multi-Agent Framework to Generate and Detect Realistic Money Laundering Transactions}.
+\newblock \bibinfo{journal}{\emph{Expert Systems with Applications}} (\bibinfo{year}{2025}).
+\newblock
+\newblock
+\shownote{arXiv:2509.11595}.
+
+
+\bibitem[Ioffe and Szegedy(2015)]%
+        {ioffe2015batch}
+\bibfield{author}{\bibinfo{person}{Sergey Ioffe} {and} \bibinfo{person}{Christian Szegedy}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Batch Normalization: Accelerating deep network training by reducing internal covariate shift}. In \bibinfo{booktitle}{\emph{International Conference on Machine Learning (ICML)}}. \bibinfo{pages}{448--456}.
+\newblock
+
+
+\bibitem[Jin et~al\mbox{.}(2021)]%
+        {jin2021anemone}
+\bibfield{author}{\bibinfo{person}{Ming Jin}, \bibinfo{person}{Yixin Liu}, \bibinfo{person}{Yu Zheng}, \bibinfo{person}{Lianhua Chi}, \bibinfo{person}{Yuan-Fang Li}, {and} \bibinfo{person}{Shirui Pan}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{ANEMONE: Graph anomaly detection with multi-scale contrastive learning}. In \bibinfo{booktitle}{\emph{ACM International Conference on Information \& Knowledge Management (CIKM)}}. \bibinfo{pages}{3122--3126}.
+\newblock
+
+
+\bibitem[Karrer and Newman(2011)]%
+        {karrer2011stochastic}
+\bibfield{author}{\bibinfo{person}{Brian Karrer} {and} \bibinfo{person}{Mark E.~J. Newman}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Stochastic blockmodels and community structure in networks}.
+\newblock \bibinfo{journal}{\emph{Physical Review E}} \bibinfo{volume}{83}, \bibinfo{number}{1} (\bibinfo{year}{2011}), \bibinfo{pages}{016107}.
+\newblock
+
+
+\bibitem[Ke et~al\mbox{.}(2017)]%
+        {lightgbm2017}
+\bibfield{author}{\bibinfo{person}{Guolin Ke}, \bibinfo{person}{Qi Meng}, \bibinfo{person}{Thomas Finley}, \bibinfo{person}{Taifeng Wang}, \bibinfo{person}{Wei Chen}, \bibinfo{person}{Weidong Ma}, \bibinfo{person}{Qiwei Ye}, {and} \bibinfo{person}{Tie-Yan Liu}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Lightgbm: A highly efficient gradient boosting decision tree}.
+\newblock \bibinfo{journal}{\emph{Advances in neural information processing systems}}  \bibinfo{volume}{30} (\bibinfo{year}{2017}).
+\newblock
+
+
+\bibitem[Kipf and Welling(2016)]%
+        {kipf2016semi}
+\bibfield{author}{\bibinfo{person}{Thomas~N Kipf} {and} \bibinfo{person}{Max Welling}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Semi-supervised classification with graph convolutional networks}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:1609.02907}} (\bibinfo{year}{2016}).
+\newblock
+
+
+\bibitem[(KoFIU)(2024)]%
+        {kofia2024aml}
+\bibfield{author}{\bibinfo{person}{Korea Financial Intelligence~Unit (KoFIU)}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Current Status of Anti-Money Laundering System Operations}.
+\newblock
+\urldef\tempurl%
+\url{https://www.kofia.or.kr}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Lee et~al\mbox{.}(2022)]%
+        {lee2022augmentation}
+\bibfield{author}{\bibinfo{person}{Namkyeong Lee}, \bibinfo{person}{Junseok Lee}, {and} \bibinfo{person}{Chanyoung Park}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Augmentation-free self-supervised learning on graphs}. In \bibinfo{booktitle}{\emph{AAAI Conference on Artificial Intelligence (AAAI)}}, Vol.~\bibinfo{volume}{36}. \bibinfo{pages}{7372--7380}.
+\newblock
+
+
+\bibitem[Lim et~al\mbox{.}(2021)]%
+        {zhu2021linkx}
+\bibfield{author}{\bibinfo{person}{Derek Lim}, \bibinfo{person}{Felix Hohne}, \bibinfo{person}{Xiuyu Li}, \bibinfo{person}{Sijia~Linda Huang}, \bibinfo{person}{Vaishnavi Gupta}, \bibinfo{person}{Omkar Bhatt}, {and} \bibinfo{person}{Lyle Ungar}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Non-homophilous graph neural networks}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2110.15323}} (\bibinfo{year}{2021}).
+\newblock
+
+
+\bibitem[Liu et~al\mbox{.}(2022)]%
+        {liu2022bond}
+\bibfield{author}{\bibinfo{person}{Kay Liu}, \bibinfo{person}{Yingtong Dou}, \bibinfo{person}{Yue Zhao}, \bibinfo{person}{Xueying Ding}, \bibinfo{person}{Xiyang Hu}, \bibinfo{person}{Ruitong Zhang}, \bibinfo{person}{Kaize Ding}, \bibinfo{person}{Canyu Chen}, \bibinfo{person}{Hao Peng}, \bibinfo{person}{Kai Shu}, {et~al\mbox{.}}} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{BOND: Benchmarking unsupervised outlier node detection on static attributed graphs}.
+\newblock \bibinfo{journal}{\emph{Advances in Neural Information Processing Systems (NeurIPS)}}  \bibinfo{volume}{35} (\bibinfo{year}{2022}), \bibinfo{pages}{27021--27035}.
+\newblock
+
+
+\bibitem[Liu et~al\mbox{.}(2021a)]%
+        {liu2021pick}
+\bibfield{author}{\bibinfo{person}{Yang Liu}, \bibinfo{person}{Xiang Ao}, \bibinfo{person}{Zidi Qin}, \bibinfo{person}{Jianfeng Chi}, \bibinfo{person}{Jinghua Feng}, \bibinfo{person}{Hao Yang}, {and} \bibinfo{person}{Qing He}.} \bibinfo{year}{2021}\natexlab{a}.
+\newblock \showarticletitle{Pick and choose: a GNN-based imbalanced learning approach for fraud detection}. In \bibinfo{booktitle}{\emph{Proceedings of the web conference 2021}}. \bibinfo{pages}{3168--3177}.
+\newblock
+
+
+\bibitem[Liu et~al\mbox{.}(2021b)]%
+        {liu2021anomaly}
+\bibfield{author}{\bibinfo{person}{Yixin Liu}, \bibinfo{person}{Zhao Li}, \bibinfo{person}{Shirui Pan}, \bibinfo{person}{Chen Gong}, \bibinfo{person}{Chuan Zhou}, {and} \bibinfo{person}{George Karypis}.} \bibinfo{year}{2021}\natexlab{b}.
+\newblock \showarticletitle{Anomaly detection on attributed networks via contrastive self-supervised learning}. In \bibinfo{booktitle}{\emph{IEEE Transactions on Neural Networks and Learning Systems}}, Vol.~\bibinfo{volume}{33}. \bibinfo{pages}{2378--2392}.
+\newblock
+
+
+\bibitem[Liu et~al\mbox{.}(2020)]%
+        {liu2020alleviating}
+\bibfield{author}{\bibinfo{person}{Zhiwei Liu}, \bibinfo{person}{Yingtong Dou}, \bibinfo{person}{Philip~S Yu}, \bibinfo{person}{Yutong Deng}, {and} \bibinfo{person}{Hao Peng}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Alleviating the inconsistency problem of applying graph neural network to fraud detection}. In \bibinfo{booktitle}{\emph{ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR)}}. \bibinfo{pages}{1569--1572}.
+\newblock
+
+
+\bibitem[Lu and Wang(2024)]%
+        {lu2024graph}
+\bibfield{author}{\bibinfo{person}{Hanbin Lu} {and} \bibinfo{person}{Haosen Wang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Graph contrastive pre-training for anti-money laundering}.
+\newblock \bibinfo{journal}{\emph{International Journal of Computational Intelligence Systems}} \bibinfo{volume}{17}, \bibinfo{number}{1} (\bibinfo{year}{2024}), \bibinfo{pages}{307}.
+\newblock
+
+
+\bibitem[Luan et~al\mbox{.}(2022)]%
+        {luan2022acmgcn}
+\bibfield{author}{\bibinfo{person}{Sitao Luan}, \bibinfo{person}{Chenqing Hua}, \bibinfo{person}{Qincheng Lu}, \bibinfo{person}{Jiaqi Zhu}, \bibinfo{person}{Mingde Zhao}, \bibinfo{person}{Shuyuan Zhang}, \bibinfo{person}{Xiao-Wen Chang}, {and} \bibinfo{person}{Doina Precup}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Revisiting heterophily for graph neural networks}. In \bibinfo{booktitle}{\emph{Advances in Neural Information Processing Systems (NeurIPS)}}, Vol.~\bibinfo{volume}{35}. \bibinfo{pages}{1362--1375}.
+\newblock
+
+
+\bibitem[Pedregosa et~al\mbox{.}(2011)]%
+        {pedregosa2011scikit}
+\bibfield{author}{\bibinfo{person}{Fabian Pedregosa}, \bibinfo{person}{Ga{\"e}l Varoquaux}, \bibinfo{person}{Alexandre Gramfort}, \bibinfo{person}{Vincent Michel}, \bibinfo{person}{Bertrand Thirion}, \bibinfo{person}{Olivier Grisel}, \bibinfo{person}{Mathieu Blondel}, \bibinfo{person}{Peter Prettenhofer}, \bibinfo{person}{Ron Weiss}, \bibinfo{person}{Vincent Dubourg}, {et~al\mbox{.}}} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Scikit-learn: Machine learning in Python}.
+\newblock \bibinfo{journal}{\emph{the Journal of machine Learning research}}  \bibinfo{volume}{12} (\bibinfo{year}{2011}), \bibinfo{pages}{2825--2830}.
+\newblock
+
+
+\bibitem[Pei et~al\mbox{.}(2020)]%
+        {pei2020geom}
+\bibfield{author}{\bibinfo{person}{Hongbin Pei}, \bibinfo{person}{Bingzhe Wei}, \bibinfo{person}{Kevin Chen-Chuan Chang}, \bibinfo{person}{Yu Lei}, {and} \bibinfo{person}{Bo Yang}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Geom-gcn: Geometric graph convolutional networks}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2002.05287}} (\bibinfo{year}{2020}).
+\newblock
+
+
+\bibitem[Peng et~al\mbox{.}(2021)]%
+        {peng2021reinforced}
+\bibfield{author}{\bibinfo{person}{Hao Peng}, \bibinfo{person}{Ruitong Zhang}, \bibinfo{person}{Yingtong Dou}, \bibinfo{person}{Renyu Yang}, \bibinfo{person}{Jingyi Zhang}, {and} \bibinfo{person}{Philip~S Yu}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Reinforced neighborhood selection guided multi-relational graph neural networks}. In \bibinfo{booktitle}{\emph{ACM Transactions on Information Systems (TOIS)}}, Vol.~\bibinfo{volume}{40}. \bibinfo{pages}{1--46}.
+\newblock
+
+
+\bibitem[Rao et~al\mbox{.}(2020)]%
+        {rao2020xfraud}
+\bibfield{author}{\bibinfo{person}{Susie~Xi Rao}, \bibinfo{person}{Shuai Zhang}, \bibinfo{person}{Zhichao Han}, \bibinfo{person}{Zitao Zhang}, \bibinfo{person}{Wei Min}, \bibinfo{person}{Zhiyao Chen}, \bibinfo{person}{Yinan Shan}, \bibinfo{person}{Yang Zhao}, {and} \bibinfo{person}{Ce Zhang}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{xFraud: explainable fraud transaction detection}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2011.12193}} (\bibinfo{year}{2020}).
+\newblock
+
+
+\bibitem[Shang et~al\mbox{.}(2023)]%
+        {shang2023mlgcl}
+\bibfield{author}{\bibinfo{person}{Pengpeng Shang}, \bibinfo{person}{Dawei Zhao}, \bibinfo{person}{Fei Liu}, \bibinfo{person}{Ronghua Shang}, {and} \bibinfo{person}{Licheng Jiao}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Multi-level graph contrastive learning}.
+\newblock \bibinfo{journal}{\emph{Neurocomputing}}  \bibinfo{volume}{516} (\bibinfo{year}{2023}), \bibinfo{pages}{109--118}.
+\newblock
+
+
+\bibitem[Tan et~al\mbox{.}(2023)]%
+        {li2023s2gae}
+\bibfield{author}{\bibinfo{person}{Qiaoyu Tan}, \bibinfo{person}{Ninghao Liu}, \bibinfo{person}{Xiao Huang}, \bibinfo{person}{Soo-Hyun Choi}, \bibinfo{person}{Li Li}, \bibinfo{person}{Rui Chen}, {and} \bibinfo{person}{Xia Hu}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{S2GAE: Self-supervised graph autoencoders are generalizable learners with graph masking}. In \bibinfo{booktitle}{\emph{ACM International Conference on Web Search and Data Mining (WSDM)}}. \bibinfo{pages}{787--795}.
+\newblock
+
+
+\bibitem[Tang et~al\mbox{.}(2022)]%
+        {tang2022rethinking}
+\bibfield{author}{\bibinfo{person}{Jianheng Tang}, \bibinfo{person}{Jiajin Li}, \bibinfo{person}{Ziqi Gao}, {and} \bibinfo{person}{Jia Li}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Rethinking graph neural networks for anomaly detection}. In \bibinfo{booktitle}{\emph{International Conference on Machine Learning (ICML)}}. \bibinfo{pages}{21076--21089}.
+\newblock
+
+
+\bibitem[Teichmann(2020)]%
+        {teichmann2020recent}
+\bibfield{author}{\bibinfo{person}{Fabian Teichmann}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Recent trends in money laundering}.
+\newblock \bibinfo{journal}{\emph{Crime, Law and Social Change}}  \bibinfo{volume}{73} (\bibinfo{year}{2020}), \bibinfo{pages}{237--247}.
+\newblock
+
+
+\bibitem[Thakoor et~al\mbox{.}(2021)]%
+        {thakoor2021large}
+\bibfield{author}{\bibinfo{person}{Shantanu Thakoor}, \bibinfo{person}{Corentin Tallec}, \bibinfo{person}{Mohammad~Gheshlaghi Azar}, \bibinfo{person}{Mehdi Azabou}, \bibinfo{person}{Eva~L Dyer}, \bibinfo{person}{Remi Munos}, \bibinfo{person}{Petar Veli{\v{c}}kovi{\'c}}, {and} \bibinfo{person}{Michal Valko}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Large-scale representation learning on graphs via bootstrapping}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2102.06514}} (\bibinfo{year}{2021}).
+\newblock
+
+
+\bibitem[Tian et~al\mbox{.}(2021)]%
+        {tian2021understanding}
+\bibfield{author}{\bibinfo{person}{Yuandong Tian}, \bibinfo{person}{Xinlei Chen}, {and} \bibinfo{person}{Surya Ganguli}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Understanding self-supervised learning dynamics without contrastive pairs}. In \bibinfo{booktitle}{\emph{International Conference on Machine Learning (ICML)}}. \bibinfo{pages}{10268--10278}.
+\newblock
+
+
+\bibitem[{United Nations Office on Drugs and Crime}(2024)]%
+        {unodc_ml}
+\bibfield{author}{\bibinfo{person}{{United Nations Office on Drugs and Crime}}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \bibinfo{title}{Money Laundering}.
+\newblock \bibinfo{howpublished}{\url{https://www.unodc.org/unodc/en/money-laundering/overview.html}}.
+\newblock
+\newblock
+\shownote{Accessed: 2026-05-11}.
+
+
+\bibitem[Veli{\v{c}}kovi{\'c} et~al\mbox{.}(2017)]%
+        {velivckovic2017graph}
+\bibfield{author}{\bibinfo{person}{Petar Veli{\v{c}}kovi{\'c}}, \bibinfo{person}{Guillem Cucurull}, \bibinfo{person}{Arantxa Casanova}, \bibinfo{person}{Adriana Romero}, \bibinfo{person}{Pietro Lio}, {and} \bibinfo{person}{Yoshua Bengio}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Graph attention networks}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:1710.10903}} (\bibinfo{year}{2017}).
+\newblock
+
+
+\bibitem[Veli{\v{c}}kovi{\'c} et~al\mbox{.}(2018)]%
+        {velivckovic2018deep}
+\bibfield{author}{\bibinfo{person}{Petar Veli{\v{c}}kovi{\'c}}, \bibinfo{person}{William Fedus}, \bibinfo{person}{William~L Hamilton}, \bibinfo{person}{Pietro Li{\`o}}, \bibinfo{person}{Yoshua Bengio}, {and} \bibinfo{person}{R~Devon Hjelm}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Deep graph infomax}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:1809.10341}} (\bibinfo{year}{2018}).
+\newblock
+
+
+\bibitem[Wang et~al\mbox{.}(2023)]%
+        {wang2023label}
+\bibfield{author}{\bibinfo{person}{Yuchen Wang}, \bibinfo{person}{Jinghui Zhang}, \bibinfo{person}{Zhengjie Huang}, \bibinfo{person}{Weibin Li}, \bibinfo{person}{Shikun Feng}, \bibinfo{person}{Ziheng Ma}, \bibinfo{person}{Yu Sun}, \bibinfo{person}{Dianhai Yu}, \bibinfo{person}{Fang Dong}, \bibinfo{person}{Jiahui Jin}, {et~al\mbox{.}}} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Label information enhanced fraud detection against low homophily in graphs}. In \bibinfo{booktitle}{\emph{Proceedings of the ACM Web Conference 2023}}. \bibinfo{pages}{406--416}.
+\newblock
+
+
+\bibitem[Xia et~al\mbox{.}(2022)]%
+        {xia2022simgrace}
+\bibfield{author}{\bibinfo{person}{Jun Xia}, \bibinfo{person}{Lirong Wu}, \bibinfo{person}{Jintao Chen}, \bibinfo{person}{Bozhen Hu}, {and} \bibinfo{person}{Stan~Z Li}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{SimGRACE: A simple framework for graph contrastive learning without data augmentation}. In \bibinfo{booktitle}{\emph{ACM Web Conference (WWW)}}. \bibinfo{pages}{1070--1079}.
+\newblock
+
+
+\bibitem[Xu et~al\mbox{.}(2018)]%
+        {xu2018powerful}
+\bibfield{author}{\bibinfo{person}{Keyulu Xu}, \bibinfo{person}{Weihua Hu}, \bibinfo{person}{Jure Leskovec}, {and} \bibinfo{person}{Stefanie Jegelka}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{How powerful are graph neural networks?}
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:1810.00826}} (\bibinfo{year}{2018}).
+\newblock
+
+
+\bibitem[You et~al\mbox{.}(2020)]%
+        {you2020graph}
+\bibfield{author}{\bibinfo{person}{Yuning You}, \bibinfo{person}{Tianlong Chen}, \bibinfo{person}{Yongduo Sui}, \bibinfo{person}{Ting Chen}, \bibinfo{person}{Zhangyang Wang}, {and} \bibinfo{person}{Yang Shen}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Graph contrastive learning with augmentations}.
+\newblock \bibinfo{journal}{\emph{Advances in neural information processing systems}}  \bibinfo{volume}{33} (\bibinfo{year}{2020}), \bibinfo{pages}{5812--5823}.
+\newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2021b)]%
+        {zhang2021fraudre}
+\bibfield{author}{\bibinfo{person}{Ge Zhang}, \bibinfo{person}{Jia Wu}, \bibinfo{person}{Jian Yang}, \bibinfo{person}{Amin Beheshti}, \bibinfo{person}{Shan Xue}, \bibinfo{person}{Chuan Zhou}, {and} \bibinfo{person}{Quan~Z Sheng}.} \bibinfo{year}{2021}\natexlab{b}.
+\newblock \showarticletitle{Fraudre: Fraud detection dual-resistant to graph inconsistency and imbalance}. In \bibinfo{booktitle}{\emph{2021 IEEE international conference on data mining (ICDM)}}. IEEE, \bibinfo{pages}{867--876}.
+\newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2021a)]%
+        {zhang2021canonical}
+\bibfield{author}{\bibinfo{person}{Hengrui Zhang}, \bibinfo{person}{Qitian Wu}, \bibinfo{person}{Junchi Yan}, \bibinfo{person}{David Wipf}, {and} \bibinfo{person}{Philip~S Yu}.} \bibinfo{year}{2021}\natexlab{a}.
+\newblock \showarticletitle{From canonical correlation analysis to self-supervised graph neural networks}. In \bibinfo{booktitle}{\emph{Advances in Neural Information Processing Systems (NeurIPS)}}, Vol.~\bibinfo{volume}{34}. \bibinfo{pages}{76--89}.
+\newblock
+
+
+\bibitem[Zhu et~al\mbox{.}(2020b)]%
+        {zhu2020beyond}
+\bibfield{author}{\bibinfo{person}{Jiong Zhu}, \bibinfo{person}{Yujun Yan}, \bibinfo{person}{Lingxiao Zhao}, \bibinfo{person}{Mark Heimann}, \bibinfo{person}{Leman Akoglu}, {and} \bibinfo{person}{Danai Koutra}.} \bibinfo{year}{2020}\natexlab{b}.
+\newblock \showarticletitle{Beyond homophily in graph neural networks: Current limitations and effective designs}.
+\newblock \bibinfo{journal}{\emph{Advances in neural information processing systems}}  \bibinfo{volume}{33} (\bibinfo{year}{2020}), \bibinfo{pages}{7793--7804}.
+\newblock
+
+
+\bibitem[Zhu et~al\mbox{.}(2020a)]%
+        {zhu2020deep}
+\bibfield{author}{\bibinfo{person}{Yanqiao Zhu}, \bibinfo{person}{Yichen Xu}, \bibinfo{person}{Feng Yu}, \bibinfo{person}{Qiang Liu}, \bibinfo{person}{Shu Wu}, {and} \bibinfo{person}{Liang Wang}.} \bibinfo{year}{2020}\natexlab{a}.
+\newblock \showarticletitle{Deep graph contrastive representation learning}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2006.04131}} (\bibinfo{year}{2020}).
+\newblock
+
+
+\bibitem[Zhu et~al\mbox{.}(2021)]%
+        {zhu2021graph}
+\bibfield{author}{\bibinfo{person}{Yanqiao Zhu}, \bibinfo{person}{Yichen Xu}, \bibinfo{person}{Feng Yu}, \bibinfo{person}{Qiang Liu}, \bibinfo{person}{Shu Wu}, {and} \bibinfo{person}{Liang Wang}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Graph contrastive learning with adaptive augmentation}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the Web Conference 2021}} (\bibinfo{year}{2021}), \bibinfo{pages}{2069--2080}.
+\newblock
+
+
+\end{thebibliography}
