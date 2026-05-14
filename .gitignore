@@ -38,3 +38,15 @@ datasets/elliptic_plus_plus/repo/
 
 # Local-only idea development workspace (not pushed to GitHub)
 _idea_dev/
+
+# paper auxiliary files
+*.png
+main.aux 
+main.bbl 
+main.blg 
+main.fdb_latexmk 
+main.fls 
+main.log 
+main.out 
+main.pdf
+*.synctex.gz

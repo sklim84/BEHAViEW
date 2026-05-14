@@ -9,7 +9,7 @@ import matplotlib.patches as mpatches
 import numpy as np
 import os
 
-OUT_DIR = 'visualize/paper_figures'
+OUT_DIR = '_paper/figures'
 os.makedirs(OUT_DIR, exist_ok=True)
 
 plt.rcParams.update({
@@ -272,115 +272,207 @@ def fig5_setting_comparison():
 
 
 def fig_intro_homophily():
-    """Intro Figure: ego-network homophily contrast (refined Variant C).
+    """Intro Figure: ego-network homophily contrast.
 
-    A central suspicious account (ego) and its 12 neighbors are visualized
-    for two graph types. Color encodes neighbor class (suspicious vs benign).
-    Edge opacity reflects signal strength (S-S edges = strong, S-B = faded).
+    The visual language intentionally follows Figure 3's TikZ schematic:
+    red suspicious nodes, blue benign nodes, thin black edges, and compact
+    explanatory notes rather than chart-like styling.
     """
     import matplotlib.patches as mpatches
-    import matplotlib.patheffects as pe
 
-    # Refined paper-friendly palette
-    C_EGO       = '#1B5E7D'  # dark teal: ego (suspicious) node
-    C_SUSP      = '#2E86AB'  # medium teal: suspicious neighbor (signal)
-    C_BENIGN    = '#D1D5DB'  # neutral light gray: benign neighbor (noise)
-    C_EDGE_S    = '#2E86AB'  # signal edge: medium teal (visible)
-    C_EDGE_B    = '#E5E7EB'  # noise edge: very light gray (faded)
-    C_TEXT      = '#1F2937'
-    C_SUB       = '#6B7280'
-    C_HIGHL     = '#C73E1D'  # warm red: low-homophily state
-    C_GREEN     = '#2A9D8F'  # teal-green: restored state
-    C_ARROW     = '#E07A5F'  # warm coral: transformation arrow
+    C_SUSP = '#F4CCCC'      # close to TikZ red!25
+    C_BENIGN = '#DDE8F7'    # close to TikZ blue!18
+    C_AUX = '#FCE0BC'       # close to TikZ orange!25
+    C_EDGE = '#5F6368'
+    C_TEXT = '#202124'
+    C_MUTED = '#4B5563'
+    C_BOX = '#F4F4F5'
+    C_BOX_EDGE = '#9CA3AF'
 
-    np.random.seed(7)
-
-    fig, axes = plt.subplots(1, 2, figsize=(4.6, 2.4))
+    fig, axes = plt.subplots(1, 2, figsize=(4.9, 2.65))
     fig.patch.set_facecolor('white')
 
-    n_neighbors = 12
-    radius = 1.05
+    angles = np.linspace(0, 2 * np.pi, 12, endpoint=False) + np.pi / 12
+    radius = 0.98
 
     panels = [
-        (axes[0], 0.15, 'Transaction Graph', '1 : 5.7', C_HIGHL),
-        (axes[1], 0.41, 'Behavioral k-NN',   '1 : 1.4', C_GREEN),
+        {
+            'ax': axes[0],
+            'title': 'Transaction view',
+            'ratio': 'S-S:S-B = 1:5.7',
+            'note': 'Suspicious signal is\ndiluted by benign neighbors',
+            'labels': ['B', 'B', 'B', 'S', 'B', 'B', 'B', 'B', 'B', 'S', 'B', 'B'],
+        },
+        {
+            'ax': axes[1],
+            'title': 'Behavioral k-NN view',
+            'ratio': 'S-S:S-B = 1:1.4',
+            'note': 'Behaviorally similar accounts\nbecome neighbors',
+            'labels': ['S', 'B', 'S', 'S', 'B', 'B', 'S', 'B', 'S', 'B', 'B', 'B'],
+        },
     ]
 
-    for ax, ss_ratio, title, ratio, rcolor in panels:
-        ax.set_facecolor('white')
-        ax.set_xlim(-1.55, 1.55)
-        ax.set_ylim(-1.65, 1.55)
+    def draw_node(ax, x, y, label, size=185, is_ego=False):
+        face = C_SUSP if label == 'S' else C_BENIGN
+        if label == 'k':
+            face = C_AUX
+        ax.scatter([x], [y], s=size, marker='o', facecolors=face,
+                   edgecolors='#555555', linewidths=0.55, zorder=4)
+        ax.text(x, y, label, ha='center', va='center', fontsize=7.4 if not is_ego else 9.0,
+                color=C_TEXT, fontweight='bold', zorder=5)
+
+    for panel in panels:
+        ax = panel['ax']
+        ax.set_xlim(-1.45, 1.45)
+        ax.set_ylim(-2.2, 1.7)
         ax.set_aspect('equal')
         ax.axis('off')
 
-        n_susp = round(n_neighbors * ss_ratio)
-        is_susp = [True]*n_susp + [False]*(n_neighbors - n_susp)
-        np.random.shuffle(is_susp)
+        coords = [(radius * np.cos(a), radius * np.sin(a)) for a in angles]
+        for (x, y), label in zip(coords, panel['labels']):
+            lw = 0.7 if label == 'S' else 0.45
+            alpha = 0.78 if label == 'S' else 0.48
+            ax.plot([0, x], [0, y], color=C_EDGE, linewidth=lw, alpha=alpha,
+                    zorder=1, solid_capstyle='round')
 
-        # Slight angle offset so neighbors aren't on cardinal axes
-        angles = np.linspace(0, 2*np.pi, n_neighbors, endpoint=False) + np.pi/12
+        for (x, y), label in zip(coords, panel['labels']):
+            draw_node(ax, x, y, label)
 
-        # Draw edges first (lower z-order)
-        for angle, susp in zip(angles, is_susp):
-            x, y = radius * np.cos(angle), radius * np.sin(angle)
-            if susp:
-                ax.plot([0, x], [0, y], color=C_EDGE_S,
-                        linewidth=1.3, alpha=0.85, zorder=1, solid_capstyle='round')
-            else:
-                ax.plot([0, x], [0, y], color=C_EDGE_B,
-                        linewidth=0.9, alpha=1.0, zorder=1, solid_capstyle='round')
+        draw_node(ax, 0, 0, 'S', size=290, is_ego=True)
 
-        # Draw neighbor nodes with S/B labels
-        for angle, susp in zip(angles, is_susp):
-            x, y = radius * np.cos(angle), radius * np.sin(angle)
-            color = C_SUSP if susp else C_BENIGN
-            edge_color = '#0F4D6B' if susp else '#9CA3AF'
-            label = 'S' if susp else 'B'
-            label_color = 'white' if susp else '#374151'
-            ax.scatter(x, y, s=200, c=color, edgecolors=edge_color,
-                       linewidths=1.0, zorder=4)
-            ax.text(x, y, label, ha='center', va='center',
-                    fontsize=8, fontweight='bold', color=label_color, zorder=5)
+        ax.text(0, 1.56, panel['title'], ha='center', va='center',
+                fontsize=8.8, color=C_TEXT, fontweight='bold')
+        ax.text(0, -1.42, panel['ratio'], ha='center', va='center',
+                fontsize=7.8, color=C_TEXT, fontweight='bold')
 
-        # Draw ego (center) — slightly larger, distinct dark teal with ring
-        ax.scatter(0, 0, s=440, c=C_EGO, edgecolors='white', linewidths=2.2, zorder=5,
-                   path_effects=[pe.withStroke(linewidth=3.0, foreground='#0A3548')])
-        ax.text(0, 0, 'S', ha='center', va='center', fontsize=12, fontweight='bold',
-                color='white', zorder=6)
+        note_box = mpatches.FancyBboxPatch(
+            (-1.25, -2.08), 2.5, 0.32,
+            boxstyle='round,pad=0.06,rounding_size=0.04',
+            facecolor=C_BOX, edgecolor=C_BOX_EDGE, linewidth=0.45, zorder=0)
+        ax.add_patch(note_box)
+        ax.text(0, -1.92, panel['note'], ha='center', va='center',
+                fontsize=6.7, color=C_MUTED, linespacing=1.05)
 
-        # Title (top)
-        ax.text(0, 1.45, title, ha='center', va='center',
-                fontsize=10.5, fontweight='bold', color=C_TEXT)
-
-        # Ratio annotation (bottom, color-coded)
-        ax.text(0, -1.50, f'S-S : S-B = ', ha='right', va='center',
-                fontsize=9, color=C_SUB)
-        ax.text(0, -1.50, f'  {ratio}', ha='left', va='center',
-                fontsize=9.5, fontweight='bold', color=rcolor)
-
-    # Transformation arrow between panels
     fig.patches.append(mpatches.FancyArrowPatch(
-        (0.475, 0.50), (0.525, 0.50), transform=fig.transFigure,
-        arrowstyle='-|>', mutation_scale=18, color=C_ARROW, linewidth=2.2,
+        (0.475, 0.53), (0.525, 0.53), transform=fig.transFigure,
+        arrowstyle='-|>', mutation_scale=10, color=C_EDGE, linewidth=0.7,
         zorder=10))
-    fig.text(0.5, 0.40, 'k-NN view',
-             ha='center', va='top', fontsize=7.5, color=C_ARROW,
-             fontstyle='italic', fontweight='bold')
+    fig.text(0.5, 0.455, 'behavioral\nk-NN', ha='center', va='center',
+             fontsize=6.4, color=C_MUTED, linespacing=0.95)
 
-    # Compact legend at bottom
-    legend_elements = [
-        mpatches.Patch(facecolor=C_SUSP,   edgecolor='#0F4D6B',
-                       label='S = Suspicious'),
-        mpatches.Patch(facecolor=C_BENIGN, edgecolor='#9CA3AF',
-                       label='B = Benign'),
+    legend_handles = [
+        mpatches.Patch(facecolor=C_SUSP, edgecolor='#555555', label='S = suspicious'),
+        mpatches.Patch(facecolor=C_BENIGN, edgecolor='#555555', label='B = benign'),
     ]
-    fig.legend(handles=legend_elements, loc='lower center',
-               bbox_to_anchor=(0.5, -0.02), ncol=2, frameon=False,
-               fontsize=8.5, handlelength=1.0, handletextpad=0.4,
-               columnspacing=2.0)
+    fig.legend(handles=legend_handles, loc='lower center', bbox_to_anchor=(0.5, -0.01),
+               ncol=2, frameon=False, fontsize=7.2, handlelength=1.0,
+               handletextpad=0.4, columnspacing=1.2)
 
-    plt.tight_layout(rect=[0, 0.05, 1, 1])
+    plt.tight_layout(rect=[0, 0.07, 1, 1], w_pad=1.1)
     path = os.path.join(OUT_DIR, 'fig_intro_homophily.pdf')
+    plt.savefig(path, bbox_inches='tight', dpi=300, facecolor='white')
+    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300, facecolor='white')
+    plt.close()
+    print(f'Saved: {path}')
+
+
+def fig_dual_view_motivation():
+    """Figure 3: dual-view motivation in the same style as Figure 1."""
+    import matplotlib.patches as mpatches
+
+    C_SUSP = '#F4CCCC'
+    C_BENIGN = '#DDE8F7'
+    C_AUX = '#FCE0BC'
+    C_EDGE = '#5F6368'
+    C_TEXT = '#202124'
+    C_MUTED = '#4B5563'
+    C_BOX = '#F4F4F5'
+    C_BOX_EDGE = '#9CA3AF'
+
+    fig, ax = plt.subplots(figsize=(4.9, 3.0))
+    fig.patch.set_facecolor('white')
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 6.2)
+    ax.axis('off')
+
+    def draw_node(x, y, label, size=230):
+        face = C_AUX if label == 'k' else (C_SUSP if label == 'S' else C_BENIGN)
+        ax.scatter([x], [y], s=size, marker='o', facecolors=face,
+                   edgecolors='#555555', linewidths=0.6, zorder=4)
+        ax.text(x, y, label, ha='center', va='center',
+                fontsize=9.8, color=C_TEXT, fontweight='bold', zorder=5)
+
+    def draw_edge(x1, y1, x2, y2, strong=False, dashed=False):
+        ax.plot([x1, x2], [y1, y2], color=C_EDGE,
+                linewidth=0.8 if strong else 0.5,
+                alpha=0.78 if strong else 0.5,
+                linestyle='--' if dashed else '-',
+                zorder=1, solid_capstyle='round')
+
+    def note_box(cx, cy, text, width=3.8):
+        box = mpatches.FancyBboxPatch(
+            (cx - width / 2, cy - 0.32), width, 0.64,
+            boxstyle='round,pad=0.06,rounding_size=0.04',
+            facecolor=C_BOX, edgecolor=C_BOX_EDGE, linewidth=0.45, zorder=0)
+        ax.add_patch(box)
+        ax.text(cx, cy, text, ha='center', va='center',
+                fontsize=8.2, color=C_MUTED, linespacing=1.05)
+
+    left_c = (2.3, 4.0)
+    right_c = (7.7, 4.0)
+    r = 1.0
+    left_nodes = [
+        ('B', -0.9, 0.55), ('B', 0.0, 0.95), ('B', 0.9, 0.55),
+        ('B', -0.9, -0.45), ('B', 0.9, -0.45), ('S', 0.0, -1.0),
+    ]
+    right_nodes = [
+        ('S', -0.9, 0.55), ('S', 0.0, 0.95), ('S', 0.9, 0.55),
+        ('S', -0.9, -0.45), ('B', 0.9, -0.45), ('k', 0.0, -1.0),
+    ]
+
+    for cx, cy, title, nodes, note in [
+        (*left_c, 'Transaction view', left_nodes,
+         'Suspicious signal is\ndiluted by benign neighbors'),
+        (*right_c, 'Behavioral k-NN view', right_nodes,
+         'Behaviorally similar accounts\nbecome neighbors'),
+    ]:
+        ax.text(cx, 5.78, title, ha='center', va='center',
+                fontsize=10.8, color=C_TEXT, fontweight='bold')
+
+        draw_node(cx, cy, 'S', size=330)
+        for label, dx, dy in nodes:
+            x, y = cx + r * dx, cy + r * dy
+            draw_edge(cx, cy, x, y, strong=(label == 'S'), dashed=(label == 'B' and dx > 0.8))
+            draw_node(x, y, label, size=210)
+
+        note_box(cx, 2.25, note, width=3.75)
+
+    bridge = mpatches.FancyBboxPatch(
+        (1.9, 0.55), 6.2, 0.62,
+        boxstyle='round,pad=0.06,rounding_size=0.04',
+        facecolor=C_BOX, edgecolor=C_BOX_EDGE, linewidth=0.45, zorder=0)
+    ax.add_patch(bridge)
+    ax.text(5.0, 0.83, 'Align the same account across two views',
+            ha='center', va='center', fontsize=8.0, color=C_TEXT, fontweight='bold')
+    ax.text(5.0, 0.25, 'Transaction structure + behavioral similarity',
+            ha='center', va='center', fontsize=7.8, color=C_MUTED)
+
+    for x0, x1 in [(2.6, 3.35), (7.4, 6.65)]:
+        ax.annotate('', xy=(x1, 1.2), xytext=(x0, 1.88),
+                    arrowprops=dict(arrowstyle='-|>', color=C_EDGE, lw=0.7,
+                                    mutation_scale=10, shrinkA=8, shrinkB=2))
+
+    legend_handles = [
+        mpatches.Patch(facecolor=C_SUSP, edgecolor='#555555', label='S = suspicious'),
+        mpatches.Patch(facecolor=C_BENIGN, edgecolor='#555555', label='B = benign'),
+        mpatches.Patch(facecolor=C_AUX, edgecolor='#555555', label='k = k-NN auxiliary'),
+    ]
+    fig.legend(handles=legend_handles, loc='lower center', bbox_to_anchor=(0.5, -0.015),
+               ncol=3, frameon=False, fontsize=7.8, handlelength=1.0,
+               handletextpad=0.35, columnspacing=0.85)
+
+    plt.tight_layout(rect=[0, 0.08, 1, 1])
+    path = os.path.join(OUT_DIR, 'fig_dual_view_motivation.pdf')
     plt.savefig(path, bbox_inches='tight', dpi=300, facecolor='white')
     plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300, facecolor='white')
     plt.close()
@@ -492,10 +584,10 @@ def fig1_framework():
     print(f'Saved: {path}')
 
 
-def fig_rq5_baseline():
-    """RQ5: Self-supervised BehaView vs 11 supervised baselines across 3 datasets.
+def fig_rq3_baseline():
+    """RQ3: Self-supervised BehaView vs 11 supervised baselines across 3 datasets.
 
-    Values mirror Table tab:rq5 exactly (4-seed mean, std for errorbars).
+    Values mirror Table tab:rq3 exactly (4-seed mean, std for errorbars).
     BehaView uses setting (d) with the strongest encoder per dataset
     (GBT on HOFINET/AMLNet, BGRL on AMLworld).
     """
@@ -584,7 +676,7 @@ def fig_rq5_baseline():
                framealpha=0.95, edgecolor='#cccccc')
 
     plt.tight_layout(rect=(0, 0, 1, 0.97))
-    path = os.path.join(OUT_DIR, 'fig_rq5_baseline.pdf')
+    path = os.path.join(OUT_DIR, 'fig_rq3_baseline.pdf')
     plt.savefig(path, bbox_inches='tight', dpi=300)
     plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
     plt.close()
@@ -594,10 +686,11 @@ def fig_rq5_baseline():
 if __name__ == '__main__':
     print('Generating paper figures...')
     fig_intro_homophily()
+    fig_dual_view_motivation()
     fig1_framework()
     fig2_ablation_matrix()
     fig3_susp_connectivity()
     fig4_bn_effect()
     fig5_setting_comparison()
-    fig_rq5_baseline()
+    fig_rq3_baseline()
     print(f'\nAll figures saved to {OUT_DIR}/')
