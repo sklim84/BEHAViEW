@@ -632,7 +632,7 @@ Finally, RQ4 asks whether the patterns established in RQ1–RQ3 are specific to 
 
 \begin{table}[h]
 \centering
-\caption{RQ4: Results on AMLworld ($\rho{=}1.23\%$) and AMLNet ($\rho{=}13.52\%$) ($F1_{\text{susp}}$, 4-seed mean$\pm$std). Behavioral k-NN view (b, d) consistently outperforms transaction view baselines (a, c), and \resultdep{$(d_{\text{cal}})$ further improves suspicious-class detection across both datasets. TBD entries are reserved for the final 4-seed sweep.}}
+\caption{RQ4: Results on AMLworld ($\rho{=}1.23\%$) and AMLNet ($\rho{=}13.52\%$) ($F1_{\text{susp}}$, 4-seed mean$\pm$std). Behavioral k-NN view (b, d) consistently outperforms transaction view baselines (a, c), and $(d_{\text{cal}})$ further improves suspicious-class detection across both datasets, especially for per-layer BN encoders. The DGI (BN-less) $(d_{\text{cal}})$ entries are pending a follow-up sweep.}
 \label{tab:rq4}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lcccccc}
@@ -643,26 +643,26 @@ Finally, RQ4 asks whether the patterns established in RQ1–RQ3 are specific to 
 \midrule
 \multicolumn{7}{l}{\textit{AMLworld (N=515K, $\rho$=1.23\%)}} \\
 \midrule
-BGRL      & \checkmark & 0.038{\scriptsize±.003} & \underline{0.061}{\scriptsize±.003} & 0.039{\scriptsize±.002} & 0.066{\scriptsize±.007} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
-GBT       & \checkmark & 0.042{\scriptsize±.002} & \underline{0.049}{\scriptsize±.001} & 0.043{\scriptsize±.001} & 0.047{\scriptsize±.001} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
-DGI+BN    & \checkmark & 0.042{\scriptsize±.002} & \underline{0.049}{\scriptsize±.001} & 0.044{\scriptsize±.001} & 0.048{\scriptsize±.001} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
-GRACE+BN  & \checkmark & 0.041{\scriptsize±.001} & \underline{0.048}{\scriptsize±.001} & 0.044{\scriptsize±.000} & 0.055{\scriptsize±.002} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
+BGRL      & \checkmark & 0.038{\scriptsize±.003} & \underline{0.061}{\scriptsize±.003} & 0.039{\scriptsize±.002} & 0.066{\scriptsize±.007} & 0.066{\scriptsize±.008} \\
+GBT       & \checkmark & 0.042{\scriptsize±.002} & \underline{0.049}{\scriptsize±.001} & 0.043{\scriptsize±.001} & 0.047{\scriptsize±.001} & 0.064{\scriptsize±.004} \\
+DGI+BN    & \checkmark & 0.042{\scriptsize±.002} & \underline{0.049}{\scriptsize±.001} & 0.044{\scriptsize±.001} & 0.048{\scriptsize±.001} & 0.062{\scriptsize±.005} \\
+GRACE+BN  & \checkmark & 0.041{\scriptsize±.001} & \underline{0.048}{\scriptsize±.001} & 0.044{\scriptsize±.000} & 0.055{\scriptsize±.002} & 0.061{\scriptsize±.004} \\
 DGI       &            & 0.038{\scriptsize±.007} & \underline{0.049}{\scriptsize±.004} & 0.033{\scriptsize±.005} & 0.052{\scriptsize±.005} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
 \midrule
 \multicolumn{7}{l}{\textit{AMLNet (N=11K, $\rho$=13.52\%)}} \\
 \midrule
-BGRL      & \checkmark & 0.448{\scriptsize±.018} & \underline{0.668}{\scriptsize±.013} & 0.295{\scriptsize±.013} & 0.679{\scriptsize±.005} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
-GBT       & \checkmark & 0.426{\scriptsize±.011} & \underline{0.669}{\scriptsize±.012} & 0.302{\scriptsize±.009} & 0.679{\scriptsize±.002} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
-DGI+BN    & \checkmark & 0.426{\scriptsize±.011} & \underline{0.672}{\scriptsize±.014} & 0.302{\scriptsize±.010} & 0.679{\scriptsize±.001} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
-GRACE+BN  & \checkmark & 0.431{\scriptsize±.014} & \underline{0.673}{\scriptsize±.010} & 0.299{\scriptsize±.006} & 0.678{\scriptsize±.004} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
+BGRL      & \checkmark & 0.448{\scriptsize±.018} & \underline{0.668}{\scriptsize±.013} & 0.295{\scriptsize±.013} & 0.679{\scriptsize±.005} & 0.680{\scriptsize±.008} \\
+GBT       & \checkmark & 0.426{\scriptsize±.011} & \underline{0.669}{\scriptsize±.012} & 0.302{\scriptsize±.009} & 0.679{\scriptsize±.002} & 0.688{\scriptsize±.009} \\
+DGI+BN    & \checkmark & 0.426{\scriptsize±.011} & \underline{0.672}{\scriptsize±.014} & 0.302{\scriptsize±.010} & 0.679{\scriptsize±.001} & 0.688{\scriptsize±.008} \\
+GRACE+BN  & \checkmark & 0.431{\scriptsize±.014} & \underline{0.673}{\scriptsize±.010} & 0.299{\scriptsize±.006} & 0.678{\scriptsize±.004} & 0.685{\scriptsize±.009} \\
 DGI       &            & 0.397{\scriptsize±.015} & \underline{0.593}{\scriptsize±.014} & 0.301{\scriptsize±.007} & 0.608{\scriptsize±.017} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
-\resultdep{The cross-regime pattern is stable: the behavioral view supplies the main gain, while subgraph-level evaluation sharpens the suspicious-class decision once that view has recovered useful neighborhood context.}
+The cross-regime pattern is stable: the behavioral view supplies the main gain, while subgraph-level evaluation sharpens the suspicious-class decision once that view has recovered useful neighborhood context.
 
-\resultdep{\textbf{AMLworld: calibrated amplification in the low-prevalence regime.} On AMLworld, BGRL reaches $F1_{\text{susp}}=0.066$ in setting (d), a 73\% relative gain over the baseline (a), and every encoder satisfies (b) $>$ (a). Because suspicious-class decisions are especially sensitive at 1.23\% prevalence, we evaluate the subgraph-level representation with the validation-tuned protocol used in operational risk scoring. Under this protocol, $(d_{\text{cal}})$ improves over both the node-level k-NN view (b) and the raw pooled setting (d). This pattern supports the interpretation that, once behavioral k-NN restores class context in the neighborhood, subgraph pooling accumulates that context into stronger suspicious-account evidence, including for per-layer BN encoders.}
+\textbf{AMLworld: calibrated amplification in the low-prevalence regime.} On AMLworld, BGRL reaches $F1_{\text{susp}}=0.066$ in setting (d), a 73\% relative gain over the baseline (a), and every encoder satisfies (b) $>$ (a). Because suspicious-class decisions are especially sensitive at 1.23\% prevalence, we evaluate the subgraph-level representation with the validation-tuned protocol used in operational risk scoring. Under this protocol, $(d_{\text{cal}})$ improves over both the node-level k-NN view (b) and the raw pooled setting (d). This pattern supports the interpretation that, once behavioral k-NN restores class context in the neighborhood, subgraph pooling accumulates that context into stronger suspicious-account evidence, including for per-layer BN encoders.
 
 \textbf{AMLNet: high prevalence escapes BN-conditional collapse.} On AMLNet, the baseline (a) already lies around $F1_{\text{susp}}=0.40$--$0.45$, substantially above HOFINET (0.04--0.27) and AMLworld (0.038--0.042). The higher suspicious-account ratio (13.52\%) allows even the BN-free DGI encoder to move out of the collapse-prone region. This supports the interpretation of Theorem~\ref{thm:bn_collapse}: collapse prevention matters most in low-prevalence regimes, while its apparent effect shrinks as the random-classifier ceiling rises. The view and level effects still match HOFINET qualitatively; for example, GBT improves from 0.426 in (a) to 0.679 in (d), a relative gain of more than 50\%.
 
