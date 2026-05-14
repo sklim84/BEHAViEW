@@ -18,6 +18,7 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import copy
+import re
 import pandas as pd
 import torch
 import torch.nn.functional as F
@@ -565,14 +566,20 @@ def main(args):
     val_ratio = train_ratio  # paper convention: train=val=10%, test=80%
     split = make_split(z_cpu.size(0), train_ratio=train_ratio, val_ratio=val_ratio, seed=args.seed)
     tune_threshold = getattr(args, 'tune_threshold', False)
-    test_result = evaluate_with_metrics(z_cpu, data.y, split, tune_threshold=tune_threshold)
-    print(test_result)
-    print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, '
-          f'F1Ma={test_result["macro_f1"]:.4f}, '
-          f'F1_susp={test_result["f1_1"]:.4f}')
+    test_results = evaluate_with_metrics(z_cpu, data.y, split, tune_threshold=tune_threshold)
 
-    result = build_result_dict(args.model_name, args, test_result, ari_score, sil_score, use_cen=False)
-    save_results_to_csv([result], args.metric_save_path)
+    rows = []
+    for r in test_results:
+        variant = r.pop('variant', 'default')
+        if variant == 'tuned':
+            m = re.match(r'(.*)_s(\d+)$', args.model_name)
+            name = f'{m.group(1)}_tuned_s{m.group(2)}' if m else f'{args.model_name}_tuned'
+        else:
+            name = args.model_name
+        print(f'(E)[{variant}] {name}: F1Mi={r["micro_f1"]:.4f}, '
+              f'F1Ma={r["macro_f1"]:.4f}, F1_susp={r["f1_1"]:.4f}, τ={r["threshold"]:.3f}')
+        rows.append(build_result_dict(name, args, r, ari_score, sil_score, use_cen=False))
+    save_results_to_csv(rows, args.metric_save_path)
 
 
 if __name__ == '__main__':

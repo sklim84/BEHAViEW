@@ -15,7 +15,10 @@ set -e
 GPU="${GPU:-0}"
 SEEDS="${SEEDS:-2024 2025 2026 2027}"
 ENCODERS="${ENCODERS:-gbt dgi_bn grace_bn bgrl}"
-SETTINGS="${SETTINGS:-b b_tuned d d_tuned d_hap d_hap_tuned}"
+# Each setting trains once and emits two CSV rows: default (τ=0.5) and tuned (τ*
+# from validation). The deterministic seed guarantees both rows share the same
+# trained model and y_score, so the τ=0.5 row reproduces the untuned baseline.
+SETTINGS="${SETTINGS:-b d d_hap}"
 HP="--lr 0.0005 --hidden_dim 256 --gconv_nlayers 2"
 EPOCHS="${EPOCHS:-200}"
 DEVICE="${DEVICE:-auto}"
@@ -45,14 +48,11 @@ run_one() {
     local SETTING="$2"
     local SEED="$3"
 
-    local FLAGS="--knn_graph $KNN"
+    local FLAGS="--knn_graph $KNN --tune_threshold"
     case "$SETTING" in
         b) ;;
-        b_tuned) FLAGS="$FLAGS --tune_threshold" ;;
         d) FLAGS="$FLAGS --subgraph_pool" ;;
-        d_tuned) FLAGS="$FLAGS --subgraph_pool --tune_threshold" ;;
         d_hap) FLAGS="$FLAGS --subgraph_pool --pool_variant heterophily" ;;
-        d_hap_tuned) FLAGS="$FLAGS --subgraph_pool --pool_variant heterophily --tune_threshold" ;;
         *) echo "unknown setting: $SETTING"; exit 1 ;;
     esac
 

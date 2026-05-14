@@ -130,11 +130,28 @@ def _best_f1_threshold(y_true, y_score):
     return best_threshold, best_f1
 
 
+def _metrics_at_threshold(y_test, y_score, threshold):
+    y_pred = (y_score >= threshold).astype(int)
+    clf_report = classification_report(y_test, y_pred, digits=4, output_dict=True, zero_division=0)
+    return {
+        'pre_0': clf_report['0']['precision'],
+        'rec_0': clf_report['0']['recall'],
+        'f1_0': clf_report['0']['f1-score'],
+        'pre_1': clf_report['1']['precision'],
+        'rec_1': clf_report['1']['recall'],
+        'f1_1': clf_report['1']['f1-score'],
+        'micro_f1': f1_score(y_test, y_pred, average='micro'),
+        'macro_f1': f1_score(y_test, y_pred, average='macro'),
+    }
+
+
 def evaluate_with_metrics(z, y, split, tune_threshold=False):
-    """
-    z: 노드 임베딩 (torch.Tensor)
-    y: 노드 레이블 (torch.Tensor)
-    split: dict with keys 'train' and 'test' (torch.Tensor of indices)
+    """Returns list of result dicts: [default] or [default, tuned].
+
+    The default entry (variant='default') always applies τ=0.5. When
+    tune_threshold=True an additional 'tuned' entry applies τ* selected on the
+    validation split. Both share the same trained classifier and y_score, so
+    AUROC/AUPRC (threshold-invariant) are identical across entries.
     """
     if isinstance(z, torch.Tensor):
         z = z.detach().cpu().numpy()
@@ -159,56 +176,41 @@ def evaluate_with_metrics(z, y, split, tune_threshold=False):
     clf.fit(z_train, y_train)
 
     y_score = clf.predict_proba(z_test)[:, 1]
-    threshold = 0.5
-    valid_f1_at_threshold = None
+
+    try:
+        auc = roc_auc_score(y_test, y_score)
+        ap = average_precision_score(y_test, y_score)
+    except Exception as e:
+        print("AUROC/AUPRC 계산 실패:", e)
+        auc, ap = None, None
+
+    print(f"\n AUROC={auc:.4f}  AUPRC={ap:.4f}" if auc is not None else "\n AUROC/AUPRC unavailable")
+
+    def _entry(variant, threshold, valid_f1=None):
+        m = _metrics_at_threshold(y_test, y_score, threshold)
+        print(f"\n=== Eval [{variant}] threshold={threshold:.3f} ===")
+        print(f"F1_susp={m['f1_1']:.4f}  F1Mi={m['micro_f1']:.4f}  F1Ma={m['macro_f1']:.4f}")
+        return {
+            'variant': variant,
+            **m,
+            'auroc': auc,
+            'auprc': ap,
+            'threshold': threshold,
+            'valid_f1_1': valid_f1,
+        }
+
+    results = [_entry('default', 0.5)]
+
     if tune_threshold:
         if valid_idx is None:
             raise ValueError("tune_threshold=True requires split['valid']")
         z_valid, y_valid = z[valid_idx], y[valid_idx]
         y_valid_score = clf.predict_proba(z_valid)[:, 1]
-        threshold, valid_f1_at_threshold = _best_f1_threshold(y_valid, y_valid_score)
-        print(f"\n Tuned threshold: {threshold:.3f} (valid F1_susp={valid_f1_at_threshold:.4f})")
+        tau_star, valid_f1 = _best_f1_threshold(y_valid, y_valid_score)
+        print(f"\n Tuned threshold: τ*={tau_star:.3f} (valid F1_susp={valid_f1:.4f})")
+        results.append(_entry('tuned', tau_star, valid_f1))
 
-    y_pred = (y_score >= threshold).astype(int)
-
-    print("\n Classification Report")
-    print(classification_report(y_test, y_pred, digits=4))
-    clf_report = classification_report(y_test, y_pred, digits=4, output_dict=True)
-
-    f1_micro = f1_score(y_test, y_pred, average="micro")
-    f1_macro = f1_score(y_test, y_pred, average="macro")
-    f1_by_class = f1_score(y_test, y_pred, average=None)
-
-    print(f"F1-micro: {f1_micro:.4f}")
-    print(f"F1-macro: {f1_macro:.4f}")
-    print(f"F1-by-class [Normal, Suspicious]: {f1_by_class}")
-
-    print("\n AUROC & AUPRC")
-    try:
-        auc = roc_auc_score(y_test, y_score)
-        ap = average_precision_score(y_test, y_score)
-        print(f"AUROC: {auc:.4f}")
-        print(f"AUPRC: {ap:.4f}")
-    except Exception as e:
-        print("AUROC/AUPRC 계산 실패:", e)
-
-    print("\n Confusion Matrix")
-    print(confusion_matrix(y_test, y_pred))
-
-    return {
-        'pre_0': clf_report['0']['precision'],
-        'rec_0': clf_report['0']['recall'],
-        'f1_0': clf_report['0']['f1-score'],
-        'pre_1': clf_report['1']['precision'],
-        'rec_1': clf_report['1']['recall'],
-        'f1_1': clf_report['1']['f1-score'],
-        "micro_f1": f1_micro,
-        "macro_f1": f1_macro,
-        "auroc": auc if 'auc' in locals() else None,
-        "auprc": ap if 'ap' in locals() else None,
-        "threshold": threshold,
-        "valid_f1_1": valid_f1_at_threshold
-    }
+    return results
 
 
 def visualize_tsne(seed, embeddings, labels, save_path=None, max_samples=50000, skip=False):
