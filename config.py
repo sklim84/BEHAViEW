@@ -9,12 +9,16 @@ parser.add_argument('--edge_data_name', type=str, default='HOFINET_EDGES')
 parser.add_argument('--metric_save_path', type=str, default='./results/exp_results.csv')
 parser.add_argument('--loss', type=str, default='InfoNCE')
 parser.add_argument('--gpu', type=str, default='0')
+parser.add_argument('--device', type=str, default='auto',
+                    choices=['auto', 'cuda', 'mps', 'cpu'],
+                    help='Training device. auto prefers CUDA, then MPS, then CPU.')
 parser.add_argument('--seed', type=int, default=2025)
 parser.add_argument('--struct_feats', nargs='+',
                     help="List of structural feature types (dc, pagerank, hits_hub, hits_auth, kcore, triangle, betweenness)",
                     default=['dc', 'pagerank', 'hits_hub', 'hits_auth', 'kcore', 'triangle', 'betweenness'])
 
 parser.add_argument('--lr', type=float, default=0.001)
+parser.add_argument('--epochs', type=int, default=200)
 parser.add_argument('--input_dim', type=int, default=16)
 parser.add_argument('--hidden_dim', type=int, default=256)
 parser.add_argument('--gconv_nlayers', type=int, default=3)
@@ -37,6 +41,8 @@ parser.add_argument('--cycle_alpha', type=float, default=2.0,
                     help='Triangle-membership boost coefficient for cycle-aware pool')
 
 # Evaluation
+parser.add_argument('--tune_threshold', action='store_true',
+                    help='Tune LogisticRegression decision threshold on validation split for suspicious-class F1')
 parser.add_argument('--skip_tsne', action='store_true', help='Skip t-SNE visualization (for HP search)')
 parser.add_argument('--train_ratio', type=float, default=0.1, help='Train split ratio (val=same, test=1-2*train)')
 

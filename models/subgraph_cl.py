@@ -481,7 +481,18 @@ def get_embeddings(model, x, edge_index_v1, edge_index_v2):
 
 def main(args):
     set_seed(args.seed)
-    device = torch.device(f'cuda:{args.gpu}')
+    device_arg = getattr(args, 'device', 'auto')
+    if device_arg == 'auto':
+        if torch.cuda.is_available():
+            device = torch.device(f'cuda:{args.gpu}')
+        elif getattr(torch.backends, 'mps', None) is not None and torch.backends.mps.is_available():
+            device = torch.device('mps')
+        else:
+            device = torch.device('cpu')
+    elif device_arg == 'cuda':
+        device = torch.device(f'cuda:{args.gpu}')
+    else:
+        device = torch.device(device_arg)
     print(f'##### device: {device}')
 
     data, _ = load_graph_data(args, device=device)
@@ -534,8 +545,9 @@ def main(args):
 
     optimizer = Adam(model.parameters(), lr=args.lr)
 
-    with tqdm(total=200, desc='(T)') as pbar:
-        for epoch in range(1, 201):
+    epochs = getattr(args, 'epochs', 200)
+    with tqdm(total=epochs, desc='(T)') as pbar:
+        for epoch in range(1, epochs + 1):
             loss = train(model, data.x, edge_index_v1, edge_index_v2, optimizer)
             pbar.set_postfix({'loss': f'{loss:.4f}'})
             pbar.update()
@@ -552,7 +564,8 @@ def main(args):
     train_ratio = getattr(args, 'train_ratio', 0.1)
     val_ratio = train_ratio  # paper convention: train=val=10%, test=80%
     split = make_split(z_cpu.size(0), train_ratio=train_ratio, val_ratio=val_ratio, seed=args.seed)
-    test_result = evaluate_with_metrics(z_cpu, data.y, split)
+    tune_threshold = getattr(args, 'tune_threshold', False)
+    test_result = evaluate_with_metrics(z_cpu, data.y, split, tune_threshold=tune_threshold)
     print(test_result)
     print(f'(E): Best test F1Mi={test_result["micro_f1"]:.4f}, '
           f'F1Ma={test_result["macro_f1"]:.4f}, '

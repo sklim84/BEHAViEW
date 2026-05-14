@@ -17,7 +17,6 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score, silhouette_score
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
-import GCL.losses as L
 
 
 def set_seed(seed):
@@ -54,6 +53,8 @@ def make_split(n, train_ratio, val_ratio, seed):
 
 def create_loss(loss_name):
     """손실 함수 이름으로부터 GCL Loss 객체를 생성한다."""
+    import GCL.losses as L
+
     if loss_name == 'BootstrapLatent':
         return L.BootstrapLatent()
     elif loss_name == 'JSD':
@@ -88,6 +89,8 @@ def build_result_dict(model_name, args, test_result, ari_score, sil_score, use_c
         'F1Ma': test_result['macro_f1'],
         'auroc': test_result['auroc'],
         'auprc': test_result['auprc'],
+        'threshold': test_result.get('threshold', 0.5),
+        'valid_f1_1': test_result.get('valid_f1_1'),
         'ari_score': ari_score,
         'sil_score': sil_score
     }
@@ -113,7 +116,21 @@ def save_results_to_csv(results, file_path):
     print(f"Results saved to {file_path}")
 
 
-def evaluate_with_metrics(z, y, split):
+def _best_f1_threshold(y_true, y_score):
+    """Choose a validation threshold that maximizes suspicious-class F1."""
+    thresholds = np.linspace(0.0, 1.0, 1001)
+    best_threshold = 0.5
+    best_f1 = -1.0
+    for threshold in thresholds:
+        y_pred = (y_score >= threshold).astype(int)
+        f1 = f1_score(y_true, y_pred, pos_label=1, zero_division=0)
+        if f1 > best_f1:
+            best_f1 = f1
+            best_threshold = threshold
+    return best_threshold, best_f1
+
+
+def evaluate_with_metrics(z, y, split, tune_threshold=False):
     """
     z: 노드 임베딩 (torch.Tensor)
     y: 노드 레이블 (torch.Tensor)
@@ -125,10 +142,13 @@ def evaluate_with_metrics(z, y, split):
         y = y.detach().cpu().numpy()
 
     train_idx = split['train']
+    valid_idx = split.get('valid')
     test_idx = split['test']
 
     if isinstance(train_idx, torch.Tensor):
         train_idx = train_idx.cpu().numpy()
+    if isinstance(valid_idx, torch.Tensor):
+        valid_idx = valid_idx.cpu().numpy()
     if isinstance(test_idx, torch.Tensor):
         test_idx = test_idx.cpu().numpy()
 
@@ -138,8 +158,18 @@ def evaluate_with_metrics(z, y, split):
     clf = LogisticRegression(max_iter=1000, class_weight='balanced')
     clf.fit(z_train, y_train)
 
-    y_pred = clf.predict(z_test)
     y_score = clf.predict_proba(z_test)[:, 1]
+    threshold = 0.5
+    valid_f1_at_threshold = None
+    if tune_threshold:
+        if valid_idx is None:
+            raise ValueError("tune_threshold=True requires split['valid']")
+        z_valid, y_valid = z[valid_idx], y[valid_idx]
+        y_valid_score = clf.predict_proba(z_valid)[:, 1]
+        threshold, valid_f1_at_threshold = _best_f1_threshold(y_valid, y_valid_score)
+        print(f"\n Tuned threshold: {threshold:.3f} (valid F1_susp={valid_f1_at_threshold:.4f})")
+
+    y_pred = (y_score >= threshold).astype(int)
 
     print("\n Classification Report")
     print(classification_report(y_test, y_pred, digits=4))
@@ -175,7 +205,9 @@ def evaluate_with_metrics(z, y, split):
         "micro_f1": f1_micro,
         "macro_f1": f1_macro,
         "auroc": auc if 'auc' in locals() else None,
-        "auprc": ap if 'ap' in locals() else None
+        "auprc": ap if 'ap' in locals() else None,
+        "threshold": threshold,
+        "valid_f1_1": valid_f1_at_threshold
     }
 
 
