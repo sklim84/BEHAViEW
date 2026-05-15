@@ -1,5 +1,5 @@
 % \documentclass[sigconf,nonacm]{acmart}
-\documentclass[sigconf,review]{acmart}
+\documentclass[sigconf,natbib=true,anonymous=true]{acmart}
 
 \usepackage{multirow, multicol, caption}
 \captionsetup[table]{skip=2pt}
@@ -63,8 +63,7 @@
 
 \begin{document}
 
-
-\title{\method: Behavioral View and Subgraph Contrast for AML in Low-Homophily Transaction Networks}
+\title{\method: Behavioral View-Driven Homophily Recovery for Suspicious Nodes in AML Transaction Graphs}
 % \author{Seonkyu Lim}
 % \email{{sklim}@kftc.or.kr}
 % \affiliation{%
@@ -78,10 +77,10 @@
 
 
 \begin{abstract}
-In anti-money laundering (AML), suspicious-transaction labels usually arrive only after lengthy regulatory investigations, making labeled data scarce and delayed. Transaction graphs also place suspicious accounts among many benign counterparties; consequently, standard GNN aggregation can dilute the rare suspicious signal. To address this, we propose \method, a graph contrastive learning framework that builds an auxiliary behavioral k-NN view and learns node representations without labels. This view links accounts by similarity in behavioral transaction patterns (e.g., amount statistics, temporal frequencies, transaction-type entropy). On the Home and Firm banking Network (HOFINET), the suspicious ego-neighborhood ratio improves from Suspicious-Suspicious:Suspicious-Benign $=$ 1:5.7 in the transaction graph to 1:1.4 in the behavioral view, while global edge homophily rises from 0.690 to 0.981. \resultdep{With subgraph-level contrastive learning on this recovered view, \method improves suspicious-account detection across HOFINET, AMLworld, and AMLNet.} On HOFINET, its self-supervised representations are within 0.006 $F1_{\text{susp}}$ of a supervised MLP and outperform five fraud- and anomaly-specific GNNs. In a cold-start setting with only 1\% of labels, \method maintains $F1_{\text{susp}}{=}0.654$, demonstrating effective self-supervised view construction for label-delayed AML.
+In anti-money laundering (AML), suspicious-transaction labels usually arrive only after lengthy regulatory investigations, making labeled data scarce and delayed. Transaction graphs also place suspicious accounts among many benign counterparties; consequently, standard GNN aggregation can dilute the rare suspicious signal. We argue that this stems from a topology–behavior mismatch: the observed transaction topology is adversarially shaped and can be a poor proxy for suspicious-class homophily. To address this, we propose \method, a graph contrastive learning framework whose primary contribution is \emph{topology repair via behavioral homophily recovery}: we construct a topology-independent behavioral view (a behavioral affinity graph) that links accounts by similarity in behavioral transaction patterns (e.g., amount statistics, temporal frequencies, transaction-type entropy) without leaking connectivity-derived variables into the view. On the Home and Firm banking Network (HOFINET), the suspicious ego-neighborhood ratio improves from Suspicious-Suspicious:Suspicious-Benign $=$ 1:5.7 in the transaction graph to 1:1.4 in the recovered behavioral view, while global edge homophily rises from 0.690 to 0.981. \method improves suspicious-account detection across HOFINET, AMLworld, and AMLNet; subgraph-level pooling on the recovered view serves as a conditional refinement with modest additional gains. On HOFINET, its self-supervised representations are within 0.006 $F1_{\text{susp}}$ of a supervised MLP and outperform five fraud- and anomaly-specific GNNs. In a cold-start setting with only 1\% of labels, \method maintains $F1_{\text{susp}}{=}0.654$, demonstrating effective self-supervised learning for label-delayed AML.
 \end{abstract}
 
-\keywords{anti-money laundering, graph contrastive learning, k-NN graph view, subgraph pooling, low-homophily, transaction networks}
+\keywords{anti-money laundering, self-supervised learning, graph contrastive learning, behavioral auxiliary view, homophily recovery, topology repair, low-homophily, transaction networks}
 
 \maketitle
 
@@ -93,29 +92,33 @@ Money laundering, accounting for an estimated 2-5\% of global GDP~\cite{teichman
     \centering
     \includegraphics[width=0.95\columnwidth]{figures/fig_intro_homophily.pdf}
     \Description{Ego-network visualization.}
-  \caption{Ego-network of a suspicious HOFINET account. In the transaction graph, only $\sim$15\% of neighbors are suspicious (S-S:S-B $=$ 1:5.7; S=suspicious, B=benign); the behavioral k-NN view ($k{=}10$) raises the suspicious share to $\sim$41\% (S-S:S-B $=$ 1:1.4).}
+  \caption{Ego-network of a suspicious HOFINET account. In the transaction graph, only $\sim$15\% of neighbors are suspicious (S-S:S-B $=$ 1:5.7; S=suspicious, B=benign); the behavioral view (k-NN, $k{=}10$) raises the suspicious share to $\sim$41\% (S-S:S-B $=$ 1:1.4).}
 \label{fig:intro_homophily}
 \end{figure}
 
 \textbf{Challenge 1: suspicious-class neighborhood heterophily.} Money-laundering accounts intentionally interact with benign accounts to evade detection, forming mule networks. In a synthetic transaction graph based on HOFINET, about 85\% of suspicious accounts' neighbors are benign (S-S:S-B $=$ 1:5.7, Figure~\ref{fig:intro_homophily}). Consequently, the standard homophily assumption used by many GNNs~\cite{zhu2020beyond} is weak for the suspicious class: suspicious--suspicious links are rare even when global edge homophily is inflated by benign--benign edges.
 
-\textbf{Challenges 2--3: class imbalance and label scarcity.} Suspicious accounts often constitute less than 2\% of all accounts~\cite{hilal2022financial}, and labels rely on retrospective investigations that often take more than six months~\cite{fatf2013guidance,kofia2024aml}. Fraud-specific supervised models can therefore face cold-start issues in production, because transaction networks contain few labels and weak in-neighborhood suspicious signals.
+\textbf{Challenges 2--3: class imbalance and label scarcity.} Suspicious accounts often constitute less than 2\% of all accounts~\cite{hilal2022financial}, and labels rely on retrospective investigations that often take more than six months~\cite{fatf2013guidance,kofia2024aml}. Fraud-specific supervised models can therefore face cold-start issues in production because transaction networks contain few labels and weak in-neighborhood suspicious signals.
 
-Graph Contrastive Learning (GCL) is a natural fit because it learns label-free graph representations by enforcing consistency across augmented views~\cite{you2020graph,velivckovic2018deep,thakoor2021large,bielak2022graph}. Standard GCL, however, constructs views by perturbing the original transaction graph; thus, the same neighborhood mismatch can persist across both views~\cite{zhu2020deep,zhu2021graph,hassani2020contrastive}. In particular, view perturbations do not change which accounts are linked by transactions; thus, suspicious accounts can remain embedded among many benign neighbors. Some variants avoid modifying the input graph (e.g., AFGRL~\cite{lee2022augmentation}, SimGRACE~\cite{xia2022simgrace}) but still leave transaction edges unchanged.
+Graph Contrastive Learning (GCL) is a natural fit because it learns label-free graph representations by enforcing consistency across augmented views~\cite{you2020graph,velivckovic2018deep,thakoor2021large,bielak2022graph}. Standard GCL, however, constructs views by perturbing the original transaction graph; thus, the same neighborhood mismatch can persist across both views~\cite{zhu2020deep,zhu2021graph,hassani2020contrastive}. In particular, view perturbations do not change which accounts are linked by transactions; thus, suspicious accounts can remain embedded among many benign neighbors.
 
-In contrast, MLGCL~\cite{shang2023mlgcl} and GCPAL~\cite{lu2024graph} add a k-NN auxiliary graph linking nodes close in feature space. When k-NN is built from all features, including connectivity-derived variables (e.g., degree or centrality), the auxiliary graph can still reflect the original topology and blur behavioral similarity with structural proximity. This raises two design questions: which features should define the auxiliary view, and at which level should contrastive learning be applied?
+We posit that the main challenge is a \emph{topology–behavior mismatch}: in AML transaction networks, the observed graph structure is strategically manipulated (via mule chains and mixing with legitimate parties), making the transaction graph a weak surrogate for homophily within the suspicious class. Accordingly, constructing a behavioral view is not just feature engineering, but a form of \emph{graph topology repair} (or \emph{homophily recovery}) that replaces heterophilous transaction neighborhoods with behaviorally similar ones. without leaking connectivity-derived variables into the view.
 
-We answer these questions along two axes: view construction and contrastive level. For view construction, we build a behavioral k-NN auxiliary view from behavioral transaction features, increasing suspicious--suspicious neighborhoods at the view level. For the contrastive level, we move from node-level contrast to subgraph-level contrast by pooling each account with its neighbors in the behavioral k-NN view.
+We study \method along two linked questions: (i) \emph{when} can a behavioral-only view recover suspicious-class homophily, and (ii) \emph{how} should aggregation operate on the recovered view without diluting the suspicious signal.
 
-We propose \method (Figure~\ref{fig:framework}), a graph contrastive learning framework that separates topology-derived variables from behavioral features, thus enabling the auxiliary view to capture behavioral similarity rather than graph position. On HOFINET, the behavioral k-NN view improves the S-S:S-B ratio from 1:5.7 to 1:1.4, and edge homophily rises from 0.690 on the transaction graph to 0.981 on the behavioral view; AMLworld~\cite{amlpatterns2024realistic} and AMLNet exhibit the same pattern. Our contributions are summarized below.
+We propose \method (Figure~\ref{fig:framework}), a graph contrastive learning framework centered on the recovery of behavioral homophily. On HOFINET, the behavioral view improves the S-S:S-B ratio from 1:5.7 to 1:1.4, and edge homophily rises from 0.690 on the transaction graph to 0.981 on the behavioral view; AMLworld~\cite{amlpatterns2024realistic} and AMLNet exhibit the same pattern.
+
+Our contributions are summarized below.
 
 \begin{itemize}
-    \item \textbf{Homophily recovery via behavioral view construction.} \method alleviates suspicious-class neighborhood heterophily by constructing the k-NN auxiliary view using only behavioral features. On HOFINET, this raises edge homophily from 0.690 (transaction graph) to 0.981 (behavioral k-NN), with a quantitative lower bound in §\ref{subsec:theory}.
+    \item \textbf{Behavioral homophily recovery as topology repair.} We construct a topology-independent behavioral view (behavioral-only features) that recovers suspicious-class neighborhoods. We quantify this effect empirically (homophily, S-S:S-B ratio) and theoretically via a DCSBM-based homophily recovery bound (§\ref{subsec:theory}).
 
-    \item \textbf{Self-supervised learning under label delay and cold start.} Across three datasets with suspicious-account prevalences of 2.13\%, 1.23\%, and 13.52\%, \method remains competitive with fully supervised baselines and exceeds supervised GNN baselines in the low-prevalence AMLworld setting; in a 1\%-label cold-start regime, it achieves $F1_{\text{susp}}{=}0.654$.
+    \item \textbf{From recovered homophily to usable representations under label delay.} \method acquires representations that stay competitive on three AML datasets with BYOL-style self-supervision, even in a cold-start scenario with under 1\% labeled data ($F1_{\text{susp}}{=}0.654$).
 
-    \item \textbf{Disentangling view construction and contrastive level.} Crossing graph view (transaction vs. behavioral k-NN) with contrastive level (node vs. subgraph) into four settings and applying them to ten encoders, we find that behavioral k-NN enables homophily recovery, while \resultdep{subgraph-level scoring on the recovered view strengthens suspicious-class evidence}. A DCSBM-based analysis and a formal characterization of BatchNorm collapse support these mechanisms.
+    \item \textbf{Signal preservation when aggregating on the recovered view.} We analyze when neighborhood aggregation helps versus hurts: a sign-flip characterization explains why pooling can dilute suspicious evidence in heterophyllous transaction neighborhoods, while recovered behavioral neighborhoods enable pooling as a conditional refinement. BatchNorm-related collapse is treated as a supporting analysis for stability rather than the primary novelty.
 \end{itemize}
+
+\noindent\textbf{One-sentence framing.} The core contribution is a topology-agnostic behavioral view that recovers suspicious-class neighborhoods prior to contrastive learning.
 
 \begin{figure*}[t!]
 \centering
@@ -170,7 +173,7 @@ We propose \method (Figure~\ref{fig:framework}), a graph contrastive learning fr
 \node[view1, right=1.0cm of txgraph, yshift=+1.4cm] (v1)
   {Transaction view\\{Augmented $\mathcal{G}_{\text{trans}}$}\\{(edge/feat.\ drop)}};
 \node[view2, right=1.0cm of txgraph, yshift=-1.4cm] (v2)
-  {Auxiliary k-NN view\\{Behavioral k-NN}\\{ $\mathcal{G}_{\text{knn}}$ (top-$k$ sim.)}};
+  {{Behavioral view}\\{ $\mathcal{G}_{\text{knn}}$ (top-$k$ sim.)}};
 \draw[myarrow] (txgraph.east) -- ++(0.4,0) |- (v1.west);
 \draw[myarrow] (txgraph.east) -- ++(0.4,0) |- (v2.west);
 \node[above=0.2cm of v1, font=\bfseries, text=blue!70] (lv) {Contrastive Views};
@@ -187,7 +190,7 @@ We propose \method (Figure~\ref{fig:framework}), a graph contrastive learning fr
 \node[poolbox_oth, right=0.5cm of enc1] (pool1)
   {Subgraph Pool\\{tx-graph neighbors}};
 \node[poolbox_our, right=0.5cm of enc2] (pool2)
-  {Subgraph Pool\\k-NN neighbors};
+  {Subgraph Pool\\behave. sim. neighbors};
 \draw[myarrow] (enc1.east) -- (pool1.west);
 \draw[myarrow] (enc2.east) -- (pool2.west);
 \node[above=0.2cm of pool1, font=\bfseries, text=black] {Subgraph Pooling};
@@ -228,62 +231,64 @@ We propose \method (Figure~\ref{fig:framework}), a graph contrastive learning fr
     & \textbf{Setting} & \textbf{Graph View} & \textbf{Level} \\
     \hline
     {\color{blue!60}$\blacksquare$} & (a) & Aug.\ $\mathcal{G}_{\text{trans}}$ & Node \\
-    {\color{orange!80}$\blacksquare$} & (b) & Behav.\ k-NN & Node \\
+    {\color{orange!80}$\blacksquare$} & (b) & Behav.\ view & Node \\
     {\color{blue!30}$\blacksquare$} & (c) & Aug.\ $\mathcal{G}_{\text{trans}}$ & Subgraph \\
-    {\color{orange!60}$\blacksquare$} & \textbf{(d)} & Behav.\ k-NN & Subgraph \\
+    {\color{orange!60}$\blacksquare$} & \textbf{(d)} & Behav.\ view & Subgraph \\
     \hline
   \end{tabular}
 };
 \end{tikzpicture}
 }% end resizebox
-\caption{Overview of \method. We construct two contrastive views: (i) an augmented transaction view (stochastic perturbations of $\mathcal{G}_{\text{trans}}$) and (ii) a behavioral k-NN auxiliary view. Both are encoded by a shared online GNN $f_\theta$ and its EMA target $f_\xi$, trained with a symmetric BYOL-style loss without negatives. The contrasted representation varies by setting: (a)(b) use node embeddings, while (c)(d) apply subgraph pooling before contrast. Bottom legend: four-setting ablation; (d) is the proposed setup.}
+\caption{Overview of \method. We construct two contrastive views: (i) an augmented transaction view (stochastic perturbations of $\mathcal{G}_{\text{trans}}$) and (ii) a behavioral view. Both are encoded by a shared online GNN $f_\theta$ and its EMA target $f_\xi$, trained with a symmetric BYOL-style loss without negatives. The contrasted representation varies by setting: (a)(b) use node embeddings, while (c)(d) apply subgraph pooling before contrast. Bottom legend: four-setting ablation; (d) is the proposed setup.}
 \label{fig:framework}
 \end{figure*}
 
 \section{Related Work}\label{sec:related_work}
 % Korean drafts below are kept inside \iffalse blocks for reference and are not compiled.
 \subsection{Low-homophily/heterophily-aware GNNs}
-Heterophily-aware GNN, such as H2GCN~\cite{zhu2020beyond}, Geom-GCN~\cite{pei2020geom}, FAGCN~\cite{bo2021beyond}, GBK-GNN~\cite{du2022gbk}, ACM-GCN~\cite{luan2022acmgcn}, GPR-GNN~\cite{chien2021adaptive}, and LINKX~\cite{zhu2021linkx}, improve message passing under low homophily by separating ego and neighbor embeddings, modifying propagation, or decoupling structure from attributes; however, they still rely on the original graph. In AML transaction networks, suspicious accounts intentionally connect to benign ones; thus, suspicious–suspicious edges are rare, and propagation changes alone cannot recover same-class neighborhoods. We instead build a behavioral k-NN auxiliary graph as a contrastive view that directly links suspicious accounts with similar transaction patterns.
+Heterophily-aware GNN, such as H2GCN~\cite{zhu2020beyond}, Geom-GCN~\cite{pei2020geom}, FAGCN~\cite{bo2021beyond}, GBK-GNN~\cite{du2022gbk}, ACM-GCN~\cite{luan2022acmgcn}, GPR-GNN~\cite{chien2021adaptive}, and LINKX~\cite{zhu2021linkx}, improve message passing under low homophily by separating ego and neighbor embeddings, modifying propagation, or decoupling structure from attributes; however, they still rely on the original graph. In AML transaction networks, suspicious accounts intentionally connect to benign ones; thus, suspicious–suspicious edges are rare, and propagation changes alone cannot recover same-class neighborhoods. We instead build a behavioral view that directly links suspicious accounts with similar transaction patterns.
 
 \subsection{GCL and view design}
-Graph Contrastive Learning (GCL) is a self-supervised framework that learns graph representations by enforcing consistency across multiple views. Methods such as DGI~\cite{velivckovic2018deep}, GRACE~\cite{zhu2020deep}, GraphCL~\cite{you2020graph}, GCA~\cite{zhu2021graph}, BGRL~\cite{thakoor2021large}, GBT~\cite{bielak2022graph}, and MVGRL~\cite{hassani2020contrastive} typically generate views by stochastically perturbing a single input graph. Augmentation-free methods, including AFGRL~\cite{lee2022augmentation}, SimGRACE~\cite{xia2022simgrace}, CCA-SSG~\cite{zhang2021canonical}, GraphMAE~\cite{hou2022graphmae}, and S2GAE~\cite{li2023s2gae}, avoid explicit graph augmentations but still form views at the representation or model level, without repairing transaction edges. On transaction graphs where suspicious accounts have heterophilous neighborhoods, these views preserve rather than alleviate the neighborhood mismatch. In contrast, we use a behavioral k-NN auxiliary graph as one view, restoring homophily at the graph level while retaining the self-supervised benefits of GCL.
+Graph Contrastive Learning (GCL) is a self-supervised framework that learns graph representations by enforcing consistency across multiple views. Methods such as DGI~\cite{velivckovic2018deep}, GRACE~\cite{zhu2020deep}, GraphCL \cite{you2020graph}, GCA~\cite{zhu2021graph}, BGRL~\cite{thakoor2021large}, GBT~\cite{bielak2022graph}, and MVGRL~\cite{hassani2020contrastive} typically generate views by stochastically perturbing a single input graph. Augmentation-free methods, including AFGRL~\cite{lee2022augmentation}, SimGRACE~\cite{xia2022simgrace}, CCA-SSG~\cite{zhang2021canonical}, GraphMAE~\cite{hou2022graphmae}, and S2GAE~\cite{li2023s2gae}, avoid explicit graph augmentations but still form views at the representation or model level, without repairing transaction edges. On transaction graphs where suspicious accounts have heterophilous neighborhoods, these views preserve rather than alleviate the neighborhood mismatch. In contrast, we use a behavioral view, restoring homophily at the graph level while retaining the self-supervised benefits of GCL.
 
 \subsection{Fraud GNNs and label delay}
 GNN-based fraud and AML models improve detection on transaction networks via fraud-aware neighbor selection, label-distribution-based sampling, reweighting, temporal modeling, and multi-relation inference~\cite{liu2020alleviating,dou2020enhancing,liu2021pick,peng2021reinforced,zhang2021fraudre,cheng2020graph,rao2020xfraud,wang2023label,cheng2025graph}. These methods, however, rely on abundant labels and assume suspicious labels are available during training. In AML, labels depend on retrospective investigations and often appear months after the transaction; thus, it is crucial to model suspicious patterns before labels arrive. This makes label-free representation learning a practical response to operational delay. We use labels only in the downstream evaluation head, mitigating label-delay issues.
 
 \subsection{Unsupervised graph anomaly detection}
-Unsupervised graph anomaly detection methods such as DOMINANT~\cite{ding2019dominant}, CoLA~\cite{liu2021anomaly}, ANEMONE~\cite{jin2021anemone}, BWGNN~\cite{tang2022rethinking}, and BOND~\cite{liu2022bond} detect anomalous nodes via reconstruction errors of node attributes and graph structure or node–subgraph contrastive learning. These methods are mainly evaluated on general graph benchmarks and are not tailored to AML transaction networks, where label delay, low prevalence, mule-network-based evasion, and suspicious-neighborhood imbalance co-occur. We adapt the view to AML by building it from behavioral features and analyze when subgraph pooling amplifies suspicious signals versus when it dilutes them. We also study collapse behavior under severe class imbalance.
+Unsupervised graph anomaly detection methods such as DOMINANT~\cite{ding2019dominant}, CoLA~\cite{liu2021anomaly}, ANEMONE~\cite{jin2021anemone}, BWGNN~\cite{tang2022rethinking}, and BOND \cite{liu2022bond} detect anomalous nodes via reconstruction errors of node attributes and graph structure or node–subgraph contrastive learning. These methods are mainly evaluated on general graph benchmarks and are not tailored to AML transaction networks, where label delay, low prevalence, mule-network-based evasion, and suspicious-neighborhood imbalance co-occur. We adapt the view to AML by building it from behavioral features and analyze when subgraph pooling amplifies suspicious signals versus when it dilutes them. We also study collapse behavior under severe class imbalance.
 
 \subsection{k-NN-view-based GCL}
 MLGCL~\cite{shang2023mlgcl} and GCPAL~\cite{lu2024graph} are the closest prior works, as they also introduce a k-NN view. From an AML perspective, the key issue is which features define this view. We build it from behavioral features (amount, timing, type statistics) rather than graph connectivity; thus, the k-NN edges complement the transaction topology. Using all features would leak connectivity-based quantities (e.g., degree, centrality) into the auxiliary graph and prevent a topology-independent view. Prior k-NN view studies also conflate feature choice with contrastive level. In contrast, we construct the k-NN view from behavioral features only and jointly evaluate both design axes via four settings that cross view construction (transaction graph vs. behavioral k-NN) with contrastive level (node vs. subgraph).
 
-Prior work has advanced heterophilous propagation, label-dependent detection, self-supervised representation learning, unsupervised anomaly detection, and k-NN-based view construction. Yet few methods jointly tackle the three key AML transaction-network challenges: suspicious-class neighborhood heterophily, label delay, and suspicious accounts that are behaviorally similar but transactionally disconnected. We target these by constructing a behavioral k-NN auxiliary view, applying subgraph-level contrastive learning on it, and independently validating the roles of view construction and contrastive level through theory and experiments.
+Prior work has advanced heterophilous propagation, label-dependent detection, self-supervised representation learning, unsupervised anomaly detection, and k-NN-based view construction. Yet few methods jointly tackle the three key AML transaction-network challenges: suspicious-class neighborhood heterophily, label delay, and suspicious accounts that are behaviorally similar but transactionally disconnected. We target these by constructing a k-NN-based behavioral view, applying subgraph-level contrastive learning to it, and independently validating the roles of view construction and contrastive learning through theoretical analysis and experiments.
 
 \section{Method: \method}
 \label{sec:method}
 
 \subsection{Problem Formulation}
-We model the transaction network as a directed graph $\mathcal{G}_{\text{trans}} = (\mathcal{V}, \mathcal{E}, \mathbf{X})$, where $\mathcal{V}$ is the set of accounts (nodes, $|\mathcal{V}|=N$), $\mathcal{E} \subseteq \mathcal{V} \times \mathcal{V}$ is the set of transfer transactions (edges), and $\mathbf{X} \in \mathbb{R}^{N \times F}$ is the node feature matrix. Each node $v_i$ has a suspicion label $y_i \in \{0, 1\}$, but we use a self-supervised setting that ignores labels during training. Our goal is to learn node representations $\mathbf{Z} \in \mathbb{R}^{N \times D}$ that identify suspicious accounts from the graph structure and node features alone.
+We model the transaction network as a directed graph $\mathcal{G}_{\text{trans}} = (\mathcal{V}, \mathcal{E}, \mathbf{X})$, where $\mathcal{V}$ is the set of accounts (nodes, $|\mathcal{V}|=N$), $\mathcal{E} \subseteq \mathcal{V} \times \mathcal{V}$ is the set of transfer transactions (edges), and $\mathbf{X} \in \mathbb{R}^{N \times F}$ is the node feature matrix. Each node $v_i$ has a suspicion label $y_i \in \{0, 1\}$, but we use a self-supervised setting that ignores labels during training. Our goal is to learn node representations $\mathbf{Z} \in \mathbb{R}^{N \times D}$ that identify suspicious accounts based purely on the graph structure and node features.
 
 \subsection{Feature Taxonomy}
 \label{subsec:feature_taxonomy}
 We group the node features available in a transaction network into behavioral, network-derived, and structural categories (Table~\ref{tab:features}).
 
+The behavioral features capture transaction patterns via amount statistics, time-window frequencies, and transaction-type entropies (Table~\ref{tab:features}). Network-derived features (transaction counts and degrees) are input to the encoder but are excluded from the auxiliary view, while structural features (centrality, hub/authority, topology) are used only for analysis and auxiliary comparison. We denote by $\mathbf{X}^{\text{enc}}$ the behavioral and network-derived features given to the GNN encoder, and by $\mathbf{X}^{\text{knn}}$ the 20 behavioral features used to construct a behavioral affinity graph. When suspicious accounts transact with benign ones to evade detection, the suspicious class exhibits low neighborhood homophily in the observed transaction topology. We counter this by recovering a topology-independent behavioral view (topology repair), linking accounts with similar behavior even if they are not directly connected by transactions.
+
 \begin{table}[h]
 \centering
-\caption{Node feature taxonomy. Behavioral and network-derived features are used as GNN input, while k-NN view construction uses only 20 behavioral variables.}
+\caption{Node feature taxonomy. Behavioral and network-derived features are used as GNN input, while  view construction uses only 20 behavioral variables.}
 \label{tab:features}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{llrcc}
 \toprule
-\textbf{Category} & \textbf{Features} & \textbf{\#} & \textbf{GNN} & \textbf{k-NN} \\
+\textbf{Category} & \textbf{Features} & \textbf{\#} & \textbf{GNN} & \textbf{View} \\
 \midrule
 \multicolumn{2}{l}{\textit{\textbf{Behavioral}}} & \textit{Total} - 20 & & \\
 \midrule
 \textbf{Amount stats}     & \makecell[l]{\text{in\_mean, in\_max, in\_std}\\\text{out\_mean, out\_max, out\_std}} & 6 & \checkmark & \checkmark \\
-\textbf{Temporal (3min)}    & \makecell[l]{\text{in\_3m\_mean, in\_3m\_count}\\\text{out\_3m\_mean, out\_3m\_count}} & 2 & \checkmark & \checkmark \\
-\textbf{Temporal (6min)}    & \makecell[l]{\text{in\_6m\_mean, in\_6m\_count}\\\text{out\_6m\_mean, out\_6m\_count}} & 2 & \checkmark & \checkmark \\
-\textbf{Temporal (12min)}   & \makecell[l]{\text{in\_12m\_mean, in\_12m\_count}\\\text{out\_12m\_mean, out\_12m\_count}} & 2 & \checkmark & \checkmark \\
+\textbf{Temporal (3min)}    & \makecell[l]{\text{in\_3m\_mean, in\_3m\_count}\\\text{out\_3m\_mean, out\_3m\_count}} & 4 & \checkmark & \checkmark \\
+\textbf{Temporal (6min)}    & \makecell[l]{\text{in\_6m\_mean, in\_6m\_count}\\\text{out\_6m\_mean, out\_6m\_count}} & 4 & \checkmark & \checkmark \\
+\textbf{Temporal (12min)}   & \makecell[l]{\text{in\_12m\_mean, in\_12m\_count}\\\text{out\_12m\_mean, out\_12m\_count}} & 4 & \checkmark & \checkmark \\
 \textbf{Entropy}          & \makecell[l]{\text{md\_type\_entropy, fnd\_type\_entropy}} & 2 & \checkmark & \checkmark \\
 \midrule
 \multicolumn{2}{l}{\textit{Network-derived}} & \textit{Total} - 4 & & \\
@@ -300,40 +305,38 @@ Topology         & kcore, triangle                  & 2 &  &  \\
 \end{tabular}}
 \end{table}
 
-The behavioral features capture transaction patterns via amount statistics, time-window frequencies, and transaction-type entropies (Table~\ref{tab:features}). Network-derived features (transaction counts and degrees) are input to the encoder but are excluded from the k-NN view, while structural features (centrality, hub/authority, topology) are used only for analysis and auxiliary comparison. We denote by $\mathbf{X}^{\text{enc}}$ the behavioral and network-derived features given to the GNN encoder, and by $\mathbf{X}^{\text{knn}}$ the 20 behavioral features used to build the k-NN graph. When suspicious accounts transact with benign ones to evade detection, the suspicious class exhibits low neighborhood homophily. We counter this by constructing a behavioral k-NN auxiliary graph as the contrastive view, linking accounts with similar behavior even if they are not directly connected by transactions.
-
-\subsection{Behavioral k-NN View}
+\subsection{Behavioral Auxiliary View for Homophily Recovery}
 \label{subsec:knn_view}
-A central component of \method is a behavioral-similarity k-NN graph built separately from the transaction edges. Standard augmentation-based GCL produces contrastive inputs by dropping edges or masking features on the original graph. We instead construct an auxiliary k-NN view independently of the edge structure of $\mathcal{G}_{\text{trans}}$ (Figure~\ref{fig:framework}).
+A central component of \method is a topology-independent behavioral auxiliary view that acts as a recovered neighborhood graph for AML. Standard augmentation-based GCL produces contrastive inputs by dropping edges or masking features on the original graph, which cannot change heterophilous transaction neighborhoods. We instead construct a behavioral affinity graph independently of the edge structure of $\mathcal{G}_{\text{trans}}$ (Figure~\ref{fig:framework}), using behavioral-only features to avoid topology leakage.
 
-\textbf{k-NN graph construction.} We first standardize the behavioral features $\mathbf{x}_i^{\text{knn}} \in \mathbb{R}^{20}$ to have a zero mean and unit variance to remove scale differences across variables, and then apply L2 normalization, such that similarity depends on the direction of the feature vector:
+\textbf{View construction.} We first standardize the behavioral features $\mathbf{x}_i^{\text{bev}} \in \mathbb{R}^{20}$ to have a zero mean and unit variance to remove scale differences across variables, and then apply L2 normalization, such that similarity depends on the direction of the feature vector:
 
 \begin{equation}
 \label{eq:l2norm}
-    \bar{\mathbf{x}}_i = \text{StandardScaler}(\mathbf{x}_i^{\text{knn}}), \quad
+    \bar{\mathbf{x}}_i = \text{StandardScaler}(\mathbf{x}_i^{\text{bhv}}), \quad
     \tilde{\mathbf{x}}_i = \frac{\bar{\mathbf{x}}_i}{\|\bar{\mathbf{x}}_i\|_2}
 \end{equation}
 
-Because the Euclidean distance between two L2-normalized vectors is monotonic in their cosine similarity, we retrieve the $k$ nearest neighbors of each node $v_i$ with a ball-tree search over Euclidean distance. Connecting each node to these neighbors yields the k-NN graph $\mathcal{G}_{\text{knn}} = (\mathcal{V}, \mathcal{E}_{\text{knn}})$:
+Because the Euclidean distance between two L2-normalized vectors is monotonic in their cosine similarity, we retrieve the $k$ nearest neighbors of each node $v_i$ with a ball-tree search over Euclidean distance. Connecting each node to these neighbors yields the behavioral view graph $\mathcal{G}_{\text{bhv}} = (\mathcal{V}, \mathcal{E}_{\text{bhv}})$:
 
 \begin{equation}
 \label{eq:knn_edge}
-    \mathcal{E}_{\text{knn}} = \{(v_i, v_j) \mid v_j \in \operatorname{kNN}(v_i, k)\}.
+    \mathcal{E}_{\text{bhv}} = \{(v_i, v_j) \mid v_j \in \operatorname{kNN}(v_i, k)\}.
 \end{equation}
 
-We use the symmetrized (bidirectional) version of this k-NN graph for message passing and pooling; thus, we add $(v_j, v_i)$ whenever $(v_i, v_j) \in \mathcal{E}_{\text{knn}}$.
+We use the symmetrized (bidirectional) version of this behavioral view graph for message passing and pooling; thus, we add $(v_j, v_i)$ whenever $(v_i, v_j) \in \mathcal{E}_{\text{bhv}}$.
 
 Here, $\operatorname{kNN}(v_i, k)$ denotes the set of $k$ nodes closest (in Euclidean distance) to $\tilde{\mathbf{x}}_i$, with $k=10$ by default.
 
-Money-laundering accounts that split transactions and layer transfers often show similar patterns in amount distributions, time-window frequencies, and transaction-type entropies. The behavioral k-NN graph thus links suspicious accounts that are not directly connected by transactions, recovering suspicious-to-suspicious neighborhoods missing in the transaction view.
+Money-laundering accounts that split transactions and layer transfers often show similar patterns in amount distributions, time-window frequencies, and transaction-type entropies. The behavioral view graph thus links suspicious accounts that are not directly connected by transactions, recovering suspicious-to-suspicious neighborhoods missing in the transaction view.
 
 \subsection{Dual-View GNN Encoder}
 \label{subsec:dual_view}
-Dual-view contrastive learning aligns a transaction view, capturing transfer structure, with an auxiliary k-NN view, capturing behavioral similarity, for the same account. \method forms these views from $\mathcal{G}_{\text{trans}}$ and $\mathcal{G}_{\text{knn}}$, with stochastic edge dropping and feature masking applied during training.
+Dual-view contrastive learning aligns a transaction view, which captures transfer structure, with a behavioral view that captures behavioral similarity for the same account. \method forms these views from $\mathcal{G}_{\text{trans}}$ and $\mathcal{G}_{\text{bhv}}$, with stochastic edge dropping and feature masking applied during training.
 
-\textbf{Contrastive views.} Using only the transaction view mixes suspicious and benign accounts, while using only the auxiliary k-NN view loses transaction-structure information. \method learns a shared account representation across both views; thus, embeddings capture both transaction structure and behavioral similarity.
+\textbf{Contrastive views.} Using only the transaction view mixes suspicious and benign accounts, while using only the behavioral view loses transaction-structure information. \method learns a shared account representation across both views; thus, embeddings capture both transaction structure and behavioral similarity.
 
-\textbf{GNN encoder.} We apply stochastic edge dropping and feature masking ($p_e{=}p_f{=}0.3$) to the transaction and k-NN graphs to form two views. A shared online encoder $f_\theta$ outputs embeddings $\mathbf{H}^{(1)} = f_\theta(\mathbf{X}^{\text{enc}}, \tilde{\mathcal{E}}_{\text{trans}})$ and $\mathbf{H}^{(2)} = f_\theta(\mathbf{X}^{\text{enc}}, \tilde{\mathcal{E}}_{\text{knn}})$. The target encoder $f_\xi$ is an EMA copy that provides stop-gradient representations for the opposite BYOL branch. The online encoder stacks GCNConv~\cite{kipf2016semi} layers with batch normalization, nonlinear activation, and dropout. \method is encoder-agnostic and supports 10 encoders, including GIN~\cite{xu2018powerful}, MVGRL, and GBT; Section~\ref{subsec:rq2} studies the effect of batch normalization.
+\textbf{GNN encoder.} We apply stochastic edge dropping and feature masking ($p_e{=}p_f{=}0.3$) to the transaction and behavioral view graphs to form two views. A shared online encoder $f_\theta$ outputs embeddings $\mathbf{H}^{(1)} = f_\theta(\mathbf{X}^{\text{enc}}, \tilde{\mathcal{E}}_{\text{trans}})$ and $\mathbf{H}^{(2)} = f_\theta(\mathbf{X}^{\text{enc}}, \tilde{\mathcal{E}}_{\text{bhv}})$. The target encoder $f_\xi$ is an EMA copy that provides stop-gradient representations for the opposite BYOL branch. The online encoder stacks GCNConv~\cite{kipf2016semi} layers with batch normalization, nonlinear activation, and dropout. \method is encoder-agnostic and supports 10 encoders, including GIN~\cite{xu2018powerful}, MVGRL, and GBT; Section~\ref{subsec:rq2} studies the effect of batch normalization.
 
 \subsection{Subgraph Pooling}
 \label{subsec:subgraph_pool}
@@ -345,9 +348,9 @@ Dual-view contrastive learning aligns a transaction view, capturing transfer str
     \left(\mathbf{h}_i^{(t)} + \sum_{v_j \in \mathcal{N}^{(t)}(v_i)} \mathbf{h}_j^{(t)}\right)
 \end{equation}
 
-Here $\mathcal{N}^{(1)}(v_i)$ is the neighborhood of $v_i$ in the transaction view, and $\mathcal{N}^{(2)}(v_i)$ is its neighborhood in the auxiliary k-NN view. For both views, we perform message passing and pooling on a bidirected graph; hence, $\mathcal{N}^{(t)}(v_i)$ can be interpreted as the union of in- and out-neighbors. The operation is implemented efficiently with \texttt{scatter\_add}. The mean pooling in Eq.~\eqref{eq:subgraph_pool} is the default in \method.
+Here $\mathcal{N}^{(1)}(v_i)$ is the neighborhood of $v_i$ in the transaction view, and $\mathcal{N}^{(2)}(v_i)$ is its neighborhood in the behavioral view. For both views, we perform message passing and pooling on a bidirected graph; hence, $\mathcal{N}^{(t)}(v_i)$ can be interpreted as the union of in- and out-neighbors. The operation is implemented efficiently with \texttt{scatter\_add}. The mean pooling in Eq.~\eqref{eq:subgraph_pool} is the default in \method.
 
-\textbf{Pooling effect by view.} Subgraph pooling is applied separately to each view's neighborhood: transaction-graph neighbors for the transaction view and k-NN neighbors for the auxiliary view. Because pooling aggregates neighbor information, the choice of view shapes the outcome. The behavioral k-NN graph is designed to place behaviorally similar suspicious accounts closer together; therefore, pooling on this view can preserve or strengthen suspicious signals. In the transaction graph, suspicious accounts are often linked to benign ones (high S-B ratio); consequently, pooling can dilute suspicious signals with benign information.
+\textbf{View-wise pooling effect.} Subgraph pooling is conducted independently for each view’s neighborhood: transaction-graph neighbors are pooled for the transaction view, while behaviorally similar neighbors are pooled for the behavioral view. Because pooling aggregates neighbor information, the choice of view shapes the outcome. The behavioral view graph is designed to place behaviorally similar suspicious accounts closer together; therefore, pooling on this view can preserve or strengthen suspicious signals. In the transaction graph, suspicious accounts are often linked to benign ones (high S-B ratio); consequently, pooling can dilute suspicious signals with benign information.
 
 \textbf{Conditional amplification and alternative pooling.} The pooling effect depends on view homophily and encoder normalization depth. With per-layer batch normalization, ego-neighborhoods are partly normalized, leaving little room for additional pooling gains. With only final batch normalization (BGRL) or none (DGI, MVGRL, GRACE, GCA), pooling can have a larger marginal effect. When most neighbors belong to another class, averaging can weaken or even invert the suspicious signal (Theorem~\ref{thm:meanpool}; Section~\ref{subsec:theory}). We also define heterophily-aware pooling (HAP, cosine-similarity weights) to characterize when similarity weighting preserves the signal better than mean pooling (Proposition~\ref{thm:hap}); the main experiments use mean pooling for simplicity.
 
@@ -370,86 +373,13 @@ For node-level ablations, we use $\mathbf{z}_i = [\mathbf{h}_i^{(1)} \| \mathbf{
 
 Implementation details and seed-level scripts will be released with the code.
 
-\section{Theoretical Analysis: Homophily Recovery and Signal Preservation}
-\label{subsec:theory}
-
-We now analyze how each \method component behaves when suspicious accounts have low-homophily neighborhoods in the transaction graph. Two central issues arise: (1) a view derived directly from transaction edges rarely links suspicious accounts, resulting in weak suspicious-class homophily; and (2) aggregating information from such heterophilous neighbors can dilute or even invert the suspicious-class signal. Using theorems and a proposition, we identify when a behavioral k-NN view can restore homophily and how different pooling mechanisms affect signal preservation.
-
-We model the transaction graph with a degree-corrected stochastic block model (DCSBM)~\cite{karrer2011stochastic} and assume behavioral features are i.i.d. with class-conditional distributions $x_v \mid y_v = c \sim P_c$. We define homophily $h(G) := |\{(u,v) \in E : y_u = y_v\}| / |E|$, set $|V_S| = \rho N$, and let $N_{\min} = \min(|V_S|, |V_B|)$. In behavioral space, we assume probabilistic class separability: a same-class node is closer to a query than a different-class node with a probability of at least $1 - \epsilon$.
-
-\subsection{View-level Homophily Recovery}
-\label{subsec:theory_view}
-
-\begin{theorem}[Probabilistic homophily recovery]
-\label{thm:knn_homophily}
-For $k \leq (1-\epsilon)(N_{\min}-1) - 1$, the behavioral k-NN graph $G_{\text{knn},k}$ satisfies the homophily lower bound
-\[
-    h(G_{\text{knn}, k}) \;\geq\; 1 - \tfrac{N - 1}{k} \exp\!\left(-\tfrac{((N_{\min}-1)(1-\epsilon) - k)^2}{2(N_{\min}-1)(1-\epsilon)}\right).
-\]
-\end{theorem}
-
-\begin{theorem}[Combined homophily gap]\label{thm:combined}
-Let $h(G_{\text{tx}}) = \alpha$ under the DCSBM, and let $\delta$ denote the error term on the right-hand side of Theorem~\ref{thm:knn_homophily}. Then
-\[
-    h(G_{\text{knn}, k}) - h(G_{\text{tx}})
-    \geq 1 - \alpha - \delta(N, N_{\min}, k, \epsilon).
-\]
-\end{theorem}
-
-\subsection{Aggregation-level Signal Preservation}
-\label{subsec:theory_pool}
-
-We now focus on the aggregation step. We decompose the hidden representation of node $v$ as $z_v = s_v \mu + \eta_v$, where $s_v \in \{\pm 1\}$ denotes the class signal, $\mu$ is the discriminative direction separating suspicious from benign nodes, and $\eta_v$ is a bounded noise term with $\|\eta_v\| \leq \epsilon \|\mu\|$. We quantify the heterophily of the 1-hop ego neighborhood of $v$ by
-\[
-\eta_h := \frac{|\{u \in \mathcal{N}(v) : y_u \neq y_v\}|}{|\mathcal{N}(v)|}.
-\]
-The $\eta_h$ values reported in the main text are dataset-level averages, obtained by computing this fraction for every node in the transaction graph.
-
-To assess how effectively pooling retains the discriminative direction $\mu$, we compare the post-pooling projection
-\[
-\rho := \frac{\langle z_v^{(\cdot)}, \mu \rangle}{\|\mu\|^2}
-\]
-under mean pooling and heterophily-aware pooling (HAP, using cosine-similarity weights). The expectation is taken with the ego node $v$ and its heterophily $\eta_h$ fixed, while the class labels of its neighbors are treated as random. Without loss of generality, we set $s_v = +1$; hence, any neighbor $u$ satisfies
-\[
-\mathbb{E}[s_u \mid u \in \mathcal{N}(v)] = (1-\eta_h)(+1) + \eta_h(-1) = 1 - 2\eta_h.
-\]
-
-\begin{theorem}[Mean-pool signal reversal]
-\label{thm:meanpool}
-With mean pooling, the expected post-pooling projection is $\mathbb{E}[\rho^{(\text{mean})}] = \frac{1 + k(1 - 2\eta_h)}{k+1}$. Consequently, the expected signal flips sign once $\eta_h > \tfrac{1}{2} + \tfrac{1}{2k}$.
-\end{theorem}
-
-\begin{proposition}[HAP signal preservation under small-noise regime]
-\label{thm:hap}
-Assume a small-noise regime with $\epsilon < 1/\sqrt{2}$ and preservation of the cosine similarity sign. Then, for any $\eta_h$, the HAP post-pooling expectation satisfies
-\[
-\mathbb{E}[\rho^{(\text{hap})}] \geq 1 - 2\epsilon^2 - 4\epsilon^2 \eta_h.
-\]
-\end{proposition}
-
-Figure~\ref{fig:theory_inset} shows the sign-flip threshold from Theorem~\ref{thm:meanpool} and the measured $\eta_h$ on the three datasets. All three exceed $\eta_h^* = 0.55$ at $k{=}10$; therefore, mean pooling on the transaction graph places the suspicious signal in the sign-flip regime, explaining why setting (c) (transaction graph plus mean pool) can degrade performance.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=\columnwidth]{figures/fig_theory_inset.pdf}
- \caption{Theory$\to$empirical bridge for Theorem~\ref{thm:meanpool}. X-axis: ego-neighborhood heterophily $\eta_h$; Y-axis: $F1_{\text{susp}}$ drop of (c) (transaction graph + subgraph pool) relative to (a) (transaction graph + augmentation, baseline). All three AML datasets exceed the mean-pool flip threshold $\eta_h^* = 0.55$ ($k{=}10$); markers show the observed $\Delta F1_{\text{susp}}$ for each encoder.}
-    \label{fig:theory_inset}
-\end{figure}
-
-\subsection{Setting-level Performance Prediction}
-\label{subsec:theory_pred}
-
-When $\eta_h^{\text{tx}} > 1/2 + 1/(2 \bar{d}_{\text{tx}})$, with $\bar{d}_{\text{tx}}$ the average ego-neighborhood size in the transaction graph, and the encoder uses batch normalization, the analysis predicts $F1(b) \approx F1(d) > F1(a) > F1(c)$, combining view-level homophily recovery with mean-pool signal reversal. On HOFINET, all six BN-equipped encoders follow this ordering ($\Delta(b{-}a) \in [+0.255, +0.405]$, $\Delta(c{-}a) \in [-0.070, -0.052]$).
-
-Theorems~\ref{thm:knn_homophily}--\ref{thm:combined} specify when a behavioral k-NN view can offset scarce suspicious--suspicious transaction edges, while Theorem~\ref{thm:meanpool} and Proposition~\ref{thm:hap} compare pooling choices under high neighborhood heterophily. Together, they motivate the four-setting ablation used in the experiments below.
-
 \section{Experiments}
 \label{sec:experiments}
-We assess \method in four phases, moving from mechanism to practical deployment. First, we examine whether the behavioral k-NN auxiliary view can make up for missing links between suspicious accounts and restore view-level homophily, thereby boosting downstream performance. Second, we investigate whether applying subgraph pooling on this reconstructed view can further strengthen the suspicious-class signal and how this effect depends on encoder normalization, with particular attention to BatchNorm. Third, we benchmark the resulting self-supervised representations against supervised baselines under label delay and cold-start conditions, reflecting realistic AML settings. Fourth, we test whether the same mechanism and empirical patterns carry over to AML datasets that differ in prevalence and scale. Together, these experiments address the following research questions.
+We assess \method in four phases, moving from mechanism to practical deployment. First, we examine whether the behavioral auxiliary view can make up for missing links between suspicious accounts and restore view-level homophily, thereby boosting downstream performance. Second, we test whether aggregating on the recovered view (subgraph pooling) provides additional benefit \emph{without reintroducing heterophilous dilution}, and we treat normalization effects as a stability/implementation factor that modulates this refinement rather than as a separate core contribution. Third, we benchmark the resulting self-supervised representations against supervised baselines under label delay and cold-start conditions, reflecting realistic AML settings. Fourth, we test whether the same mechanism and empirical patterns carry over to AML datasets that differ in prevalence and scale. Together, these experiments address the following research questions.
 
 \begin{itemize}
-\item \textbf{RQ1. Effectiveness of behavioral k-NN view:} Does the behavioral k-NN auxiliary view compensate for missing edges between suspicious accounts in the transaction graph and restore homophily at the view level?
-\item \textbf{RQ2. Subgraph aggregation and encoder stability:} Does subgraph pooling on the recovered view further strengthen suspicious signals, and how does this depend on encoder normalization, particularly BatchNorm?
+\item \textbf{RQ1. Behavioral homophily recovery:} Does the topology-independent behavioral auxiliary view restore suspicious-class homophily relative to the transaction graph?
+\item \textbf{RQ2. Signal preservation under aggregation:} When does subgraph pooling help versus hurt, and how does recovered homophily change this trade-off?
 \item \textbf{RQ3. Self-supervised AML detection under label scarcity:} Does the self-supervised representation from \method remain competitive with supervised models under label delay and cold start?
 \item \textbf{RQ4. Robustness across AML regimes:} Do the same mechanisms and trends apply to AML datasets with different prevalence and scale?
 \end{itemize}
@@ -457,7 +387,7 @@ We assess \method in four phases, moving from mechanism to practical deployment.
 \subsection{Experimental Setting}
 \textbf{Datasets.} We use three AML datasets (Table~\ref{tab:datasets}). HOFINET includes about 4.7M synthetic transactions derived from real activity on the Korean interbank settlement network, modeling 40 months of household and corporate transfers (2021Q3--2024Q4). AMLworld~\cite{amlpatterns2024realistic}, the NeurIPS 2023 open synthetic benchmark, models eight transaction patterns (e.g., fan-out, scatter-gather, cycle); we use the HI-Small variant (high illicit ratio, small size). AMLNet~\cite{huda2025amlnet}, a small synthetic benchmark for the high-prevalence regime, shares AMLworld’s feature schema.
 
-\textbf{Account-level labels.} All three datasets provide transaction-level suspicious labels. Following standard graph-based AML and fraud detection practice~\cite{dou2020enhancing,liu2021pick}, we max-aggregate to the account level: an account is suspicious (label$=1$) if it appears on either side of any suspicious transaction, and normal (label$=0$) otherwise. The resulting suspicious-account ratios are 2.13\% (HOFINET), 1.23\% (AMLworld), and 13.52\% (AMLNet) (Table~\ref{tab:datasets}).
+\textbf{Account-level labels.} All three datasets provide transaction-level suspicious labels. Following standard graph-based AML and fraud detection practices~\cite{dou2020enhancing,liu2021pick}, we max-aggregate to the account level: an account is suspicious (label$=1$) if it appears on either side of any suspicious transaction, and normal (label$=0$) otherwise. The resulting suspicious-account ratios are 2.13\% (HOFINET), 1.23\% (AMLworld), and 13.52\% (AMLNet) (Table~\ref{tab:datasets}).
 
 \begin{table}[ht]
 \centering
@@ -476,27 +406,27 @@ AMLNet            &  11{,}000 & 1{,}090{,}172 & 13.52\% & Synthetic (simulator) 
 \end{tabular}
 \end{table}
 
-\textbf{Ablation settings and encoders.} We evaluate four settings that cross graph view and contrastive level: (a) transaction graph + node contrast, (b) behavioral k-NN + node contrast, (c) transaction graph + subgraph pooling, and (d) behavioral k-NN + subgraph pooling. These settings are tested with ten encoders spanning per-layer BN (GBT, DGI+BN, MVGRL+BN, GRACE+BN, GIN), final-only BN (BGRL), and BN-less variants (DGI, MVGRL, GRACE, GCA). All encoders use the same BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) and hyperparameters (lr=5e-4, hidden=256, $L$=2, dropout=0.2, 200 epochs).
+\textbf{Ablation settings and encoders.} We evaluate four settings that cross graph view and contrastive level: (a) transaction graph + node contrast, (b) behavioral view + node contrast, (c) transaction graph + subgraph pooling, and (d) behavioral view + subgraph pooling. These settings are tested with ten encoders spanning per-layer BN (GBT, DGI+BN, MVGRL+BN, GRACE+BN, GIN), final-only BN (BGRL), and BN-less variants (DGI, MVGRL, GRACE, GCA). All encoders use the same BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) and hyperparameters (lr=5e-4, hidden=256, $L$=2, dropout=0.2, 200 epochs).
 
 \textbf{Supervised baselines.} We apply class-weight correction to 11 supervised models: generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}, GraphSAGE~\cite{hamilton2017inductive}), tabular methods (MLP, LightGBM~\cite{lightgbm2017}, XGBoost~\cite{xgboost2016}), and fraud- and anomaly-specific GNNs (CARE-GNN~\cite{dou2020enhancing}, PC-GNN~\cite{liu2021pick}, BWGNN~\cite{tang2022rethinking}, GAGA~\cite{wang2023label}, ConsisGAD~\cite{chen2024consisgad}). All three datasets are homogeneous single-relation graphs of account-to-account transfers; therefore, the multi-relation components of the fraud-specific GNNs do not apply; we retain only their single-relation core mechanisms (see Section~\ref{subsec:rq3}).
 
-\textbf{Evaluation protocol.} The primary metric is suspicious-class F1 ($F1_{\text{susp}}$); AUROC and AUPRC are secondary. We use a 10\%/10\%/80\% train/val/test split (encoders are trained self-supervised; labels only train the LogisticRegression head; therefore, 10\% labeled data suffices). For paired comparisons, the split is fixed per seed. We report mean$\pm$std over four seeds (2024--2027). Statistical significance uses a 4-seed paired $t$-test with Holm--Bonferroni correction; seed-level raw results are in the public repository.
+\textbf{Evaluation protocol.} The primary metric is suspicious-class F1 ($F1_{\text{susp}}$); AUROC and AUPRC are secondary. We use a 10\%/10\%/80\% train/val/test split (encoders are trained self-supervised; labels only train the Logistic Regression head; therefore, 10\% of labeled data suffices). For paired comparisons, the split is fixed per seed. We report mean$\pm$std over four seeds (2024--2027). Statistical significance uses a 4-seed paired $t$-test with Holm--Bonferroni correction; seed-level raw results are in the public repository.
 
-\textbf{Evaluation environment.} We evaluate self-supervised models by freezing the encoder and training LogisticRegression~\cite{pedregosa2011scikit} on embeddings $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$. All experiments use Python 3.12, PyTorch 2.10, CUDA 12.8, and NVIDIA H100 80GB GPUs.
+\textbf{Evaluation environment.} We evaluate self-supervised models by freezing the encoder and training Logistic Regression~\cite{pedregosa2011scikit} on embeddings $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$. All experiments use Python 3.12, PyTorch 2.10, CUDA 12.8, and NVIDIA H100 80GB GPUs.
 
-\subsection{Effectiveness and Mechanism of Behavioral k-NN View (RQ1)}\label{subsec:rq1}
-RQ1 quantitatively tests whether the behavioral k-NN view alleviates missing direct edges among suspicious accounts and restores view-level homophily.
+\subsection{Behavioral Homophily Recovery (RQ1)}\label{subsec:rq1}
+RQ1 tests whether the topology-independent behavioral auxiliary view restores suspicious-class homophily relative to the transaction graph.
 
-\textbf{Quantitative gains across all 10 encoders.} The behavioral k-NN view consistently outperforms the baseline for all ten encoders (Table~\ref{tab:rq1}): +84\% to +205\% for the six BN-equipped encoders and +24\% to +29\% for the four BN-less encoders. For the six BN encoders, a 4-seed paired $t$-test remains significant after Holm--Bonferroni correction (adjusted $p < 4 \times 10^{-5}$).
+\textbf{Quantitative gains across all 10 encoders.} The behavioral view consistently outperforms the baseline across all ten encoders (Table~\ref{tab:rq1}), with gains of +84\% to +205\% for the six encoders with BN and +24\% to +29\% for the four without BN. For the six BN-equipped encoders, a four-seed paired $t$-test remains significant after Holm–Bonferroni correction (adjusted $p < 4 \times 10^{-5}$).
 
 \begin{table}[h]
 \centering
-\caption{$F1_{\text{susp}}$ on HOFINET for four ablation settings (10 encoders, 4-seed mean$\pm$std): (1) transaction graph with node-level contrast, (2) behavioral k-NN view with node-level contrast, (3) transaction graph with subgraph pooling, and (4) behavioral k-NN view with subgraph pooling (proposed). Best per row in bold, second-best underlined. $^{\dagger}$GIN applies per-layer BN in its GINConv encoder.}
+\caption{$F1_{\text{susp}}$ on HOFINET for four ablation settings (10 encoders, 4-seed mean$\pm$std): (1) transaction graph with node-level contrast, (2) behavioral view with node-level contrast, (3) transaction graph with subgraph pooling, and (4) behavioral view with subgraph pooling (proposed). Best per row in bold, second-best underlined. $^{\dagger}$GIN applies per-layer BN in its GINConv encoder.}
 \label{tab:rq1}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lccccc}
 \toprule
-\textbf{Encoder} & \textbf{BN} & \makecell{\textbf{Tx graph}\\\textbf{node}} & \makecell{\textbf{k-NN view}\\\textbf{node}} & \makecell{\textbf{Tx graph}\\\textbf{pool}} & \makecell{\textbf{k-NN view}\\\textbf{pool}} \\
+\textbf{Encoder} & \textbf{BN} & \makecell{\textbf{Tx graph}\\\textbf{node}} & \makecell{\textbf{ Bhv view}\\\textbf{node}} & \makecell{\textbf{Tx graph}\\\textbf{pool}} & \makecell{\textbf{Bhv view}\\\textbf{pool}} \\
 \midrule
 GBT       & \multirow{4}{*}{Per-layer} & 0.266{\scriptsize±.010} & \underline{0.671}{\scriptsize±.003} & 0.197{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.003} \\
 DGI+BN    &            & 0.266{\scriptsize±.010} & \underline{0.670}{\scriptsize±.004} & 0.198{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.002} \\
@@ -516,7 +446,7 @@ GRACE     &            & 0.044{\scriptsize±.001} & \underline{0.054}{\scriptsiz
 
 \begin{table}[h]
 \centering
-\caption{S-S:S-B edge ratio and homophily by graph type across the three AML datasets. Best per dataset in bold, second-best underlined (higher homophily and a smaller S-B multiplier in 1:$x$ are better). Behavioral k-NN consistently recovers homophily; structural k-NN (HOFINET only, ablation) does not.}
+\caption{S-S:S-B edge ratio and homophily by graph type across the three AML datasets. Best per dataset in bold, second-best underlined (higher homophily and a smaller S-B multiplier in 1:$x$ are better). Behavioral view consistently recovers homophily; structural view (HOFINET only, ablation) does not.}
 \label{tab:ss_sb}
 \small
 \setlength{\tabcolsep}{5pt}
@@ -526,40 +456,40 @@ GRACE     &            & 0.044{\scriptsize±.001} & \underline{0.054}{\scriptsiz
 \midrule
 \multirow{3}{*}{HOFINET}
   & Transaction      & 0.690 & \underline{1:5.7} \\
-  & Structural k-NN  & \underline{0.965} & 1:9.7 \\
-  & Behavioral k-NN  & \textbf{0.981} & \textbf{1:1.4} \\
+  & Structural view  & \underline{0.965} & 1:9.7 \\
+  & Behavioral view  & \textbf{0.981} & \textbf{1:1.4} \\
 \midrule
 \multirow{2}{*}{AMLworld}
   & Transaction      & \underline{0.886} & \underline{1:15.8} \\
-  & Behavioral k-NN  & \textbf{0.980} & \textbf{1:9.4} \\
+  & Behavioral view  & \textbf{0.980} & \textbf{1:9.4} \\
 \midrule
 \multirow{2}{*}{AMLNet}
   & Transaction      & \underline{0.791} & \underline{1:7.2} \\
-  & Behavioral k-NN  & \textbf{0.900} & \textbf{1:1.3} \\
+  & Behavioral view  & \textbf{0.900} & \textbf{1:1.3} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Homophily recovery via behavioral similarity.} The transaction graph's S-S:S-B ratio of 1:5.7 (Table~\ref{tab:ss_sb}) improves to 1:1.4 under the behavioral k-NN graph (Figure~\ref{fig:intro_homophily}), and edge homophily $h$ (fraction of edges whose endpoints share the same label) increases from 0.690 to 0.981. Because money-laundering accounts share transaction patterns such as split transfers and multi-hop routing, behavioral k-NN tends to link suspicious accounts. In contrast, structural k-NN worsens the ratio to 1:9.7, as degree and centrality capture position rather than suspicious behavior.
+\textbf{Homophily recovery via behavioral similarity.} The transaction graph's S-S:S-B ratio of 1:5.7 (Table~\ref{tab:ss_sb}) improves to 1:1.4 under the behavioral view graph (Figure~\ref{fig:intro_homophily}), and edge homophily $h$ (fraction of edges whose endpoints share the same label) increases from 0.690 to 0.981. Because money-laundering accounts share transaction patterns such as split transfers and multi-hop routing, behavioral view tends to link suspicious accounts. In contrast, structural view worsens the ratio to 1:9.7, as degree and centrality capture position rather than suspicious behavior.
 
 \textbf{Robustness to $k$.} On GBT, $k=10$ is optimal over $k \in \{5, 10, 20, 50\}$, and $k=5$ remains strong at (d) $F1_{\text{susp}} = 0.676$. For $k>10$, benign mixing reduces S-S density and (d) decreases monotonically ($k{=}50$: 0.661). The full-range spread of (d) $F1_{\text{susp}}$ is only 0.021, indicating robustness to $k$.
 
-\subsection{Subgraph Aggregation and Encoder Stability (RQ2)}
+\subsection{Signal Preservation under Aggregation (RQ2)}
 \label{subsec:rq2}
-RQ1 verified homophily recovery in the behavioral k-NN view; RQ2 tests whether subgraph pooling on this recovered view strengthens the suspicious-class signal and how the effect depends on encoder normalization. \resultdep{Subgraph pooling is not uniformly beneficial on the raw transaction graph; however, on the recovered behavioral view it can amplify suspicious evidence, with the clearest gains under suspicious-class-oriented downstream scoring.}
+RQ1 verified homophily recovery in the behavioral auxiliary view; RQ2 asks when aggregation (subgraph pooling) helps versus hurts, and how recovered homophily changes this trade-off. Pooling is not uniformly beneficial on the raw transaction graph; however, on the recovered behavioral view, it can amplify suspicious evidence, with the clearest gains under suspicious-class-oriented downstream scoring.
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.7\columnwidth]{figures/fig_rq2_ablation.pdf}
-\caption{$F1_{\text{susp}}$ over four ablation settings of the two design axes (graph view $\times$ contrastive level) on HOFINET, averaged over 4 per-layer BN encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN). Settings: (a) tx-view+node, (b) k-NN-view+node, (c) tx-view+pool, (d) k-NN-view+pool (proposed). The behavioral k-NN view supplies the main gain; subgraph pooling adds smaller gains when combined with the recovered view.}
+\caption{$F1_{\text{susp}}$ over four ablation settings of the two design axes (graph view $\times$ contrastive level) on HOFINET, averaged over 4 per-layer BN encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN). Settings: (a) tx-view+node, (b) bhv-view+node, (c) tx-view+pool, (d) bhv-view+pool (proposed). The behavioral view supplies the main gain; subgraph pooling adds smaller gains when combined with the recovered view.}
     \label{fig:rq2_ablation}
 \end{figure}
 
 \textbf{Conditional amplification across the 4-setting ablation.} The effect of subgraph pooling depends on both the view and the encoder's normalization depth (Figure~\ref{fig:rq2_ablation}). On HOFINET, the (d)-over-(b) gain shrinks as normalization deepens: four per-layer BN encoders gain only +0.002--0.003, BGRL gains +0.078, and BN-less encoders gain +0.018 on average. In contrast, setting (c), pooling on the transaction graph, reduces performance by 17--30\% relative to (a) for BN-equipped encoders ($-17.1\%$ for BGRL to $-29.9\%$ for GIN; (c) bars in Figure~\ref{fig:rq2_ablation}), consistent with the noise-amplification mechanism in Section~\ref{subsec:subgraph_pool} (Theorem~\ref{thm:meanpool}).
 
-On HOFINET, view recovery produces the dominant jump, with (b)$>$(a) and (d)$>$(c); pooling then adds a smaller, normalization-dependent increment, with (d)$\approx$(b) for per-layer BN and larger gains for BGRL and BN-less encoders. The (b)$\to$(d) improvement is significant under paired $t$-tests for representative encoders (GBT $p=1.83{\times}10^{-3}$, BGRL Holm-adjusted $p=2.66{\times}10^{-4}$). \resultdep{On AMLworld, where 1.23\% prevalence makes suspicious-class decisions especially sensitive to calibration, Table~\ref{tab:rq4} reports $(d_{\text{cal}})$. This setting improves over both the node-level k-NN view (b) and the raw pooled representation (d), suggesting that recovered k-NN neighborhoods provide additional class context.}
+On HOFINET, view recovery produces the dominant jump, with (b)$>$(a) and (d)$>$(c); pooling then adds a smaller, normalization-dependent increment, with (d)$\approx$(b) for per-layer BN and larger gains for BGRL and BN-less encoders. The (b)$\to$(d) improvement is significant under paired $t$-tests for representative encoders (GBT $p=1.83{\times}10^{-3}$, BGRL Holm-adjusted $p=2.66{\times}10^{-4}$). On AMLworld, Table~\ref{tab:rq4} shows that the pooled behavioral view setting (d) improves over the node-level behavioral view (b), suggesting that the recovered behaviorally similar neighborhoods provide additional class context that pooling can accumulate.
 
-\resultdep{Overall, subgraph pooling acts as a conditional amplifier whose effect depends on (i) view homophily, (ii) encoder normalization depth, and (iii) the downstream decision rule.}
+Overall, subgraph pooling acts as a conditional amplifier whose effect depends on (i) view homophily, (ii) encoder normalization depth, and (iii) the downstream decision rule.
 
 \begin{table*}[h]
 \centering
@@ -576,7 +506,7 @@ On HOFINET, view recovery produces the dominant jump, with (b)$>$(a) and (d)$>$(
 \end{tabular}
 \end{table*}
 
-\textbf{BatchNorm as the dominant architectural axis.} BatchNorm (BN) accounts for the largest architectural difference (Figure~\ref{fig:rq2_bn}, comparing $F1_{\text{susp}}$ at settings (a) vs. (d) across ten encoders). Table~\ref{tab:bn_summary} shows 4-seed paired $t$-tests with Holm correction for setting (d). (i) BN presence dominates ($\Delta F1_{\text{susp}} \approx 0.60$, about a 10$\times$ gap), and three controlled comparisons (identical architectures differing only in BN) attribute this gap to BN itself. (ii) BN position (per-layer $>$ final-only) and (iii) convolution type (GCNConv $>$ GINConv) are also significant but with much smaller effects (about 1/18 to 1/6 of (i)). The four per-layer BN encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN), from different contrastive paradigms (BarlowTwins, JSD, BootstrapLatent, InfoNCE), converge to 0.673--0.674 under the same BYOL bootstrap loss, indicating that once BN is used, paradigm-level differences are small on this benchmark.
+\textbf{Normalization as a stability factor (not a separate novelty).} Under the BYOL-style bootstrap loss, normalization strongly affects training stability (Figure~\ref{fig:rq2_bn}, settings (a) vs. (d) across ten encoders). Table~\ref{tab:bn_summary} reports 4-seed paired $t$-tests with Holm correction for setting (d). (i) BN presence yields the largest performance gap ($\Delta F1_{\text{susp}} \approx 0.60$) in controlled comparisons that differ only in BN, while (ii) BN position (per-layer $>$ final-only) and (iii) convolution type (GCNConv $>$ GINConv) show smaller but significant effects. Across paradigms, per-layer BN encoders converge to 0.673--0.674 under the same bootstrap loss, suggesting that once training is stabilized, the dominant driver remains the recovered view rather than the contrastive paradigm.
 
 \begin{figure}[h]
     \centering
@@ -593,18 +523,18 @@ On HOFINET, view recovery produces the dominant jump, with (b)$>$(a) and (d)$>$(
         \caption{BN-free encoders}
         \label{fig:rq2_bn_b}
     \end{subfigure}
-    \caption{$F1_{\text{susp}}$ trajectories for four ablations (a)/(b)/(c)/(d) across 10 encoders (HOFINET, 4-seed mean$\pm$std). Note differing y-axis scales. (a) Per-layer BN encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN, GIN) saturate at the (b) view-only step; final-only BN (BGRL) shows strong (b)$\to$(d) amplification. (b) BN-free encoders (DGI, MVGRL, GRACE, GCA) collapse to near-random ($\sim$0.04--0.08), supporting the structural collapse in Theorem~\ref{thm:bn_collapse}. BatchNorm is the main architectural factor; subgraph pooling adds the largest marginal gain for under-normalized encoders.}
+    \caption{$F1_{\text{susp}}$ trajectories for four ablations (a)/(b)/(c)/(d) across 10 encoders (HOFINET, 4-seed mean$\pm$std). Note differing y-axis scales. Per-layer BN encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN, GIN) largely saturate at the view-recovery step (b), while final-only BN (BGRL) shows stronger (b)$\to$(d) amplification. BN-free encoders (DGI, MVGRL, GRACE, GCA) remain near-random ($\sim$0.04--0.08), consistent with the collapse/stability analysis in Theorem~\ref{thm:bn_collapse}. Overall, view recovery drives the main gains; pooling is a conditional refinement whose marginal effect depends on encoder stabilization.}
     \label{fig:rq2_bn}
 \end{figure}
 
-\begin{theorem}[BN-conditional collapse]\label{thm:bn_collapse}
-Under the BYOL-style bootstrap loss~\eqref{eq:loss}, the trivial constant solution $f_\theta(\cdot) \equiv c$ of an encoder $f_\theta$ is an attainable global minimum at $\mathcal{L} = 0$ only when $f_\theta$ contains no BN layer. An encoder with at least one BN layer blocks the trivial constant solution by the definition of batch normalization.
+\begin{theorem}[Normalization-conditional stability under bootstrap objectives]\label{thm:bn_collapse}
+Under the BYOL-style bootstrap loss~\eqref{eq:loss}, the trivial constant solution $f_\theta(\cdot) \equiv c$ attains $\mathcal{L}=0$ when the encoder lacks batch normalization (BN). In contrast, the presence of at least one BN layer rules out this trivial constant mapping under the definition of batch normalization, acting as a sufficient condition for avoiding the constant-solution pathology.
 \end{theorem}
 
-\textbf{Empirical confirmation of BN-conditional collapse.} At setting (a), BN-less encoders achieve $F1_{\text{susp}} \approx 0.04$, matching the HOFINET random-classifier upper bound $2\rho/(1+\rho) \approx 0.042$ (the maximum $F1_{\text{susp}}$ at positive rate $\rho$), thereby empirically confirming structural collapse.
-The practical severity depends on prevalence: at low prevalence ($\rho \leq 2\%$), the bound is already $\approx 0.04$; hence, collapse leaves little usable suspicious-class signal. On AMLNet ($\rho = 13.52\%$), BN-less DGI still reaches $F1_{\text{susp}} \approx 0.40$ (Section~\ref{subsec:rq4}); consequently, the absolute effect is smaller. RQ2 thus indicates that \method's gains arise from combining the homophily-recovered view, appropriate normalization, and conditional subgraph amplification, rather than from any single pooling ablation.
+\textbf{Empirical check for the stability analysis.} At setting (a), BN-less encoders achieve $F1_{\text{susp}} \approx 0.04$, close to the HOFINET random-classifier upper bound $2\rho/(1+\rho) \approx 0.042$ (the maximum $F1_{\text{susp}}$ at a positive rate $\rho$), indicating that unstable training can wash out the suspicious-class signal in low-prevalence regimes.
+The practical severity depends on prevalence: at low prevalence ($\rho \leq 2\%$), the bound is already $\approx 0.04$; hence, instability leaves little usable suspicious-class evidence. On AMLNet ($\rho = 13.52\%$), BN-less DGI still reaches $F1_{\text{susp}} \approx 0.40$ (Section~\ref{subsec:rq4}); consequently, the absolute impact is smaller. Overall, the results align with a single mechanism: homophily recovery provides class-relevant neighborhoods, sign-flip explains when aggregation can dilute them, and normalization mainly modulates whether this mechanism is realized under the bootstrap objective.
 
-\subsection{Self-Supervised Detection under Label Scarcity (RQ3)}
+\subsection{Self-Supervised AML Detection under Label Scarcity (RQ3)}
 \label{subsec:rq3}
 
 The previous questions validated \method’s internal mechanisms; RQ3 tests whether its learned representation remains competitive with supervised models under realistic AML constraints, including label delay and cold start. \method uses no labels during representation learning; labels are used only to train the downstream LogisticRegression head.
@@ -616,64 +546,97 @@ The previous questions validated \method’s internal mechanisms; RQ3 tests whet
 \label{fig:rq3_baseline}
 \end{figure*}
 
+\begin{table*}[h]
+\centering
+\caption{RQ3 (full numerical detail accompanying Figure~\ref{fig:rq3_baseline}): Self-supervised \method vs.\ 11 supervised baselines (4-seed mean$\pm$std on the 80\% holdout; identical test indices for paired comparison). Per dataset and metric, the best score is in \textbf{bold} and the second-best is \underline{underlined} (ties are shared). \method uses setting (d) with the strongest encoder per dataset (GBT on HOFINET and AMLNet, BGRL on AMLworld). Fraud-GNN baselines are simplified single-relation variants (see body Section~\ref{subsec:rq3} for retained core mechanism per method).}
+\label{tab:rq3}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{ll ccc ccc ccc}
+\toprule
+& & \multicolumn{3}{c}{\textbf{HOFINET ($\rho{=}2.13\%$)}} & \multicolumn{3}{c}{\textbf{AMLworld ($\rho{=}1.23\%$)}} & \multicolumn{3}{c}{\textbf{AMLNet ($\rho{=}13.52\%$)}} \\
+\cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+\textbf{Category} & \textbf{Model} & \textbf{$F1_{\text{susp}}$} & \textbf{AUROC} & \textbf{AUPRC} & \textbf{$F1_{\text{susp}}$} & \textbf{AUROC} & \textbf{AUPRC} & \textbf{$F1_{\text{susp}}$} & \textbf{AUROC} & \textbf{AUPRC} \\
+\midrule
+\multirow{3}{*}{Tabular}
+  & XGBoost   & 0.675{\scriptsize±.001} & \textbf{0.992}{\scriptsize±.000} & \textbf{0.665}{\scriptsize±.005} & \textbf{0.073}{\scriptsize±.002} & \textbf{0.753}{\scriptsize±.003} & \textbf{0.037}{\scriptsize±.001} & 0.699{\scriptsize±.007} & 0.938{\scriptsize±.002} & 0.785{\scriptsize±.012} \\
+  & LightGBM  & 0.670{\scriptsize±.001} & \textbf{0.992}{\scriptsize±.000} & \underline{0.662}{\scriptsize±.002} & \underline{0.070}{\scriptsize±.002} & \underline{0.752}{\scriptsize±.003} & \textbf{0.037}{\scriptsize±.001} & 0.687{\scriptsize±.011} & 0.936{\scriptsize±.004} & 0.781{\scriptsize±.013} \\
+  & MLP       & \textbf{0.679}{\scriptsize±.002} & \underline{0.991}{\scriptsize±.000} & 0.616{\scriptsize±.009} & 0.048{\scriptsize±.002} & 0.695{\scriptsize±.014} & 0.024{\scriptsize±.001} & \textbf{0.714}{\scriptsize±.005} & \textbf{0.945}{\scriptsize±.001} & \underline{0.797}{\scriptsize±.008} \\
+\midrule
+\multirow{3}{*}{Generic GNN}
+  & GCN       & 0.250{\scriptsize±.007} & 0.935{\scriptsize±.017} & 0.316{\scriptsize±.045} & 0.045{\scriptsize±.001} & 0.703{\scriptsize±.007} & 0.022{\scriptsize±.001} & 0.467{\scriptsize±.006} & 0.785{\scriptsize±.011} & 0.476{\scriptsize±.022} \\
+  & GAT       & 0.534{\scriptsize±.024} & 0.988{\scriptsize±.001} & 0.565{\scriptsize±.010} & 0.047{\scriptsize±.001} & 0.701{\scriptsize±.013} & 0.023{\scriptsize±.001} & 0.500{\scriptsize±.047} & 0.803{\scriptsize±.013} & 0.562{\scriptsize±.039} \\
+  & GraphSAGE & \underline{0.677}{\scriptsize±.002} & \textbf{0.992}{\scriptsize±.000} & 0.610{\scriptsize±.004} & 0.050{\scriptsize±.001} & 0.671{\scriptsize±.013} & 0.024{\scriptsize±.001} & \underline{0.708}{\scriptsize±.007} & \underline{0.940}{\scriptsize±.005} & \textbf{0.806}{\scriptsize±.005} \\
+\midrule
+\multirow{5}{*}{Fraud-spec.\ GNN}
+  & CARE-GNN  & 0.108{\scriptsize±.007} & 0.625{\scriptsize±.005} & 0.094{\scriptsize±.003} & 0.041{\scriptsize±.000} & 0.711{\scriptsize±.003} & 0.024{\scriptsize±.000} & 0.443{\scriptsize±.013} & 0.770{\scriptsize±.007} & 0.418{\scriptsize±.007} \\
+  & PC-GNN    & 0.245{\scriptsize±.005} & 0.952{\scriptsize±.003} & 0.358{\scriptsize±.008} & 0.044{\scriptsize±.001} & 0.702{\scriptsize±.006} & 0.022{\scriptsize±.001} & 0.458{\scriptsize±.006} & 0.783{\scriptsize±.016} & 0.476{\scriptsize±.025} \\
+  & BWGNN     & 0.348{\scriptsize±.022} & 0.928{\scriptsize±.042} & 0.369{\scriptsize±.077} & 0.049{\scriptsize±.001} & 0.745{\scriptsize±.007} & \underline{0.030}{\scriptsize±.001} & 0.509{\scriptsize±.021} & 0.818{\scriptsize±.010} & 0.500{\scriptsize±.032} \\
+  & GAGA      & 0.516{\scriptsize±.006} & 0.984{\scriptsize±.004} & 0.476{\scriptsize±.011} & 0.046{\scriptsize±.004} & 0.713{\scriptsize±.012} & 0.025{\scriptsize±.002} & 0.475{\scriptsize±.031} & 0.785{\scriptsize±.027} & 0.420{\scriptsize±.051} \\
+  & ConsisGAD & 0.234{\scriptsize±.006} & 0.953{\scriptsize±.003} & 0.348{\scriptsize±.008} & 0.045{\scriptsize±.001} & 0.704{\scriptsize±.005} & 0.024{\scriptsize±.001} & 0.456{\scriptsize±.008} & 0.785{\scriptsize±.016} & 0.483{\scriptsize±.034} \\
+\midrule
+Self-sup.\ (proposed) & \method & 0.673{\scriptsize±.003} & \underline{0.991}{\scriptsize±.000} & 0.604{\scriptsize±.006} & 0.066{\scriptsize±.009} & 0.608{\scriptsize±.030} & 0.027{\scriptsize±.001} & 0.679{\scriptsize±.002} & 0.928{\scriptsize±.001} & 0.751{\scriptsize±.005} \\
+\bottomrule
+\end{tabular}}
+\end{table*}
+
+
 \textbf{Self-supervised competitiveness with supervised baselines.} Figure~\ref{fig:rq3_baseline} reports $F1_{\text{susp}}$ for \method (setting (d), using the strongest encoder per dataset) against 11 supervised baselines: 3 tabular models (XGBoost, LightGBM, MLP), 3 generic GNNs (GCN, GAT, GraphSAGE), and 5 fraud-oriented GNNs (CARE-GNN~\cite{dou2020enhancing}, PC-GNN~\cite{liu2021pick}, BWGNN~\cite{tang2022rethinking}, GAGA~\cite{wang2023label}, ConsisGAD~\cite{chen2024consisgad}). Since all datasets are homogeneous, single-relation transaction graphs, we evaluate only each method's single-relation component.
 
 Across all three datasets, \method lies in the upper range of supervised models. On HOFINET and AMLNet, it is close to the best supervised baseline (MLP), differing by 0.006 and 0.035. On AMLworld, tree-based models perform slightly better overall, but \method still surpasses all eight supervised GNN variants. These results support the operational claim that self-supervised representations can remain competitive in settings where AML labels arrive late.
 
 \textbf{Robustness under cold-start label scarcity.} \method remains stable in the 1\%-label cold-start regime ($F1_{\text{susp}}=0.654$, 2.8\% below the 10\%-label setting), where supervised models become unstable. In operational settings with a six-month label delay and a 0.5\%--2\% suspicious rate, \method can be trained before reliable labels mature. Its gap to supervised models narrows as prevalence increases (HOFINET 0.006, AMLNet 0.035), and \method outperforms all supervised GNN baselines on AMLworld. Overall, the strongest benefits appear in label-scarce, low-prevalence regimes.
 
-\textbf{Fraud-specific GNN baselines.} Fraud- and anomaly-specific GNNs stay below \method across the CIKM 2020--ICLR 2024 sequence (CARE-GNN $\to$ PC-GNN $\to$ BWGNN $\to$ GAGA $\to$ ConsisGAD); on HOFINET, the best of these baselines (GAGA 0.516) trails \method (0.673) by 0.16. All five handle fraud heterogeneity in message passing but leave the transaction graph's suspicious-neighborhood imbalance (S-S:S-B $=$ 1:5.7--1:15.8) intact. ConsisGAD's multi-view consistency still uses views of the same graph; thus, graph-level neighborhoods remain unchanged. \method instead adds a structurally independent behavioral k-NN view, correcting the neighborhood structure before contrastive training.
+\textbf{Fraud-specific GNN baselines.} Fraud- and anomaly-specific GNNs stay below \method across the CIKM 2020--ICLR 2024 sequence (CARE-GNN $\to$ PC-GNN $\to$ BWGNN $\to$ GAGA $\to$ ConsisGAD); on HOFINET, the best of these baselines (GAGA 0.516) trails \method (0.673) by 0.16. All five handle fraud heterogeneity in message passing but leave the transaction graph's suspicious-neighborhood imbalance (S-S:S-B $=$ 1:5.7--1:15.8) intact. ConsisGAD's multi-view consistency still uses views of the same graph; thus, graph-level neighborhoods remain unchanged. \method instead adds a structurally independent behavioral view, correcting the neighborhood structure before contrastive training.
 
 \textbf{Operational utility with a limited analyst budget.} \method with GBT attains HOFINET precision@$k$ of 0.875, 0.853, 0.834, 0.791, and 0.746 for $k \in \{50, 100, 200, 400, 800\}$ (4 seeds), detecting approximately 317 true suspicious accounts within a top-400 budget.
 
-\subsection{Robustness Across AML Regimes (RQ4)}\label{subsec:rq4}
+\subsection{Robustness across AML Regimes (RQ4)}\label{subsec:rq4}
 
-Finally, RQ4 asks whether the patterns established in RQ1–RQ3 are specific to HOFINET or transfer to AML regimes with different prevalence and scale. We therefore repeat the same ablation on two structurally distinct datasets: AMLworld, a large low-prevalence simulator dataset ($\rho{=}1.23\%$), and AMLNet, a smaller high-prevalence benchmark ($\rho{=}13.52\%$). Table~\ref{tab:rq4} reports $F1_{\text{susp}}$ across view/level settings for five encoders; \resultdep{$(d_{\text{cal}})$ denotes the validation-tuned downstream evaluation used for suspicious-class scoring.}
+Finally, RQ4 asks whether the patterns established in RQ1--RQ3 transfer to AML regimes with different prevalence and scale. We therefore repeat the same ablation on two structurally distinct datasets: AMLworld, a large low-prevalence simulator dataset ($\rho{=}1.23\%$), and AMLNet, a smaller high-prevalence benchmark ($\rho{=}13.52\%$). Table~\ref{tab:rq4} reports $F1_{\text{susp}}$ across view/level settings for five encoders.
 
 \begin{table}[h]
 \centering
-\caption{RQ4: Results on AMLworld ($\rho{=}1.23\%$) and AMLNet ($\rho{=}13.52\%$) ($F1_{\text{susp}}$, 4-seed mean$\pm$std). Behavioral k-NN view (b, d) consistently outperforms transaction view baselines (a, c), and $(d_{\text{cal}})$ further improves suspicious-class detection across both datasets, especially for per-layer BN encoders. The DGI (BN-less) $(d_{\text{cal}})$ entries are pending a follow-up sweep.}
+\caption{RQ4: Results on AMLworld ($\rho{=}1.23\%$) and AMLNet ($\rho{=}13.52\%$) ($F1_{\text{susp}}$, 4-seed mean$\pm$std). Behavioral view (b, d) consistently outperforms transaction view baselines (a, c), and moving from node-level (b) to subgraph pooling (d) further improves suspicious-class detection for most encoders.}
 \label{tab:rq4}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lcccccc}
 \toprule
  & & \multicolumn{2}{c}{\textbf{Node-level}} & \multicolumn{3}{c}{\textbf{Subgraph Pooling}} \\
 \cmidrule(lr){3-4} \cmidrule(lr){5-7}
-\textbf{Encoder} & \textbf{BN} & \textbf{(a) Aug.} & \textbf{(b) k-NN} & \textbf{(c) Aug.} & \textbf{(d) k-NN} & \textbf{$(d_{\text{cal}})$ k-NN} \\
+\textbf{Encoder} & \textbf{BN} & \textbf{(a) Aug.} & \textbf{(b) Bhv.} & \textbf{(c) Aug.} & \textbf{(d) Bhv.}  \\
 \midrule
-\multicolumn{7}{l}{\textit{AMLworld (N=515K, $\rho$=1.23\%)}} \\
-\midrule
-BGRL      & \checkmark & 0.038{\scriptsize±.003} & \underline{0.061}{\scriptsize±.003} & 0.039{\scriptsize±.002} & 0.066{\scriptsize±.007} & 0.066{\scriptsize±.008} \\
-GBT       & \checkmark & 0.042{\scriptsize±.002} & \underline{0.049}{\scriptsize±.001} & 0.043{\scriptsize±.001} & 0.047{\scriptsize±.001} & 0.064{\scriptsize±.004} \\
-DGI+BN    & \checkmark & 0.042{\scriptsize±.002} & \underline{0.049}{\scriptsize±.001} & 0.044{\scriptsize±.001} & 0.048{\scriptsize±.001} & 0.062{\scriptsize±.005} \\
-GRACE+BN  & \checkmark & 0.041{\scriptsize±.001} & \underline{0.048}{\scriptsize±.001} & 0.044{\scriptsize±.000} & 0.055{\scriptsize±.002} & 0.061{\scriptsize±.004} \\
-DGI       &            & 0.038{\scriptsize±.007} & \underline{0.049}{\scriptsize±.004} & 0.033{\scriptsize±.005} & 0.052{\scriptsize±.005} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
+\multicolumn{7}{l}{\textit{AMLworld (N=515K, $\rho$=1.23\%)}} \\\midrule
+BGRL      & \checkmark & 0.038{\scriptsize±.003} & \underline{0.061}{\scriptsize±.003} & 0.039{\scriptsize±.002} & 0.066{\scriptsize±.008} \\
+GBT       & \checkmark & 0.042{\scriptsize±.002} & \underline{0.049}{\scriptsize±.001} & 0.043{\scriptsize±.001} & 0.064{\scriptsize±.004} \\
+DGI+BN    & \checkmark & 0.042{\scriptsize±.002} & \underline{0.049}{\scriptsize±.001} & 0.044{\scriptsize±.001} & 0.062{\scriptsize±.005} \\
+GRACE+BN  & \checkmark & 0.041{\scriptsize±.001} & \underline{0.048}{\scriptsize±.001} & 0.044{\scriptsize±.000} & 0.061{\scriptsize±.004} \\
+DGI       &            & 0.038{\scriptsize±.007} & \underline{0.049}{\scriptsize±.004} & 0.033{\scriptsize±.005} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
 \midrule
 \multicolumn{7}{l}{\textit{AMLNet (N=11K, $\rho$=13.52\%)}} \\
 \midrule
-BGRL      & \checkmark & 0.448{\scriptsize±.018} & \underline{0.668}{\scriptsize±.013} & 0.295{\scriptsize±.013} & 0.679{\scriptsize±.005} & 0.680{\scriptsize±.008} \\
-GBT       & \checkmark & 0.426{\scriptsize±.011} & \underline{0.669}{\scriptsize±.012} & 0.302{\scriptsize±.009} & 0.679{\scriptsize±.002} & 0.688{\scriptsize±.009} \\
-DGI+BN    & \checkmark & 0.426{\scriptsize±.011} & \underline{0.672}{\scriptsize±.014} & 0.302{\scriptsize±.010} & 0.679{\scriptsize±.001} & 0.688{\scriptsize±.008} \\
-GRACE+BN  & \checkmark & 0.431{\scriptsize±.014} & \underline{0.673}{\scriptsize±.010} & 0.299{\scriptsize±.006} & 0.678{\scriptsize±.004} & 0.685{\scriptsize±.009} \\
-DGI       &            & 0.397{\scriptsize±.015} & \underline{0.593}{\scriptsize±.014} & 0.301{\scriptsize±.007} & 0.608{\scriptsize±.017} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
+BGRL      & \checkmark & 0.448{\scriptsize±.018} & \underline{0.668}{\scriptsize±.013} & 0.295{\scriptsize±.013} & 0.680{\scriptsize±.008} \\
+GBT       & \checkmark & 0.426{\scriptsize±.011} & \underline{0.669}{\scriptsize±.012} & 0.302{\scriptsize±.009} & 0.688{\scriptsize±.009} \\
+DGI+BN    & \checkmark & 0.426{\scriptsize±.011} & \underline{0.672}{\scriptsize±.014} & 0.302{\scriptsize±.010} & 0.688{\scriptsize±.008} \\
+GRACE+BN  & \checkmark & 0.431{\scriptsize±.014} & \underline{0.673}{\scriptsize±.010} & 0.299{\scriptsize±.006} & 0.685{\scriptsize±.009} \\
+DGI       &            & 0.397{\scriptsize±.015} & \underline{0.593}{\scriptsize±.014} & 0.301{\scriptsize±.007} & \resultdep{\textbf{TBD{\scriptsize±TBD}}} \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
 The cross-regime pattern is stable: the behavioral view supplies the main gain, while subgraph-level evaluation sharpens the suspicious-class decision once that view has recovered useful neighborhood context.
 
-\textbf{AMLworld: calibrated amplification in the low-prevalence regime.} On AMLworld, BGRL reaches $F1_{\text{susp}}=0.066$ in setting (d), a 73\% relative gain over the baseline (a), and every encoder satisfies (b) $>$ (a). Because suspicious-class decisions are especially sensitive at 1.23\% prevalence, we evaluate the subgraph-level representation with the validation-tuned protocol used in operational risk scoring. Under this protocol, $(d_{\text{cal}})$ improves over both the node-level k-NN view (b) and the raw pooled setting (d). This pattern supports the interpretation that, once behavioral k-NN restores class context in the neighborhood, subgraph pooling accumulates that context into stronger suspicious-account evidence, including for per-layer BN encoders.
+\textbf{AMLworld: amplification in the low-prevalence regime.} On AMLworld, BGRL reaches $F1_{\text{susp}}=0.066$ in setting (d), a 73\% relative gain over the baseline (a), and every encoder satisfies (b) $>$ (a). In this low-prevalence regime ($\rho{=}1.23\%$), subgraph pooling on the recovered behavioral view (d) improves over the node-level behavioral view (b). This pattern supports the interpretation that, once behavioral view restores class context in the neighborhood, subgraph pooling accumulates that context into stronger suspicious-account evidence, including for per-layer BN encoders.
 
 \textbf{AMLNet: high prevalence escapes BN-conditional collapse.} On AMLNet, the baseline (a) already lies around $F1_{\text{susp}}=0.40$--$0.45$, substantially above HOFINET (0.04--0.27) and AMLworld (0.038--0.042). The higher suspicious-account ratio (13.52\%) allows even the BN-free DGI encoder to move out of the collapse-prone region. This supports the interpretation of Theorem~\ref{thm:bn_collapse}: collapse prevention matters most in low-prevalence regimes, while its apparent effect shrinks as the random-classifier ceiling rises. The view and level effects still match HOFINET qualitatively; for example, GBT improves from 0.426 in (a) to 0.679 in (d), a relative gain of more than 50\%.
 
-\textbf{Cross-dataset homophily recovery.} All three datasets exhibit strong suspicious-neighborhood imbalance in the transaction graph, with S-S:S-B ratios ranging from 1:5.7 to 1:15.8. The behavioral k-NN view shifts this range to 1:1.3 (AMLNet) through 1:9.4 (AMLworld), as summarized in Table~\ref{tab:ss_sb}. AMLworld remains the hardest case because its 1.23\% prevalence limits the absolute number of suspicious--suspicious neighbors. \resultdep{Overall, the cross-dataset evidence is consistent: behavioral k-NN restores class-relevant neighborhood structure across prevalence regimes, and subgraph-level scoring turns that restored context into a stronger suspicious-account decision.}
+\textbf{Cross-dataset homophily recovery.} All three datasets exhibit strong suspicious-neighborhood imbalance in the transaction graph, with S-S:S-B ratios ranging from 1:5.7 to 1:15.8. The behavioral view shifts this range to 1:1.3 (AMLNet) through 1:9.4 (AMLworld), as summarized in Table~\ref{tab:ss_sb}. AMLworld remains the hardest case because its 1.23\% prevalence limits the absolute number of suspicious--suspicious neighbors. Overall, the cross-dataset evidence is consistent: behavioral view restores class-relevant neighborhood structure across prevalence regimes, and subgraph-level scoring turns that restored context into a stronger suspicious-account decision.
 
 \paragraph{Additional checks.}
-Seed-level analyses support the same conclusion: behavioral-only k-NN features outperform an all-feature proxy for MLGCL/GCPAL by $+0.040$ $F1_{\text{susp}}$. k-NN construction is a one-time preprocessing step (608.9\,s) on HOFINET, and HAP mainly helps in the transaction-view regime, where mean pooling is most exposed to heterophily.
+Seed-level analyses support the same conclusion: behavioral-only features outperform an all-feature proxy for MLGCL/GCPAL by $+0.040$ $F1_{\text{susp}}$. k-NN-based behavioral view construction is a one-time preprocessing step (608.9\,s) on HOFINET, and HAP mainly aids in the transaction-view regime, where mean pooling is most exposed to heterophily.
 
 \section{Conclusion and Future Work}
 
-We introduced \method, a graph contrastive learning framework for AML detection in low-homophily transaction networks. Its central design is to build an auxiliary behavioral k-NN view from transaction-behavior features rather than from the original topology, raising HOFINET edge homophily from 0.690 to 0.981. The resulting self-supervised representations are competitive with supervised models: they are within 0.006 and 0.035 $F1_{\text{susp}}$ of the best supervised baselines on HOFINET and AMLNet, respectively, and above all supervised GNN baselines on AMLworld. Under cold-start label scarcity, \method maintains $F1_{\text{susp}}=0.654$ with only 1\% downstream labels. \resultdep{The experiments also clarify the role of the second design axis: on the recovered behavioral view, subgraph-level contrast strengthens suspicious-class evidence}, while BatchNorm prevents trivial collapse under the BYOL-style objective. These findings are supported by the homophily-recovery, aggregation-signal, and BN-collapse analyses in Theorems~\ref{thm:knn_homophily}--\ref{thm:bn_collapse}.
+We introduced \method, a graph contrastive learning framework for AML detection in low-homophily transaction networks. Its central design is to build a topology-independent behavioral auxiliary view from transaction-behavior features rather than from the original topology, raising HOFINET edge homophily from 0.690 to 0.981. The resulting self-supervised representations are competitive with supervised models: they are within 0.006 and 0.035 $F1_{\text{susp}}$ of the best supervised baselines on HOFINET and AMLNet, respectively, and above all supervised GNN baselines on AMLworld. Under cold-start label scarcity, \method maintains $F1_{\text{susp}}=0.654$ with only 1\% downstream labels. Overall, the paper supports a single mechanism: recovered homophily provides class-relevant neighborhoods, sign-flip analysis explains when aggregation can dilute them, and subgraph pooling on the recovered view serves as a conditional refinement; normalization primarily acts as a stability factor under the bootstrap objective. These findings are supported by the homophily-recovery and aggregation-signal analyses (Theorems~\ref{thm:knn_homophily}--\ref{thm:meanpool}) and the stability analysis (Theorem~\ref{thm:bn_collapse}).
 
 \method is designed for the operational regimes common in AML: delayed labels, low prevalence, and transaction neighborhoods that are anti-homophilous for the suspicious class. When abundant labels are available, high-prevalence supervised models such as MLP, XGBoost, or LightGBM can be marginally stronger. In settings with a six-month label delay and a 0.5\%--2\% suspicious rate, self-supervised behavioral view construction provides a trainable alternative before reliable labels exist.
 
@@ -683,7 +646,7 @@ Several limitations remain. The evaluation is transductive and does not yet use 
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{aml}
-\end{document}
+
 
 % Appendix material below is retained in the source for reuse but excluded from
 % the CIKM-length submission PDF.
@@ -705,7 +668,7 @@ AFGRL~\cite{lee2022augmentation} finds homophilous anchors in representation spa
 
 \subsection{Graph Anomaly Detection}\label{app:rw_gad}
 
-DOMINANT~\cite{ding2019dominant} derives unsupervised anomaly scores by jointly reconstructing attributes and structure. CoLA~\cite{liu2021anomaly} uses node-subgraph contrast, and ANEMONE~\cite{jin2021anemone} extends this idea to multi-scale patch-context objectives. BWGNN~\cite{tang2022rethinking} analyzes anomalies in the spectral domain and introduces band-pass filtering. The BOND benchmark~\cite{liu2022bond} shows that such unsupervised methods can be competitive on standard anomaly datasets. Most of these benchmarks, however, are citation or co-author graphs such as Cora, Citeseer, and ACM. Their graph statistics differ sharply from AML networks, where suspicious accounts deliberately interact with benign accounts to evade detection. \method closes this domain gap through transaction-specific view construction and an explicit analysis of BatchNorm-conditional collapse.
+DOMINANT~\cite{ding2019dominant} derives unsupervised anomaly scores by jointly reconstructing attributes and structure. CoLA~\cite{liu2021anomaly} uses node-subgraph contrast, and ANEMONE~\cite{jin2021anemone} extends this idea to multi-scale patch-context objectives. BWGNN~\cite{tang2022rethinking} analyzes anomalies in the spectral domain and introduces band-pass filtering. The BOND benchmark~\cite{liu2022bond} shows that such unsupervised methods can be competitive on standard anomaly datasets. Most of these benchmarks, however, are citation or co-author graphs such as Cora, Citeseer, and ACM. Their graph statistics differ sharply from AML networks, where suspicious accounts deliberately interact with benign accounts to evade detection. \method closes this domain gap by treating auxiliary-view design as topology repair (behavioral homophily recovery) and by analyzing when aggregation and training stability preserve or wash out suspicious-class signal.
 
 \section{Theory: Proofs and Empirical Checks}\label{app:theory}
 
@@ -794,6 +757,80 @@ AMLNet   & 0.791 & 0.900 & 0.109 & $\geq$0.209 & 0.878 & 0.783 & \cmark \\
 \end{tabular}}
 \end{table}
 
+\section{Theoretical Analysis: Homophily Recovery and Signal Preservation}
+\label{subsec:theory}
+
+We now analyze how each \method component behaves when suspicious accounts have low-homophily neighborhoods in the transaction graph. Two central issues arise: (1) a view derived directly from transaction edges rarely links suspicious accounts, resulting in weak suspicious-class homophily; and (2) aggregating information from such heterophilous neighbors can dilute or even invert the suspicious-class signal. Using theorems and a proposition, we identify when a behavioral view can restore homophily and how different pooling mechanisms affect signal preservation.
+
+We model the transaction graph with a degree-corrected stochastic block model (DCSBM)~\cite{karrer2011stochastic} and assume behavioral features are i.i.d. with class-conditional distributions $x_v \mid y_v = c \sim P_c$. We define homophily $h(G) := |\{(u,v) \in E : y_u = y_v\}| / |E|$, set $|V_S| = \rho N$, and let $N_{\min} = \min(|V_S|, |V_B|)$. In behavioral space, we assume probabilistic class separability: a same-class node is closer to a query than a different-class node with a probability of at least $1 - \epsilon$.
+
+\subsection{View-level Homophily Recovery}
+\label{subsec:theory_view}
+
+\begin{theorem}[Probabilistic homophily recovery]
+\label{thm:knn_homophily}
+For $k \leq (1-\epsilon)(N_{\min}-1) - 1$, the behavioral view graph $G_{\text{knn},k}$ satisfies the homophily lower bound
+\[
+    h(G_{\text{knn}, k}) \;\geq\; 1 - \tfrac{N - 1}{k} \exp\!\left(-\tfrac{((N_{\min}-1)(1-\epsilon) - k)^2}{2(N_{\min}-1)(1-\epsilon)}\right).
+\]
+\end{theorem}
+
+\begin{theorem}[Combined homophily gap]\label{thm:combined}
+Let $h(G_{\text{tx}}) = \alpha$ under the DCSBM, and let $\delta$ denote the error term on the right-hand side of Theorem~\ref{thm:knn_homophily}. Then
+\[
+    h(G_{\text{knn}, k}) - h(G_{\text{tx}})
+    \geq 1 - \alpha - \delta(N, N_{\min}, k, \epsilon).
+\]
+\end{theorem}
+
+\subsection{Aggregation-level Signal Preservation}
+\label{subsec:theory_pool}
+
+We now focus on the aggregation step. We decompose the hidden representation of node $v$ as $z_v = s_v \mu + \eta_v$, where $s_v \in \{\pm 1\}$ denotes the class signal, $\mu$ is the discriminative direction separating suspicious from benign nodes, and $\eta_v$ is a bounded noise term with $\|\eta_v\| \leq \epsilon \|\mu\|$. We quantify the heterophily of the 1-hop ego neighborhood of $v$ by
+\[
+\eta_h := \frac{|\{u \in \mathcal{N}(v) : y_u \neq y_v\}|}{|\mathcal{N}(v)|}.
+\]
+The $\eta_h$ values reported in the main text are dataset-level averages, obtained by computing this fraction for every node in the transaction graph.
+
+To assess how effectively pooling retains the discriminative direction $\mu$, we compare the post-pooling projection
+\[
+\rho := \frac{\langle z_v^{(\cdot)}, \mu \rangle}{\|\mu\|^2}
+\]
+under mean pooling and heterophily-aware pooling (HAP, using cosine-similarity weights). The expectation is taken with the ego node $v$ and its heterophily $\eta_h$ fixed, while the class labels of its neighbors are treated as random. Without loss of generality, we set $s_v = +1$; hence, any neighbor $u$ satisfies
+\[
+\mathbb{E}[s_u \mid u \in \mathcal{N}(v)] = (1-\eta_h)(+1) + \eta_h(-1) = 1 - 2\eta_h.
+\]
+
+\begin{theorem}[Mean-pool signal reversal]
+\label{thm:meanpool}
+With mean pooling, the expected post-pooling projection is $\mathbb{E}[\rho^{(\text{mean})}] = \frac{1 + k(1 - 2\eta_h)}{k+1}$. Consequently, the expected signal flips sign once $\eta_h > \tfrac{1}{2} + \tfrac{1}{2k}$.
+\end{theorem}
+
+\begin{proposition}[HAP signal preservation under small-noise regime]
+\label{thm:hap}
+Assume a small-noise regime with $\epsilon < 1/\sqrt{2}$ and preservation of the cosine similarity sign. Then, for any $\eta_h$, the HAP post-pooling expectation satisfies
+\[
+\mathbb{E}[\rho^{(\text{hap})}] \geq 1 - 2\epsilon^2 - 4\epsilon^2 \eta_h.
+\]
+\end{proposition}
+
+Figure~\ref{fig:theory_inset} shows the sign-flip threshold from Theorem~\ref{thm:meanpool} and the measured $\eta_h$ on the three datasets. All three exceed $\eta_h^* = 0.55$ at $k{=}10$; therefore, mean pooling on the transaction graph places the suspicious signal in the sign-flip regime, explaining why setting (c) (transaction graph plus mean pool) can degrade performance.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/fig_theory_inset.pdf}
+ \caption{Theory$\to$empirical bridge for Theorem~\ref{thm:meanpool}. X-axis: ego-neighborhood heterophily $\eta_h$; Y-axis: $F1_{\text{susp}}$ drop of (c) (transaction graph + subgraph pool) relative to (a) (transaction graph + augmentation, baseline). All three AML datasets exceed the mean-pool flip threshold $\eta_h^* = 0.55$ ($k{=}10$); markers show the observed $\Delta F1_{\text{susp}}$ for each encoder.}
+    \label{fig:theory_inset}
+\end{figure}
+
+\subsection{Setting-level Performance Prediction}
+\label{subsec:theory_pred}
+
+When $\eta_h^{\text{tx}} > 1/2 + 1/(2 \bar{d}_{\text{tx}})$, with $\bar{d}_{\text{tx}}$ the average ego-neighborhood size in the transaction graph, and the encoder uses batch normalization, the analysis predicts $F1(b) \approx F1(d) > F1(a) > F1(c)$, combining view-level homophily recovery with mean-pool signal reversal. On HOFINET, all six BN-equipped encoders follow this ordering ($\Delta(b{-}a) \in [+0.255, +0.405]$, $\Delta(c{-}a) \in [-0.070, -0.052]$).
+
+Theorems~\ref{thm:knn_homophily}--\ref{thm:combined} specify when a behavioral view can offset scarce suspicious--suspicious transaction edges, while Theorem~\ref{thm:meanpool} and Proposition~\ref{thm:hap} compare pooling choices under high neighborhood heterophily. Together, they motivate the four-setting ablation used in the experiments below.
+
+
 \section{Datasets: Detailed Description}\label{app:datasets}
 
 \subsection{HOFINET}\label{app:dataset_hofinet}
@@ -838,7 +875,7 @@ The theorem explains why both BN-equipped families in the paper, per-layer BN an
 \toprule
 \textbf{Result} & \textbf{Motivates} & \textbf{Examined by} \\
 \midrule
-Thm~\ref{thm:knn_homophily}, \ref{thm:combined} & Behavioral k-NN view & RQ1 (Tab~\ref{tab:rq1}, \ref{tab:ss_sb}) \\
+Thm~\ref{thm:knn_homophily}, \ref{thm:combined} & Behavioral view & RQ1 (Tab~\ref{tab:rq1}, \ref{tab:ss_sb}) \\
 Thm~\ref{thm:meanpool}             & Setting (c) failure ($\eta_h{>}0.55$) & RQ2 (Fig~\ref{fig:rq2_ablation}) \\
 Prop~\ref{thm:hap}                 & HAP design alternative      & RQ2 ablation \\
 Empirical prediction               & Predicted 4-setting order $b{\approx}d{>}a{>}c$ & RQ2 (6/6 BN) \\
@@ -886,39 +923,6 @@ Thm~\ref{thm:bn_collapse}          & BN-conditional collapse-prevention & RQ2 (F
 \end{tabular}}
 \end{table}
 
-\begin{table*}[h]
-\centering
-\caption{RQ3 (full numerical detail accompanying Figure~\ref{fig:rq3_baseline}): Self-supervised \method vs.\ 11 supervised baselines (4-seed mean$\pm$std on the 80\% holdout; identical test indices for paired comparison). Per dataset and metric, the best score is in \textbf{bold} and the second-best is \underline{underlined} (ties are shared). \method uses setting (d) with the strongest encoder per dataset (GBT on HOFINET and AMLNet, BGRL on AMLworld). Fraud-GNN baselines are simplified single-relation variants (see body Section~\ref{subsec:rq3} for retained core mechanism per method).}
-\label{tab:rq3}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{ll ccc ccc ccc}
-\toprule
-& & \multicolumn{3}{c}{\textbf{HOFINET ($\rho{=}2.13\%$)}} & \multicolumn{3}{c}{\textbf{AMLworld ($\rho{=}1.23\%$)}} & \multicolumn{3}{c}{\textbf{AMLNet ($\rho{=}13.52\%$)}} \\
-\cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
-\textbf{Category} & \textbf{Model} & \textbf{$F1_{\text{susp}}$} & \textbf{AUROC} & \textbf{AUPRC} & \textbf{$F1_{\text{susp}}$} & \textbf{AUROC} & \textbf{AUPRC} & \textbf{$F1_{\text{susp}}$} & \textbf{AUROC} & \textbf{AUPRC} \\
-\midrule
-\multirow{3}{*}{Tabular}
-  & XGBoost   & 0.675{\scriptsize±.001} & \textbf{0.992}{\scriptsize±.000} & \textbf{0.665}{\scriptsize±.005} & \textbf{0.073}{\scriptsize±.002} & \textbf{0.753}{\scriptsize±.003} & \textbf{0.037}{\scriptsize±.001} & 0.699{\scriptsize±.007} & 0.938{\scriptsize±.002} & 0.785{\scriptsize±.012} \\
-  & LightGBM  & 0.670{\scriptsize±.001} & \textbf{0.992}{\scriptsize±.000} & \underline{0.662}{\scriptsize±.002} & \underline{0.070}{\scriptsize±.002} & \underline{0.752}{\scriptsize±.003} & \textbf{0.037}{\scriptsize±.001} & 0.687{\scriptsize±.011} & 0.936{\scriptsize±.004} & 0.781{\scriptsize±.013} \\
-  & MLP       & \textbf{0.679}{\scriptsize±.002} & \underline{0.991}{\scriptsize±.000} & 0.616{\scriptsize±.009} & 0.048{\scriptsize±.002} & 0.695{\scriptsize±.014} & 0.024{\scriptsize±.001} & \textbf{0.714}{\scriptsize±.005} & \textbf{0.945}{\scriptsize±.001} & \underline{0.797}{\scriptsize±.008} \\
-\midrule
-\multirow{3}{*}{Generic GNN}
-  & GCN       & 0.250{\scriptsize±.007} & 0.935{\scriptsize±.017} & 0.316{\scriptsize±.045} & 0.045{\scriptsize±.001} & 0.703{\scriptsize±.007} & 0.022{\scriptsize±.001} & 0.467{\scriptsize±.006} & 0.785{\scriptsize±.011} & 0.476{\scriptsize±.022} \\
-  & GAT       & 0.534{\scriptsize±.024} & 0.988{\scriptsize±.001} & 0.565{\scriptsize±.010} & 0.047{\scriptsize±.001} & 0.701{\scriptsize±.013} & 0.023{\scriptsize±.001} & 0.500{\scriptsize±.047} & 0.803{\scriptsize±.013} & 0.562{\scriptsize±.039} \\
-  & GraphSAGE & \underline{0.677}{\scriptsize±.002} & \textbf{0.992}{\scriptsize±.000} & 0.610{\scriptsize±.004} & 0.050{\scriptsize±.001} & 0.671{\scriptsize±.013} & 0.024{\scriptsize±.001} & \underline{0.708}{\scriptsize±.007} & \underline{0.940}{\scriptsize±.005} & \textbf{0.806}{\scriptsize±.005} \\
-\midrule
-\multirow{5}{*}{Fraud-spec.\ GNN}
-  & CARE-GNN  & 0.108{\scriptsize±.007} & 0.625{\scriptsize±.005} & 0.094{\scriptsize±.003} & 0.041{\scriptsize±.000} & 0.711{\scriptsize±.003} & 0.024{\scriptsize±.000} & 0.443{\scriptsize±.013} & 0.770{\scriptsize±.007} & 0.418{\scriptsize±.007} \\
-  & PC-GNN    & 0.245{\scriptsize±.005} & 0.952{\scriptsize±.003} & 0.358{\scriptsize±.008} & 0.044{\scriptsize±.001} & 0.702{\scriptsize±.006} & 0.022{\scriptsize±.001} & 0.458{\scriptsize±.006} & 0.783{\scriptsize±.016} & 0.476{\scriptsize±.025} \\
-  & BWGNN     & 0.348{\scriptsize±.022} & 0.928{\scriptsize±.042} & 0.369{\scriptsize±.077} & 0.049{\scriptsize±.001} & 0.745{\scriptsize±.007} & \underline{0.030}{\scriptsize±.001} & 0.509{\scriptsize±.021} & 0.818{\scriptsize±.010} & 0.500{\scriptsize±.032} \\
-  & GAGA      & 0.516{\scriptsize±.006} & 0.984{\scriptsize±.004} & 0.476{\scriptsize±.011} & 0.046{\scriptsize±.004} & 0.713{\scriptsize±.012} & 0.025{\scriptsize±.002} & 0.475{\scriptsize±.031} & 0.785{\scriptsize±.027} & 0.420{\scriptsize±.051} \\
-  & ConsisGAD & 0.234{\scriptsize±.006} & 0.953{\scriptsize±.003} & 0.348{\scriptsize±.008} & 0.045{\scriptsize±.001} & 0.704{\scriptsize±.005} & 0.024{\scriptsize±.001} & 0.456{\scriptsize±.008} & 0.785{\scriptsize±.016} & 0.483{\scriptsize±.034} \\
-\midrule
-Self-sup.\ (proposed) & \method & 0.673{\scriptsize±.003} & \underline{0.991}{\scriptsize±.000} & 0.604{\scriptsize±.006} & 0.066{\scriptsize±.009} & 0.608{\scriptsize±.030} & 0.027{\scriptsize±.001} & 0.679{\scriptsize±.002} & 0.928{\scriptsize±.001} & 0.751{\scriptsize±.005} \\
-\bottomrule
-\end{tabular}}
-\end{table*}
-
 \begin{table}[h]
 \centering
 \caption{Sensitivity analysis on the number of k-NN neighbors $k$ (HOFINET, GBT encoder, $F1_{\text{susp}}$, 4-seed mean$\pm$std).}
@@ -926,7 +930,7 @@ Self-sup.\ (proposed) & \method & 0.673{\scriptsize±.003} & \underline{0.991}{\
 \small
 \begin{tabular}{ccc}
 \toprule
-$k$ & \textbf{(b) Behav.\ k-NN} & \textbf{(d) Behav.\ + Subgraph} \\
+$k$ & \textbf{(b) Bhv.\ k-NN} & \textbf{(d) Bhv.\ + Subgraph} \\
 \midrule
 5  & 0.672{\scriptsize±.009} & 0.676{\scriptsize±.006} \\
 \textbf{10} & 0.678{\scriptsize±.008} & 0.682{\scriptsize±.008} \\
@@ -946,7 +950,7 @@ $k$ & \textbf{(b) Behav.\ k-NN} & \textbf{(d) Behav.\ + Subgraph} \\
 \toprule
 \textbf{Symbol} & \textbf{Description} \\
 \midrule
-$\mathcal{G}_{\text{trans}}, \mathcal{G}_{\text{knn}}$ & Transaction graph, behavioral k-NN graph \\
+$\mathcal{G}_{\text{trans}}, \mathcal{G}_{\text{bhv}}$ & Transaction graph, behavioral view graph \\
 $\mathcal{V}, \mathcal{E}$ & Node (account) set, edge (transaction) set \\
 $N, F$ & Number of nodes, number of input features \\
 $\mathbf{X} \in \mathbb{R}^{N \times F}$ & Node feature matrix \\
@@ -1096,7 +1100,7 @@ The linear-probe setting freezes the source encoder and trains only the target L
 
 \subsection{Pool Variant Comparison}\label{app:pool_variants}
 
-We compare mean pooling from Section~\ref{subsec:subgraph_pool} against two alternatives: heterophily-aware pooling (HAP; Proposition~\ref{thm:hap}) and cycle-aware pooling (HAP with a triangle-membership boost, $\alpha=2$). The ablation covers four encoders (GBT, BGRL, GIN, DGI) and two views (transaction graph and behavioral k-NN), as shown in Table~\ref{tab:pool_variants}. Because only HOFINET provides triangle features, the cycle-aware comparison is limited to HOFINET.
+We compare mean pooling from Section~\ref{subsec:subgraph_pool} against two alternatives: heterophily-aware pooling (HAP; Proposition~\ref{thm:hap}) and cycle-aware pooling (HAP with a triangle-membership boost, $\alpha=2$). The ablation covers four encoders (GBT, BGRL, GIN, DGI) and two views (transaction graph and behavioral view), as shown in Table~\ref{tab:pool_variants}. Because only HOFINET provides triangle features, the cycle-aware comparison is limited to HOFINET.
 
 \begin{table}[h]
 \centering
@@ -1105,7 +1109,7 @@ We compare mean pooling from Section~\ref{subsec:subgraph_pool} against two alte
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lcccccc}
 \toprule
-& \multicolumn{3}{c}{\textbf{Transaction view (high $\eta_h$)}} & \multicolumn{3}{c}{\textbf{Behavioral k-NN view (low $\eta_h$)}} \\
+& \multicolumn{3}{c}{\textbf{Transaction view (high $\eta_h$)}} & \multicolumn{3}{c}{\textbf{Behavioral view (low $\eta_h$)}} \\
 \cmidrule(lr){2-4}\cmidrule(lr){5-7}
 \textbf{Encoder} & \textbf{mean} & \textbf{HAP} & \textbf{Cycle} & \textbf{mean} & \textbf{HAP} & \textbf{Cycle} \\
 \midrule
@@ -1117,7 +1121,7 @@ DGI  & 0.048{\scriptsize±.004} & 0.047{\scriptsize±.003} & 0.047{\scriptsize±
 \end{tabular}}
 \end{table}
 
-Four patterns emerge. First, on the transaction view with per-layer BN encoders (GBT and GIN), HAP and Cycle recover substantial performance over mean pooling: +0.046 for GBT and +0.059 for GIN. This is the regime where the HAP signal-preservation bound is most relevant because mean pooling lies in the sign-flip region ($\eta_h>0.55$). Second, with final-only BN (BGRL), all three variants are within noise (mean 0.253, HAP 0.240, Cycle 0.243, all with std $\approx0.02$), suggesting that the final normalization already absorbs much of the heterophily noise after pooling. Third, the BN-free DGI encoder remains near the random-classifier region across settings ($F1_{\text{susp}}\approx0.04$--0.07); consequently, pool variants have little effect unless the encoder has already learned a usable signal. Fourth, on the behavioral k-NN view, the three variants are nearly identical: recovered homophily makes the $-4\epsilon^2\eta_h$ term in Proposition~\ref{thm:hap} negligible; hence, mean pooling already preserves the signal.
+Four patterns emerge. First, on the transaction view with per-layer BN encoders (GBT and GIN), HAP and Cycle recover substantial performance over mean pooling: +0.046 for GBT and +0.059 for GIN. This is the regime where the HAP signal-preservation bound is most relevant because mean pooling lies in the sign-flip region ($\eta_h>0.55$). Second, with final-only BN (BGRL), all three variants are within noise (mean 0.253, HAP 0.240, Cycle 0.243, all with std $\approx0.02$), suggesting that the final normalization already absorbs much of the heterophily noise after pooling. Third, the BN-free DGI encoder remains near the random-classifier region across settings ($F1_{\text{susp}}\approx0.04$--0.07); consequently, pool variants have little effect unless the encoder has already learned a usable signal. Fourth, on the behavioral view, the three variants are nearly identical: recovered homophily makes the $-4\epsilon^2\eta_h$ term in Proposition~\ref{thm:hap} negligible; hence, mean pooling already preserves the signal.
 
 Overall, HAP is most useful for robustness in the mean-pool sign-flip regime, especially with per-layer normalization on the transaction view. Outside that regime, mean pooling is sufficient and remains the default design for \method.
 
