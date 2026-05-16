@@ -173,8 +173,8 @@ def fig4_bn_effect():
         'bgrl':      ('#2ca02c', 'P'),  # green: final-only BN (distinct from per-layer family)
     }
     bn_aug_order = ['gbt', 'dgi_bn', 'mvgrl_bn', 'grace_bn', 'gin', 'bgrl']
-    bn_free_order = ['dgi', 'mvgrl', 'grace', 'gca']
-    bn_free_colors = ['#d62728', '#ff7f0e', '#bcbd22', '#9467bd']
+    bn_free_order = ['dgi', 'mvgrl', 'grace']
+    bn_free_colors = ['#d62728', '#ff7f0e', '#bcbd22']
 
     settings = ['a', 'b', 'c', 'd']
     setting_labels = ['(a)\nbaseline', '(b)\n+view', '(c)\n+level', '(d)\n+both']
@@ -235,8 +235,8 @@ def fig5_setting_comparison():
     bgrl = [0.315, 0.566, 0.254, 0.647]
     # GIN+BN
     gin = [0.149, 0.545, 0.121, 0.570]
-    # Average across non-BN encoders (DGI, MVGRL, GRACE, GCA)
-    nobn_avg = [0.046, 0.057, 0.048, 0.075]
+    # Average across non-BN encoders (DGI, MVGRL, GRACE)
+    nobn_avg = [0.043, 0.054, 0.047, 0.070]
 
     fig, ax = plt.subplots(figsize=(7, 5))
 
