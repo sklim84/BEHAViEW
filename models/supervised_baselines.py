@@ -102,11 +102,15 @@ class SupervisedSAGE(nn.Module):
 
 
 class SupervisedMLP(nn.Module):
-    def __init__(self, input_dim, hidden_dim, num_layers=2, dropout=0.2):
+    """Standard (bare) MLP baseline: stacked Linear + ReLU. No BatchNorm, no
+    Dropout. Matches the convention used in AML/fraud-GNN literature
+    (CARE-GNN, PC-GNN, BWGNN, GAGA) where "MLP" denotes a plain feedforward
+    network without modern regularization tricks."""
+    def __init__(self, input_dim, hidden_dim, num_layers=2, dropout=0.0):
         super().__init__()
-        layers = [nn.Linear(input_dim, hidden_dim), nn.BatchNorm1d(hidden_dim), nn.ReLU(), nn.Dropout(dropout)]
+        layers = [nn.Linear(input_dim, hidden_dim), nn.ReLU()]
         for _ in range(num_layers - 1):
-            layers += [nn.Linear(hidden_dim, hidden_dim), nn.BatchNorm1d(hidden_dim), nn.ReLU(), nn.Dropout(dropout)]
+            layers += [nn.Linear(hidden_dim, hidden_dim), nn.ReLU()]
         layers.append(nn.Linear(hidden_dim, 2))
         self.net = nn.Sequential(*layers)
 
@@ -377,13 +381,13 @@ def eval_supervised(model, data, test_mask):
     return f1_1, pre_1, rec_1, auroc, auprc
 
 
-def run_gnn_model(model_name, data, device, seed, hidden_dim=256, num_layers=2, lr=0.001, epochs=200):
+def run_gnn_model(model_name, data, device, seed, hidden_dim=256, num_layers=2, lr=0.001, epochs=200, train_ratio=0.1):
     set_seed(seed)
     N = data.num_nodes
     y = data.y.cpu().numpy()
 
-    # 10/10/80 train/val/test split via make_split (paired with BehaView SSL evaluation)
-    split = make_split(N, train_ratio=0.1, val_ratio=0.1, seed=seed)
+    # train/val/test split via make_split (paired with BehaView SSL evaluation)
+    split = make_split(N, train_ratio=train_ratio, val_ratio=0.1, seed=seed)
     train_idx = split['train'].numpy()
     test_idx = split['test'].numpy()
     train_mask = torch.zeros(N, dtype=torch.bool)
@@ -421,9 +425,9 @@ def run_gnn_model(model_name, data, device, seed, hidden_dim=256, num_layers=2, 
 # ============================================================
 # Tabular Baselines (LightGBM, XGBoost)
 # ============================================================
-def run_tabular_model(model_name, X, y, seed):
-    # 10/10/80 split via make_split — same accounts as GNN supervised and BehaView SSL
-    split = make_split(len(y), train_ratio=0.1, val_ratio=0.1, seed=seed)
+def run_tabular_model(model_name, X, y, seed, train_ratio=0.1):
+    # split via make_split — same accounts as GNN supervised and BehaView SSL
+    split = make_split(len(y), train_ratio=train_ratio, val_ratio=0.1, seed=seed)
     train_idx = split['train'].numpy()
     test_idx = split['test'].numpy()
     X_train, X_test = X[train_idx], X[test_idx]
@@ -466,6 +470,10 @@ def main():
     parser.add_argument('--seeds', nargs='+', type=int, default=[2024, 2025, 2026, 2027])
     parser.add_argument('--dataset', type=str, default='hofinet', choices=['hofinet', 'amlworld', 'amlnet'])
     parser.add_argument('--result_file', type=str, default='./results/exp_results_supervised.csv')
+    parser.add_argument('--train_ratio', type=float, default=0.1,
+                        help='Train split ratio (val_ratio fixed at 0.1; test = 1 - train - val)')
+    parser.add_argument('--exclude_struct', action='store_true',
+                        help='If set, tabular models (lgbm, xgb) use only behavioral features (data.x), matching BehaView encoder input')
     parser.add_argument('--models', nargs='+', type=str, default=None,
                         help='Specific models to run (default: all)')
     args = parser.parse_args()
@@ -473,8 +481,8 @@ def main():
     device = torch.device(f'cuda:{args.gpu}')
 
     if args.dataset == 'hofinet':
-        node_data = 'hofinet/HOFINET_NODE_FEAT'
-        edge_data = 'hofinet/HOFINET_EDGES'
+        node_data = 'HOFINET_NODE_FEAT'
+        edge_data = 'HOFINET_EDGES'
     elif args.dataset == 'amlworld':
         node_data = 'amlworld/AMLWORLD_NODE_FEAT'
         edge_data = 'amlworld/AMLWORLD_EDGES'
@@ -494,8 +502,13 @@ def main():
     print(f'Dataset: {args.dataset}, Nodes: {data.num_nodes}, Edges: {data.edge_index.size(1)}')
     print(f'Suspicious: {(data.y==1).sum().item()} ({(data.y==1).float().mean().item()*100:.2f}%)')
 
-    # Feature matrix for tabular models (behavioral + structural)
-    X_all = torch.cat([data.x.cpu(), x_struct], dim=1).numpy()
+    # Feature matrix for tabular models. By default behavioral + structural;
+    # with --exclude_struct only behavioral (matches BehaView encoder input).
+    if args.exclude_struct:
+        X_all = data.x.cpu().numpy()
+        print(f'[exclude_struct] tabular models use behavioral-only features ({X_all.shape[1]} cols)')
+    else:
+        X_all = torch.cat([data.x.cpu(), x_struct], dim=1).numpy()
     y_all = data.y.cpu().numpy()
 
     results = []
@@ -507,10 +520,10 @@ def main():
             print(f'[{model_name}] seed={seed}...', end=' ')
 
             if model_name in ('lgbm', 'xgb'):
-                f1_1, pre_1, rec_1, auroc, auprc = run_tabular_model(model_name, X_all, y_all, seed)
+                f1_1, pre_1, rec_1, auroc, auprc = run_tabular_model(model_name, X_all, y_all, seed, train_ratio=args.train_ratio)
             else:
                 f1_1, pre_1, rec_1, auroc, auprc = run_gnn_model(
-                    model_name, data, device, seed, hidden_dim=256, num_layers=2)
+                    model_name, data, device, seed, hidden_dim=256, num_layers=2, train_ratio=args.train_ratio)
 
             print(f'F1_susp={f1_1:.4f}, AUROC={auroc:.4f}')
             results.append({
