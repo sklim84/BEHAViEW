@@ -1,0 +1,14 @@
+{
+  "k": 10,
+  "n_suspicious_total": 9644,
+  "n_with_tx_neighbors": 9644,
+  "n_isolated_in_tx": 0,
+  "tx_S_ratio_mean": 0.5051148464208601,
+  "tx_S_ratio_median": 0.40202153596099144,
+  "bhv_S_ratio_mean": 0.5811281625881377,
+  "bhv_S_ratio_median": 0.6,
+  "shift_mean": 0.07601331616727754,
+  "shift_median": 0.08571428571428572,
+  "p_tx_majority_susp": 0.476980506014102,
+  "p_bhv_majority_susp": 0.7155744504355039
+}

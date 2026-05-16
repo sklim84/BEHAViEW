@@ -1,0 +1,36 @@
+{
+  "top100_extreme_readable": {
+    "tx_S_ratio_median": 0.10555555555555556,
+    "bhv_S_ratio_median": 0.8
+  },
+  "binned": [
+    {
+      "tx_bin": "near-isolated [0,0.1]",
+      "n": 1230,
+      "tx_S": 0.0699663449503518,
+      "bhv_S": 0.6
+    },
+    {
+      "tx_bin": "low [0.1,0.3]",
+      "n": 2629,
+      "tx_S": 0.1908127208480565,
+      "bhv_S": 0.5
+    },
+    {
+      "tx_bin": "mid [0.3,0.6]",
+      "n": 2377,
+      "tx_S": 0.5,
+      "bhv_S": 0.5
+    },
+    {
+      "tx_bin": "high [0.6,1]",
+      "n": 3408,
+      "tx_S": 1.0,
+      "bhv_S": 0.7
+    }
+  ],
+  "needs_repair_count": 5044,
+  "flipped_count": 3336,
+  "needs_repair_frac": 0.523019493985898,
+  "flipped_frac_of_needs": 0.6613798572561459
+}
