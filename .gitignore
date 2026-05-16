@@ -50,3 +50,5 @@ main.log
 main.out 
 main.pdf
 *.synctex.gz
+datasets/.DS_Store
+_paper/.DS_Store
