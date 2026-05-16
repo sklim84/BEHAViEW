@@ -352,7 +352,7 @@ Dual-view contrastive learning aligns a transaction view, which captures transfe
 
 \textbf{Contrastive views.} Using only the transaction view mixes suspicious and benign accounts, while using only the behavioral view loses transaction-structure information. \method learns a shared account representation across both views, so embeddings capture both transaction structure and behavioral similarity.
 
-\textbf{GNN encoder.} We apply stochastic edge dropping and feature masking ($p_e{=}p_f{=}0.3$) to the transaction and behavioral view graphs to form two views. A shared online encoder $f_\theta$ outputs embeddings $\mathbf{H}^{(1)} = f_\theta(\mathbf{X}^{\text{enc}}, \tilde{\mathcal{E}}_{\text{trans}})$ and $\mathbf{H}^{(2)} = f_\theta(\mathbf{X}^{\text{enc}}, \tilde{\mathcal{E}}_{\text{bhv}})$. The target encoder $f_\xi$ is an EMA copy that provides stop-gradient representations for the opposite BYOL branch. The online encoder stacks GCNConv~\cite{kipf2016semi} layers with batch normalization, nonlinear activation, and dropout. \method is encoder-agnostic and supports 10 encoders, including GIN~\cite{xu2018powerful}, MVGRL, and GBT; Section~\ref{subsec:rq2} studies the effect of batch normalization.
+\textbf{GNN encoder.} We apply stochastic edge dropping and feature masking ($p_e{=}p_f{=}0.3$) to the transaction and behavioral view graphs to form two views. A shared online encoder $f_\theta$ outputs embeddings $\mathbf{H}^{(1)} = f_\theta(\mathbf{X}^{\text{enc}}, \tilde{\mathcal{E}}_{\text{trans}})$ and $\mathbf{H}^{(2)} = f_\theta(\mathbf{X}^{\text{enc}}, \tilde{\mathcal{E}}_{\text{bhv}})$. The target encoder $f_\xi$ is an EMA copy that provides stop-gradient representations for the opposite BYOL branch. The online encoder stacks GCNConv~\cite{kipf2016semi} layers with batch normalization, nonlinear activation, and dropout. \method is encoder-agnostic and supports nine encoders, including GIN~\cite{xu2018powerful}, MVGRL, and GBT; Section~\ref{subsec:rq2} studies the effect of batch normalization.
 
 \subsection{Subgraph Pooling}
 \label{subsec:subgraph_pool}
@@ -422,7 +422,7 @@ AMLNet            &  11{,}000 & 1{,}090{,}172 & 13.52\% & Synthetic (simulator) 
 \end{tabular}
 \end{table}
 
-\textbf{Ablation settings and encoders.} We evaluate four settings that cross graph view and contrastive level: (a) transaction graph + node contrast, (b) behavioral view + node contrast, (c) transaction graph + subgraph pooling, and (d) behavioral view + subgraph pooling. These settings are tested with ten encoders spanning per-layer BN (GBT, DGI+BN, MVGRL+BN, GRACE+BN, GIN), final-only BN (BGRL), and BN-less variants (DGI, MVGRL, GRACE, GCA). All encoders use the same BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) and hyperparameters (lr=5e-4, hidden=256, $L$=2, dropout=0.2, 200 epochs).
+\textbf{Ablation settings and encoders.} We evaluate four settings that cross graph view and contrastive level: (a) transaction graph + node contrast, (b) behavioral view + node contrast, (c) transaction graph + subgraph pooling, and (d) behavioral view + subgraph pooling. These settings are tested with nine encoders spanning per-layer BN (GBT, DGI+BN, MVGRL+BN, GRACE+BN, GIN), final-only BN (BGRL), and BN-less variants (DGI, MVGRL, GRACE). All encoders use the same BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) and hyperparameters (lr=5e-4, hidden=256, $L$=2, dropout=0.2, 200 epochs).
 
 % --- Deprecated baseline list (11 models for Table 6 single-snapshot comparison) ---
 % \textbf{Supervised baselines.} We apply class-weight correction to 11 supervised models: generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}, GraphSAGE~\cite{hamilton2017inductive}), tabular methods (MLP, LightGBM~\cite{lightgbm2017}, XGBoost~\cite{xgboost2016}), and fraud- and anomaly-specific GNNs (CARE-GNN~\cite{dou2020enhancing}, PC-GNN~\cite{liu2021pick}, BWGNN~\cite{tang2022rethinking}, GAGA~\cite{wang2023label}, ConsisGAD~\cite{chen2024consisgad}). Since our datasets are homogeneous single-relation graphs of account-to-account transfers, we evaluate the single-relation versions of the fraud-specific GNN baselines (see Section~\ref{subsec:rq3}).
@@ -436,11 +436,11 @@ AMLNet            &  11{,}000 & 1{,}090{,}172 & 13.52\% & Synthetic (simulator) 
 \subsection{Behavioral Homophily Recovery (RQ1)}\label{subsec:rq1}
 RQ1 tests whether the topology-independent recovered neighborhood graph repairs the suspicious-class topology relative to the transaction graph.
 
-\textbf{Quantitative gains across all 10 encoders.} Replacing the transaction topology with the recovered neighborhood graph consistently outperforms the baseline across all ten encoders (Table~\ref{tab:rq1}), with gains of +84\% to +205\% for the six encoders with BN and +24\% to +29\% for the four without BN. For the six BN-equipped encoders, a four-seed paired $t$-test remains significant after Holm--Bonferroni correction (adjusted $p < 4 \times 10^{-5}$).
+\textbf{Quantitative gains across all 9 encoders.} Replacing the transaction topology with the recovered neighborhood graph consistently outperforms the baseline across all nine encoders (Table~\ref{tab:rq1}), with gains of +84\% to +205\% for the six encoders with BN and +23\% to +28\% for the three without BN. For the six BN-equipped encoders, a four-seed paired $t$-test remains significant after Holm--Bonferroni correction (adjusted $p < 4 \times 10^{-5}$).
 
 \begin{table}[h]
 \centering
-\caption{$F1_{\text{susp}}$ on \hofinet for four ablation settings (10 encoders, 4-seed mean$\pm$std): (1) transaction graph with node-level contrast, (2) behavioral view with node-level contrast, (3) transaction graph with subgraph pooling, and (4) behavioral view with subgraph pooling (proposed). Best per row in bold, second-best underlined. $^{\dagger}$GIN applies per-layer BN in its GINConv encoder.}
+\caption{$F1_{\text{susp}}$ on \hofinet for four ablation settings (9 encoders, 4-seed mean$\pm$std): (1) transaction graph with node-level contrast, (2) behavioral view with node-level contrast, (3) transaction graph with subgraph pooling, and (4) behavioral view with subgraph pooling (proposed). Best per row in bold, second-best underlined. $^{\dagger}$GIN applies per-layer BN in its GINConv encoder.}
 \label{tab:rq1}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lccccc}
@@ -455,8 +455,9 @@ GRACE+BN  &            & 0.286{\scriptsize±.004} & \underline{0.670}{\scriptsiz
 BGRL      & Final      & 0.306{\scriptsize±.012} & \underline{0.561}{\scriptsize±.008} & 0.253{\scriptsize±.016} & \textbf{0.639}{\scriptsize±.005} \\
 GIN       & Per-layer$^{\dagger}$ & 0.181{\scriptsize±.035} & \underline{0.555}{\scriptsize±.038} & 0.127{\scriptsize±.001} & \textbf{0.578}{\scriptsize±.021} \\
 \midrule
-GCA       & \multirow{4}{*}{None} & 0.045{\scriptsize±.002} & \underline{0.058}{\scriptsize±.004} & 0.049{\scriptsize±.005} & \textbf{0.081}{\scriptsize±.011} \\
-DGI       &            & 0.043{\scriptsize±.001} & \underline{0.054}{\scriptsize±.006} & 0.048{\scriptsize±.004} & \textbf{0.068}{\scriptsize±.004} \\
+% --- GCA removed: encoder is structurally identical to GRACE in this implementation; GCA's novelty (adaptive augmentation) is not isolated here ---
+% GCA       & \multirow{4}{*}{None} & 0.045{\scriptsize±.002} & \underline{0.058}{\scriptsize±.004} & 0.049{\scriptsize±.005} & \textbf{0.081}{\scriptsize±.011} \\
+DGI       & \multirow{3}{*}{None} & 0.043{\scriptsize±.001} & \underline{0.054}{\scriptsize±.006} & 0.048{\scriptsize±.004} & \textbf{0.068}{\scriptsize±.004} \\
 MVGRL     &            & 0.043{\scriptsize±.001} & \underline{0.055}{\scriptsize±.007} & 0.048{\scriptsize±.003} & \textbf{0.072}{\scriptsize±.008} \\
 GRACE     &            & 0.044{\scriptsize±.001} & \underline{0.054}{\scriptsize±.005} & 0.045{\scriptsize±.003} & \textbf{0.070}{\scriptsize±.008} \\
 \bottomrule
@@ -536,7 +537,7 @@ Overall, the effect of subgraph pooling depends on (i) view homophily and (ii) e
 \end{tabular}
 \end{table*}
 
-\textbf{Normalization as a stability factor.} We use Theorem~\ref{thm:bn_collapse} together with the homophily-recovery and signal-preservation analyses in Appendix~\ref{app:theory} as a unified theoretical lens. Under the BYOL-style bootstrap loss, normalization affects training stability (Figure~\ref{fig:rq2_bn}, settings (a) vs. (d) across ten encoders). Table~\ref{tab:bn_summary} reports 4-seed paired $t$-tests with Holm correction for setting (d). (i) The presence of BN yields the largest performance gap ($\Delta F1_{\text{susp}} \approx 0.60$) in controlled comparisons that differ only in BN, while (ii) the position of BN (per-layer $>$ final-only) and (iii) the type of convolution (GCNConv $>$ GINConv) show smaller but significant effects. Across paradigms, per-layer BN encoders converge to 0.673--0.674 under the same bootstrap loss, suggesting that once training stabilizes, the repaired topology is the major driver of performance.
+\textbf{Normalization as a stability factor.} We use Theorem~\ref{thm:bn_collapse} together with the homophily-recovery and signal-preservation analyses in Appendix~\ref{app:theory} as a unified theoretical lens. Under the BYOL-style bootstrap loss, normalization affects training stability (Figure~\ref{fig:rq2_bn}, settings (a) vs. (d) across nine encoders). Table~\ref{tab:bn_summary} reports 4-seed paired $t$-tests with Holm correction for setting (d). (i) The presence of BN yields the largest performance gap ($\Delta F1_{\text{susp}} \approx 0.60$) in controlled comparisons that differ only in BN, while (ii) the position of BN (per-layer $>$ final-only) and (iii) the type of convolution (GCNConv $>$ GINConv) show smaller but significant effects. Across paradigms, per-layer BN encoders converge to 0.673--0.674 under the same bootstrap loss, suggesting that once training stabilizes, the repaired topology is the major driver of performance.
 
 \begin{figure}[h]
     \centering
@@ -553,7 +554,7 @@ Overall, the effect of subgraph pooling depends on (i) view homophily and (ii) e
         \caption{BN-free encoders}
         \label{fig:rq2_bn_b}
     \end{subfigure}
-    \caption{$F1_{\text{susp}}$ trajectories for four ablations (a)/(b)/(c)/(d) across 10 encoders (\hofinet, 4-seed mean$\pm$std). Note differing y-axis scales. Per-layer BN encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN, GIN) largely saturate at the topology-repair step (b), while final-only BN (BGRL) shows stronger (b)$\to$(d) amplification. BN-free encoders (DGI, MVGRL, GRACE, GCA) remain near-random ($\sim$0.04--0.08), consistent with the collapse/stability analysis in Theorem~\ref{thm:bn_collapse}. Overall, topology repair drives the main gains; pooling is a conditional refinement whose marginal effect depends on encoder stabilization.}
+    \caption{$F1_{\text{susp}}$ trajectories for four ablations (a)/(b)/(c)/(d) across 9 encoders (\hofinet, 4-seed mean$\pm$std). Note differing y-axis scales. Per-layer BN encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN, GIN) largely saturate at the topology-repair step (b), while final-only BN (BGRL) shows stronger (b)$\to$(d) amplification. BN-free encoders (DGI, MVGRL, GRACE) remain near-random ($\sim$0.04--0.07), consistent with the collapse/stability analysis in Theorem~\ref{thm:bn_collapse}. Overall, topology repair drives the main gains; pooling is a conditional refinement whose marginal effect depends on encoder stabilization.}
     \label{fig:rq2_bn}
 \end{figure}
 
