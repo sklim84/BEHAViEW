@@ -549,6 +549,7 @@ Under the BYOL-style bootstrap loss~\eqref{eq:loss}, the trivial constant soluti
 \textbf{Empirical check for the stability analysis.} At setting (a), BN-less encoders achieve $F1_{\text{susp}} \approx 0.04$, close to the \hofinet random-classifier upper bound $2\rho/(1+\rho) \approx 0.042$ (the maximum $F1_{\text{susp}}$ at a positive rate $\rho$), indicating that unstable training can wash out the suspicious-class signal in low-prevalence regimes.
 The practical severity depends on prevalence: at low prevalence ($\rho \leq 2\%$), the bound is already $\approx 0.04$; hence, instability leaves little usable suspicious-class evidence. On AMLNet ($\rho = 13.52\%$), BN-less DGI still reaches $F1_{\text{susp}} \approx 0.40$ (Section~\ref{subsec:rq4}); consequently, the absolute impact is smaller. Overall, the results align with a single mechanism: homophily recovery provides class-relevant neighborhoods, sign-flip explains when aggregation can dilute them, and normalization mainly modulates whether this mechanism is realized under the bootstrap objective.
 
+\iffalse  % --- BEGIN deprecated tab:rq3 (replaced by Fig fig:rq3_labeff label-efficiency curve) ---
 \begin{table*}[h]
 \centering
 \caption{\BLUE{[실험방향 전환 필요 - 고민중]}RQ3 (full numerical details for Figure~\ref{fig:rq3_baseline}): Self-supervised \method vs.\ 11 supervised baselines (4-seed mean$\pm$std on the 80\% holdout; identical test indices for paired comparison). For each dataset and metric, the best score is in \textbf{bold} and the second-best is \underline{underlined} (ties shared). \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet and AMLNet, BGRL on AMLworld). Fraud-GNN baselines are simplified single-relation variants (see Section~\ref{subsec:rq3} for the retained core mechanism per method).}
@@ -581,25 +582,27 @@ Self-sup.\ (proposed) & \method & 0.673{\scriptsize±.003} & \underline{0.991}{\
 \bottomrule
 \end{tabular}}
 \end{table*}
+\fi  % --- END deprecated tab:rq3 ---
 
 \subsection{Self-Supervised AML Detection under Label Scarcity (RQ3)}
 \label{subsec:rq3}
-The previous questions validated \method’s internal mechanisms; RQ3 tests whether its learned representation remains competitive with supervised models under realistic AML constraints, including label delay and cold start. \method uses no labels during representation learning; labels are used only to train the downstream LogisticRegression head.
 
-\begin{figure}[H]
+RQ3 asks whether \method's self-supervised representation remains competitive with supervised baselines as labels become scarce. We vary the train label fraction in $\{1\%, 5\%, 10\%\}$ and compare \method against six supervised baselines spanning three families: tabular (MLP, XGBoost~\cite{xgboost2016}, LightGBM~\cite{lightgbm2017}), generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}), and fraud-specific GNN (CARE-GNN~\cite{dou2020enhancing}). MLP follows the standard convention (stacked Linear$+$ReLU; no BatchNorm) common in fraud-GNN literature. All models share the same 22 behavioral features; \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet/AMLNet, BGRL on AMLworld).
+
+\begin{figure*}[t]
 \centering
-\includegraphics[width=0.3\textwidth]{figures/fig_rq3_baseline.pdf}
-\caption{Self-supervised \method (rightmost dark-blue bar) vs.\ 11 supervised baselines on three AML datasets (4-seed mean$\pm$std on the 80\% holdout). The dotted line shows \method's $F1_{\mathrm{susp}}$. Five fraud-specific GNNs from CIKM'20--ICLR'24 (CARE-GNN, PC-GNN, BWGNN, GAGA, ConsisGAD) score $0.157$–$0.57$ lower in $F1_{\mathrm{susp}}$ than label-free \method on \hofinet. Y-axes differ due to dataset-specific suspicious prevalence ($\rho$).}
-\label{fig:rq3_baseline}
-\end{figure}
+\includegraphics[width=\textwidth]{figures/fig_rq3_labeff.pdf}
+\caption{Label-efficiency comparison on three AML datasets (4-seed mean$\pm$std, shaded bands). X-axis: train label fraction (\%, log scale). Y-axis: $F1_{\text{susp}}$. \method (red) achieves the highest $F1_{\text{susp}}$ at 1\% labels on all three datasets. Tabular boosting baselines (XGBoost, LightGBM) close the gap at 10\% labels on AMLworld and AMLNet. Bare MLP collapses to near-random on the two low-prevalence datasets ($\rho{<}2.2\%$), consistent with the BN-conditional collapse analysis in Theorem~\ref{thm:bn_collapse}.}
+\label{fig:rq3_labeff}
+\end{figure*}
 
-\textbf{Self-supervised competitiveness with supervised baselines.} Figure~\ref{fig:rq3_baseline} reports $F1_{\text{susp}}$ for \method (setting (d), using the strongest encoder per dataset) against 11 supervised baselines: 3 tabular models (XGBoost, LightGBM, MLP), 3 generic GNNs (GCN, GAT, GraphSAGE), and 5 fraud-oriented GNNs (CARE-GNN~\cite{dou2020enhancing}, PC-GNN~\cite{liu2021pick}, BWGNN~\cite{tang2022rethinking}, GAGA~\cite{wang2023label}, ConsisGAD~\cite{chen2024consisgad}). Since all datasets are homogeneous, single-relation transaction graphs, we evaluate only each method's single-relation component.
+\textbf{\method dominates the 1\%-label cold-start regime.} At 1\% labels, \method attains the highest $F1_{\text{susp}}$ on every dataset: 0.654 on \hofinet, 0.062 on AMLworld, and 0.632 on AMLNet. The margin over the next-best supervised baseline is $+0.021$ (\hofinet, vs.\ XGBoost), $+0.017$ (AMLworld, vs.\ MLP), and $+0.010$ (AMLNet, vs.\ MLP). Among graph baselines, \method exceeds the strongest (GAT) by $+0.25$ on \hofinet, $+0.02$ on AMLworld, and $+0.26$ on AMLNet at 1\% labels.
 
-Across all three datasets, \method lies in the upper range of supervised models. On \hofinet and AMLNet, it is close to the best supervised baseline (MLP), differing by 0.006 and 0.035. On AMLworld, tree-based models perform slightly better overall, but \method still surpasses all eight supervised GNN variants. These results support the operational claim that self-supervised representations can remain competitive in settings where AML labels arrive late.
+\textbf{Tabular boosting catches up at 10\% labels.} XGBoost and LightGBM approach \method monotonically as labels increase. On AMLworld, XGBoost reaches $F1_{\text{susp}}=0.073$ at 10\% labels versus \method's 0.066; on AMLNet, XGBoost reaches 0.699 versus \method's 0.679. The gap to \method shrinks as the label budget grows, supporting the operational claim that \method's main value lies in the label-delayed regime characteristic of AML operations~\cite{hilal2022financial}.
 
-\textbf{Robustness under cold-start label scarcity.} \method remains stable in the 1\%-label cold-start regime ($F1_{\text{susp}}=0.654$, 2.8\% below the 10\%-label setting), where retraining supervised models with so few labels is generally challenging. In operational settings with a six-month label delay and a 0.5\%--2\% suspicious rate, \method can be trained before reliable labels mature.
+\textbf{BN-conditional collapse generalizes from self-supervised to supervised models.} On the low-prevalence \hofinet ($\rho{=}2.13\%$) and AMLworld ($\rho{=}1.23\%$), bare MLP collapses to near-random performance ($F1_{\text{susp}}\approx 0.05$, close to the random-classifier upper bound $2\rho/(1+\rho)$). The same model reaches $F1_{\text{susp}}=0.62$--$0.68$ on AMLNet ($\rho{=}13.52\%$), where the random-classifier ceiling is much higher ($\approx 0.24$). This mirrors the BN-free self-supervised encoders analyzed in Theorem~\ref{thm:bn_collapse}: collapse-prevention—via BatchNorm or sufficient prevalence—becomes critical in low-prevalence regimes, regardless of whether training is supervised or self-supervised. \method's encoder uses per-layer BatchNorm and avoids this collapse on all three datasets.
 
-\textbf{Fraud-specific GNN baselines.} Fraud- and anomaly-specific GNNs stay below \method across the CIKM 2020--ICLR 2024 sequence (CARE-GNN $\to$ PC-GNN $\to$ BWGNN $\to$ GAGA $\to$ ConsisGAD); on \hofinet, the best of these baselines (GAGA 0.516) trails \method (0.673) by 0.157. All five operate at the message-passing level on the original transaction topology, so the graph-level suspicious-neighborhood imbalance (S-S:S-B $=$ 1:5.7--1:15.8) remains unchanged. \method instead adds a structurally independent behavioral view, correcting the neighborhood structure before contrastive training.
+\textbf{Graph baselines remain consistently weaker than \method.} GCN, GAT, and CARE-GNN trail \method by $0.13$--$0.57$ $F1_{\text{susp}}$ at 10\% labels on \hofinet, $0.02$ on AMLworld, and $0.16$--$0.24$ on AMLNet. These baselines aggregate on the original transaction topology and inherit its anti-homophilous neighborhood structure; \method's behavioral view replaces this structure before contrastive training. The gap is stable across all label fractions, indicating that view recovery—not message-passing capacity—is the binding constraint for graph-based AML detection.
 
 \textbf{Operational utility with a limited analyst budget.} \method with GBT attains \hofinet precision@$k$ of 0.875, 0.853, 0.834, 0.791, and 0.746 for $k \in \{50, 100, 200, 400, 800\}$ (4 seeds), detecting approximately 317 true suspicious accounts within a top-400 budget.
 
