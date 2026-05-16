@@ -513,7 +513,7 @@ RQ1 verified topology repair in the recovered neighborhood graph; RQ2 asks when 
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.7\columnwidth]{figures/fig_rq2_ablation.pdf}
-\caption{$F1_{\text{susp}}$ over four ablation settings of the two design axes (graph view $\times$ contrastive level) on \hofinet, averaged over 4 per-layer BN encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN). Settings: (a) tx-view+node, (b) bhv-view+node, (c) tx-view+pool, (d) bhv-view+pool (proposed). Topology repair supplies the main gain; subgraph pooling adds smaller gains when combined with the repaired topology.}
+\caption{$F1_{\text{susp}}$ over four ablation settings of the two design axes (graph view $\times$ contrastive level) on \hofinet, averaged over 4 per-layer BN encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN). Settings: (a) tx-view+node, (b) bhv-view+node, (c) tx-view+pool, (d) bhv-view+pool (proposed).}
     \label{fig:rq2_ablation}
 \end{figure}
 
@@ -525,7 +525,7 @@ Overall, the effect of subgraph pooling depends on (i) view homophily and (ii) e
 
 \begin{table*}[h]
 \centering
-\caption{BatchNorm architectural ablation summary at setting (d) on \hofinet (4-seed paired $t$-test, Holm-Bonferroni adjusted; \# = pairs within family). BN presence explains the largest gap; BN position and convolution type are smaller but still significant factors.}
+\caption{BatchNorm architectural ablation summary at setting (d) on \hofinet (4-seed paired $t$-test, Holm-Bonferroni adjusted; \# = pairs within family).}
 \label{tab:bn_summary}
 \begin{tabular}{llccc}
 \toprule
@@ -555,7 +555,7 @@ Overall, the effect of subgraph pooling depends on (i) view homophily and (ii) e
         \caption{BN-free encoders}
         \label{fig:rq2_bn_b}
     \end{subfigure}
-    \caption{$F1_{\text{susp}}$ trajectories for four ablations (a)/(b)/(c)/(d) across 9 encoders (\hofinet, 4-seed mean$\pm$std). Note differing y-axis scales. Per-layer BN encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN, GIN) largely saturate at the topology-repair step (b), while final-only BN (BGRL) shows stronger (b)$\to$(d) amplification. BN-free encoders (DGI, MVGRL, GRACE) remain near-random ($\sim$0.04--0.07), consistent with the collapse/stability analysis in Theorem~\ref{thm:bn_collapse}. Overall, topology repair drives the main gains; pooling is a conditional refinement whose marginal effect depends on encoder stabilization.}
+    \caption{$F1_{\text{susp}}$ trajectories for four ablations (a)/(b)/(c)/(d) across 9 encoders on \hofinet (4-seed mean$\pm$std). Note the differing y-axis scales between panels.}
     \label{fig:rq2_bn}
 \end{figure}
 
@@ -609,7 +609,7 @@ RQ3 asks whether \method's self-supervised representation remains competitive wi
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_rq3_labeff.pdf}
-\caption{Label-efficiency comparison on three AML datasets (4-seed mean$\pm$std, shaded bands). X-axis: train label fraction (\%, log scale). Y-axis: $F1_{\text{susp}}$. \method (red) achieves the highest $F1_{\text{susp}}$ at 1\% labels on all three datasets. Tabular boosting baselines (XGBoost, LightGBM) close the gap at 10\% labels on AMLworld and AMLNet. Bare MLP collapses to near-random on the two low-prevalence datasets ($\rho{<}2.2\%$), consistent with the BN-conditional collapse analysis in Theorem~\ref{thm:bn_collapse}.}
+\caption{Label-efficiency comparison on three AML datasets (4-seed mean$\pm$std, shaded bands). X-axis: train label fraction (\%, log scale). Y-axis: $F1_{\text{susp}}$.}
 \label{fig:rq3_labeff}
 \end{figure*}
 
@@ -625,7 +625,7 @@ RQ3 asks whether \method's self-supervised representation remains competitive wi
 
 \begin{table}[h]
 \centering
-\caption{RQ4: Results on AMLworld ($\rho{=}1.23\%$) and AMLNet ($\rho{=}13.52\%$) in $F1_{\text{susp}}$ (4-seed mean$\pm$std). Models using the recovered neighborhood graph (b, d) consistently outperform transaction-graph baselines (a, c), and subgraph pooling on the repaired topology (d) generally improves suspicious-class detection over node-level modeling (b) for most encoders.}
+\caption{RQ4: $F1_{\text{susp}}$ on AMLworld ($\rho{=}1.23\%$) and AMLNet ($\rho{=}13.52\%$) across the four view/level settings (4-seed mean$\pm$std).}
 \label{tab:rq4}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lcccccc}
