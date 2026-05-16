@@ -440,7 +440,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \begin{table}[h]
 \centering
-\caption{$F1_{\text{susp}}$ on \hofinet for four ablation settings (9 encoders, 4-seed mean$\pm$std): (1) transaction graph with node-level contrast, (2) behavioral view with node-level contrast, (3) transaction graph with subgraph pooling, and (4) behavioral view with subgraph pooling (proposed). The first six rows form a paired BN ablation across three GCN-based encoder families; each pair differs only by per-layer BN addition (suffix \texttt{+BN}). The remaining three rows are reference encoders with native BN at a different position or with a different convolution. Best per row in \textbf{bold}, second-best \underline{underlined}.}
+\caption{$F1_{\text{susp}}$ on \hofinet for nine encoders across the four view/level ablation settings (4-seed mean$\pm$std). \textit{Paired BN}: three GCN encoder families (DGI, MVGRL, GRACE) with and without per-layer BN. \textit{Native BN}: reference encoders (GBT, BGRL, GIN). Best per row in \textbf{bold}, second-best \underline{underlined}.}
 \label{tab:rq1}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{llccccc}
