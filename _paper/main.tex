@@ -113,7 +113,7 @@ Money laundering, accounting for an estimated 2--5\% of global GDP~\cite{unodc_m
 
 \textbf{Challenge 1: weak suspicious-class neighborhood signal.} Money-laundering accounts intentionally interact with benign accounts to evade detection, forming mule networks. In a synthetic transaction graph based on \hofinet, about 85\% of suspicious-incident edges connect to benign accounts (S-S:S-B $=$ 1:5.7), and many individual suspicious accounts are even more deeply embedded in benign neighborhoods (Figure~\ref{fig:intro_topology_repair} shows one such account with 25 of its 26 1-hop counterparts benign). As a result, even expressive message passing can struggle to accumulate suspicious evidence from local neighborhoods because suspicious--suspicious links are scarce, despite high global homophily dominated by benign--benign edges. Standard graph contrastive learning (GCL) cannot resolve this mismatch either: typical view-augmentation strategies perturb the original transaction graph, leaving the underlying neighborhood structure unchanged~\cite{zhu2021graph}. Because view perturbations do not alter which accounts are linked by transactions, suspicious accounts remain embedded among many benign neighbors across both views.
 
-\textbf{Challenges 2--3: class imbalance and delayed/limited labels.} Suspicious accounts often constitute less than 2\% of all accounts~\cite{hilal2022financial}. Moreover, suspicious labels are confirmed only after retrospective investigations that can take more than six months~\cite{fatf2013guidance,kofia2024aml}; therefore, at training time, reliable suspicious labels are often limited. Supervised fraud models can therefore face cold-start issues in production, especially when both label availability and neighborhood suspicious signals are weak.
+\textbf{Challenges 2--3: class imbalance and delayed or limited labels.} Suspicious accounts often constitute less than 2\% of all accounts~\cite{hilal2022financial}. Moreover, suspicious labels are confirmed only after retrospective investigations that can take more than six months~\cite{fatf2013guidance,kofia2024aml}; therefore, at training time, reliable suspicious labels are often limited. Supervised fraud models can therefore face cold-start issues in production, especially when both label availability and neighborhood suspicious signals are weak.
 
 Graph contrastive learning (GCL) is a natural label-free starting point because it enforces consistency across augmented views~\cite{you2020graph,velivckovic2018deep}; the challenge above motivates moving beyond \emph{standard} GCL augmentations toward topology repair via an auxiliary view that no longer inherits the transaction topology.
 
@@ -275,7 +275,7 @@ A line of work improves message passing when label homophily is low by separatin
 \subsection{Self-supervised GCL and auxiliary-view design}
 Self-supervised GCL learns representations by enforcing consistency across multiple graph views~\cite{velivckovic2018deep,you2020graph}. Most existing approaches either perturb a single input graph or form views at the model and representation level, leaving the underlying neighborhood structure essentially unchanged. Auxiliary-graph approaches introduce a separate view, such as a k-NN affinity graph~\cite{shang2023mlgcl}; however, when built from all available features, this view can entangle behavioral similarity with topology-correlated variables. \method constructs a topology-independent affinity graph from behavioral features only and uses it for topology repair, then studies when aggregation on the repaired topology preserves versus dilutes suspicious evidence. Unlike prior k-NN auxiliary views that mainly enrich an existing topology, we motivate the construction as topology repair: when the observed graph is adversarially manipulated to be heterophilous (e.g., mule networks), the recovered neighborhood graph replaces broken neighborhood structure so downstream learning can operate on class-relevant neighborhoods.
 
-\subsection{AML/fraud detection and unsupervised anomaly detection under label delay}
+\subsection{AML and fraud detection, and unsupervised anomaly detection under label delay}
 In AML and fraud detection, supervised GNNs can improve detection under class imbalance via neighborhood selection and reweighting~\cite{dou2020enhancing}. However, they typically require training-time labels that are delayed and limited in AML operations. Unsupervised anomaly detection provides label-free alternatives~\cite{ding2019dominant}, but is mostly evaluated on general graph benchmarks and does not directly address the suspicious-class neighborhood mismatch in transaction networks. \method targets this gap by combining topology-independent topology repair with self-supervised learning, and by analyzing aggregation-level signal preservation on the repaired topology.
 
 \section{Method: \method}
@@ -440,7 +440,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \begin{table}[h]
 \centering
-\caption{$F1_{\text{susp}}$ on \hofinet for nine encoders across the four view/level ablation settings (4-seed mean$\pm$std). \textit{Paired BN}: three GCN encoder families (DGI, MVGRL, GRACE) with and without per-layer BN. \textit{Native BN}: reference encoders (GBT, BGRL, GIN). Best per row in \textbf{bold}, second-best \underline{underlined}.}
+\caption{$F1_{\text{susp}}$ on \hofinet for nine encoders across the four view-by-level ablation settings (4-seed mean$\pm$std). \textit{Paired BN}: three GCN encoder families (DGI, MVGRL, GRACE) with and without per-layer BN. \textit{Native BN}: reference encoders (GBT, BGRL, GIN). Best per row in \textbf{bold}, second-best \underline{underlined}.}
 \label{tab:rq1}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{llccccc}
@@ -504,7 +504,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \textbf{Robustness to $k$.} On GBT, $k=10$ is optimal over $k \in \{5, 10, 20, 50\}$, and $k=5$ remains strong at (d) $F1_{\text{susp}} = 0.676$. For $k>10$, benign mixing reduces S-S density, and (d) decreases monotonically ($k{=}50$: 0.661). The full-range spread of (d) $F1_{\text{susp}}$ is only 0.021, indicating robustness to $k$.
 
-\textbf{Additional checks.} Seed-level analyses show that constructing the recovered neighborhood graph from behavioral features alone outperforms an all-feature baseline (analogous to MLGCL/GCPAL-style view construction) by $+0.040$ $F1_{\text{susp}}$ on \hofinet. The repair is a one-time preprocessing step (608.9\,s on \hofinet). We report an additional pooling variant (HAP) in Appendix~\ref{app:theory}.
+\textbf{Additional checks.} Seed-level analyses show that constructing the recovered neighborhood graph from behavioral features alone outperforms an all-feature baseline (analogous to MLGCL- and GCPAL-style view construction) by $+0.040$ $F1_{\text{susp}}$ on \hofinet. The repair is a one-time preprocessing step (608.9\,s on \hofinet). We report an additional pooling variant (HAP) in Appendix~\ref{app:theory}.
 
 \subsection{Signal Preservation under Aggregation (RQ2)}
 \label{subsec:rq2}
@@ -604,7 +604,7 @@ Self-sup.\ (proposed) & \method & 0.673{\scriptsize±.003} & \underline{0.991}{\
 \subsection{Self-Supervised AML Detection under Label Scarcity (RQ3)}
 \label{subsec:rq3}
 
-RQ3 asks whether \method's self-supervised representation remains competitive with supervised baselines as labels become scarce. We vary the train label fraction in $\{1\%, 5\%, 10\%\}$ and compare \method against six supervised baselines spanning three families: tabular (MLP, XGBoost~\cite{xgboost2016}, LightGBM~\cite{lightgbm2017}), generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}), and fraud-specific GNN (CARE-GNN~\cite{dou2020enhancing}). MLP follows the standard convention (stacked Linear$+$ReLU; no BatchNorm) common in fraud-GNN literature. All models share the same 22 behavioral features; \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet/AMLNet, BGRL on AMLworld).
+RQ3 asks whether \method's self-supervised representation remains competitive with supervised baselines as labels become scarce. We vary the train label fraction in $\{1\%, 5\%, 10\%\}$ and compare \method against six supervised baselines spanning three families: tabular (MLP, XGBoost~\cite{xgboost2016}, LightGBM~\cite{lightgbm2017}), generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}), and fraud-specific GNN (CARE-GNN~\cite{dou2020enhancing}). MLP follows the standard convention (stacked Linear$+$ReLU; no BatchNorm) common in fraud-GNN literature. All models share the same 22 behavioral features; \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet and AMLNet, BGRL on AMLworld).
 
 \begin{figure*}[t]
 \centering
@@ -625,7 +625,7 @@ RQ3 asks whether \method's self-supervised representation remains competitive wi
 
 \begin{table}[h]
 \centering
-\caption{RQ4: $F1_{\text{susp}}$ on AMLworld ($\rho{=}1.23\%$) and AMLNet ($\rho{=}13.52\%$) across the four view/level settings (4-seed mean$\pm$std).}
+\caption{RQ4: $F1_{\text{susp}}$ on AMLworld ($\rho{=}1.23\%$) and AMLNet ($\rho{=}13.52\%$) across the four view-by-level settings (4-seed mean$\pm$std).}
 \label{tab:rq4}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lcccccc}
@@ -654,7 +654,7 @@ GRACE+BN  & \checkmark & 0.431{\scriptsize±.014} & \underline{0.673}{\scriptsiz
 
 \subsection{Robustness across AML Regimes (RQ4)}\label{subsec:rq4}
 
-Finally, RQ4 asks whether the patterns established in RQ1–RQ3 transfer to AML regimes with different prevalence and scale. We therefore repeat the same ablation on two structurally distinct datasets: AMLworld, a large low-prevalence simulator dataset ($\rho{=}1.23\%$), and AMLNet, a smaller high-prevalence benchmark ($\rho{=}13.52\%$). Table~\ref{tab:rq4} reports $F1_{\text{susp}}$ across view/level settings for five encoders.
+Finally, RQ4 asks whether the patterns established in RQ1–RQ3 transfer to AML regimes with different prevalence and scale. We therefore repeat the same ablation on two structurally distinct datasets: AMLworld, a large low-prevalence simulator dataset ($\rho{=}1.23\%$), and AMLNet, a smaller high-prevalence benchmark ($\rho{=}13.52\%$). Table~\ref{tab:rq4} reports $F1_{\text{susp}}$ across view-by-level settings for five encoders.
 
 The cross-regime trend is consistent: topology repair provides most of the gains, and subgraph-level evaluation sharpens suspicious-class decisions once the topology has been repaired.
 
@@ -681,7 +681,7 @@ Limitations remain. Our evaluation is transductive and does not include temporal
 
 \subsection{\hofinet}
 \label{app:dataset_hofinet}
-\hofinet is a synthetic transaction dataset based on a national inter-bank transfer system. The network includes both household (internet/mobile banking) and corporate firm-banking channels. Our snapshot has 452,816 accounts and 4,732,130 directed multi-edges, including 9,644 suspicious accounts (2.13\%). The simulator generates six AML typologies, including structuring, layering, and mule networks, over 40 months from 2021Q3 to 2024Q4.
+\hofinet is a synthetic transaction dataset based on a national inter-bank transfer system. The network includes both household (internet and mobile banking) and corporate firm-banking channels. Our snapshot has 452,816 accounts and 4,732,130 directed multi-edges, including 9,644 suspicious accounts (2.13\%). The simulator generates six AML typologies, including structuring, layering, and mule networks, over 40 months from 2021Q3 to 2024Q4.
 
 \subsection{AMLworld}
 \label{app:dataset_amlworld}
@@ -720,7 +720,7 @@ Table~\ref{tab:label_eff_full} reports the per-cell numbers underlying Figure~\r
 
 \begin{table*}[t]
 \centering
-\caption{Full numerical results for Figure~\ref{fig:rq3_labeff}: $F1_{\text{susp}}$ (4-seed mean$\pm$std) across train label fractions $\{1\%, 5\%, 10\%\}$ on three AML datasets. Best per (dataset, fraction) in \textbf{bold}, second-best \underline{underlined}. \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet/AMLNet, BGRL on AMLworld); MLP follows the standard fraud-GNN convention (Linear$+$ReLU, no BatchNorm).}
+\caption{Full numerical results for Figure~\ref{fig:rq3_labeff}: $F1_{\text{susp}}$ (4-seed mean$\pm$std) across train label fractions $\{1\%, 5\%, 10\%\}$ on three AML datasets. Best per (dataset, fraction) in \textbf{bold}, second-best \underline{underlined}. \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet and AMLNet, BGRL on AMLworld); MLP follows the standard fraud-GNN convention (Linear$+$ReLU, no BatchNorm).}
 \label{tab:label_eff_full}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{l ccc ccc ccc}
