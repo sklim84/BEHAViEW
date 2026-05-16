@@ -172,6 +172,30 @@ def main():
     tx_neighbors = sorted(adj_tx[rep_idx])
     bhv_neighbors_idx = bhv_idx[np.where(susp_indices == rep_idx)[0][0]].tolist()
 
+    # Induced subgraph edges: ego + 1-hop neighbors
+    tx_node_set = set(tx_neighbors + [rep_idx])
+    tx_induced = []
+    for u in tx_node_set:
+        for v in adj_tx.get(u, set()):
+            if v in tx_node_set and u < v:  # undirected, dedup
+                tx_induced.append((int(u), int(v)))
+
+    # For behavioral: each node's k-NN may include other nodes in the same set
+    bhv_node_set = set(bhv_neighbors_idx + [rep_idx])
+    bhv_query_indices = np.array(sorted(bhv_node_set))
+    _, bhv_query_knn = nn.kneighbors(X[bhv_query_indices])  # (n_set, K+1)
+    bhv_induced = []
+    seen = set()
+    for src, knn_row in zip(bhv_query_indices, bhv_query_knn):
+        for tgt in knn_row[1:]:  # skip self
+            if int(tgt) in bhv_node_set:
+                a, b = (int(src), int(tgt)) if src < tgt else (int(tgt), int(src))
+                if (a, b) not in seen:
+                    seen.add((a, b))
+                    bhv_induced.append((a, b))
+
+    print(f"  Induced edges: tx={len(tx_induced)}, bhv={len(bhv_induced)}")
+
     rep_payload = {
         'idx': rep_idx,
         'account': rep_row['account'],
@@ -184,6 +208,8 @@ def main():
             {'idx': int(n), 'account': accounts[n], 'label': int(labels[n])}
             for n in bhv_neighbors_idx
         ],
+        'tx_induced_edges': tx_induced,
+        'bhv_induced_edges': bhv_induced,
         'tx_S_ratio': float(rep_row['tx_S_ratio']),
         'bhv_S_ratio': float(rep_row['bhv_S_ratio']),
         'tx_deg': int(rep_row['tx_deg']),
