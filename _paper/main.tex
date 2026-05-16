@@ -440,26 +440,25 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \begin{table}[h]
 \centering
-\caption{$F1_{\text{susp}}$ on \hofinet for four ablation settings (9 encoders, 4-seed mean$\pm$std): (1) transaction graph with node-level contrast, (2) behavioral view with node-level contrast, (3) transaction graph with subgraph pooling, and (4) behavioral view with subgraph pooling (proposed). Best per row in bold, second-best underlined. $^{\dagger}$GIN applies per-layer BN in its GINConv encoder.}
+\caption{$F1_{\text{susp}}$ on \hofinet for four ablation settings (9 encoders, 4-seed mean$\pm$std): (1) transaction graph with node-level contrast, (2) behavioral view with node-level contrast, (3) transaction graph with subgraph pooling, and (4) behavioral view with subgraph pooling (proposed). The first six rows form a paired BN ablation across three GCN-based encoder families; each pair differs only by per-layer BN addition (suffix \texttt{+BN}). The remaining three rows are reference encoders with native BN at a different position or with a different convolution. Best per row in \textbf{bold}, second-best \underline{underlined}.}
 \label{tab:rq1}
 \resizebox{\columnwidth}{!}{%
-\begin{tabular}{lccccc}
+\begin{tabular}{llccccc}
 \toprule
-\textbf{Encoder} & \textbf{BN} & \makecell{\textbf{Tx graph}\\\textbf{node}} & \makecell{\textbf{ Bhv view}\\\textbf{node}} & \makecell{\textbf{Tx graph}\\\textbf{pool}} & \makecell{\textbf{Bhv view}\\\textbf{pool}} \\
+\textbf{Category} & \textbf{Encoder} & \textbf{BN} & \makecell{\textbf{Tx graph}\\\textbf{node}} & \makecell{\textbf{Bhv view}\\\textbf{node}} & \makecell{\textbf{Tx graph}\\\textbf{pool}} & \makecell{\textbf{Bhv view}\\\textbf{pool}} \\
 \midrule
-GBT       & \multirow{4}{*}{Per-layer} & 0.266{\scriptsize±.010} & \underline{0.671}{\scriptsize±.003} & 0.197{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.003} \\
-DGI+BN    &            & 0.266{\scriptsize±.010} & \underline{0.670}{\scriptsize±.004} & 0.198{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.002} \\
-MVGRL+BN  &            & 0.266{\scriptsize±.010} & \underline{0.671}{\scriptsize±.004} & 0.198{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.003} \\
-GRACE+BN  &            & 0.286{\scriptsize±.004} & \underline{0.670}{\scriptsize±.004} & 0.216{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.003} \\
-\cmidrule{1-1}\cmidrule{3-6}
-BGRL      & Final      & 0.306{\scriptsize±.012} & \underline{0.561}{\scriptsize±.008} & 0.253{\scriptsize±.016} & \textbf{0.639}{\scriptsize±.005} \\
-GIN       & Per-layer$^{\dagger}$ & 0.181{\scriptsize±.035} & \underline{0.555}{\scriptsize±.038} & 0.127{\scriptsize±.001} & \textbf{0.578}{\scriptsize±.021} \\
+\multirow{6}{*}{\makecell[l]{Paired\\BN}}
+  & DGI       & \xmark & 0.043{\scriptsize±.001} & \underline{0.054}{\scriptsize±.006} & 0.048{\scriptsize±.004} & \textbf{0.068}{\scriptsize±.004} \\
+  & DGI+BN    & \cmark & 0.266{\scriptsize±.010} & \underline{0.670}{\scriptsize±.004} & 0.198{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.002} \\
+  & MVGRL     & \xmark & 0.043{\scriptsize±.001} & \underline{0.055}{\scriptsize±.007} & 0.048{\scriptsize±.003} & \textbf{0.072}{\scriptsize±.008} \\
+  & MVGRL+BN  & \cmark & 0.266{\scriptsize±.010} & \underline{0.671}{\scriptsize±.004} & 0.198{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.003} \\
+  & GRACE     & \xmark & 0.044{\scriptsize±.001} & \underline{0.054}{\scriptsize±.005} & 0.045{\scriptsize±.003} & \textbf{0.070}{\scriptsize±.008} \\
+  & GRACE+BN  & \cmark & 0.286{\scriptsize±.004} & \underline{0.670}{\scriptsize±.004} & 0.216{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.003} \\
 \midrule
-% --- GCA removed: encoder is structurally identical to GRACE in this implementation; GCA's novelty (adaptive augmentation) is not isolated here ---
-% GCA       & \multirow{4}{*}{None} & 0.045{\scriptsize±.002} & \underline{0.058}{\scriptsize±.004} & 0.049{\scriptsize±.005} & \textbf{0.081}{\scriptsize±.011} \\
-DGI       & \multirow{3}{*}{None} & 0.043{\scriptsize±.001} & \underline{0.054}{\scriptsize±.006} & 0.048{\scriptsize±.004} & \textbf{0.068}{\scriptsize±.004} \\
-MVGRL     &            & 0.043{\scriptsize±.001} & \underline{0.055}{\scriptsize±.007} & 0.048{\scriptsize±.003} & \textbf{0.072}{\scriptsize±.008} \\
-GRACE     &            & 0.044{\scriptsize±.001} & \underline{0.054}{\scriptsize±.005} & 0.045{\scriptsize±.003} & \textbf{0.070}{\scriptsize±.008} \\
+\multirow{3}{*}{\makecell[l]{Native\\BN}}
+  & GBT             & \cmark & 0.266{\scriptsize±.010} & \underline{0.671}{\scriptsize±.003} & 0.197{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.003} \\
+  & BGRL (final BN) & \cmark & 0.306{\scriptsize±.012} & \underline{0.561}{\scriptsize±.008} & 0.253{\scriptsize±.016} & \textbf{0.639}{\scriptsize±.005} \\
+  & GIN (GINConv)   & \cmark & 0.181{\scriptsize±.035} & \underline{0.555}{\scriptsize±.038} & 0.127{\scriptsize±.001} & \textbf{0.578}{\scriptsize±.021} \\
 \bottomrule
 \end{tabular}}
 \end{table}
