@@ -151,7 +151,11 @@ def fig1_topology_repair(rep, dpi=300):
 
 
 def fig_rq1_shift_hist(dist, stats, dpi=300):
-    """Overlay histogram of suspicious-share in tx vs behavioral neighborhoods."""
+    """Overlay histogram of suspicious-share in tx vs behavioral neighborhoods.
+
+    Annotations (majority-S threshold + 47.7% -> 71.6% shift) are deferred to
+    the LaTeX caption so the figure itself stays uncluttered.
+    """
     fig, ax = plt.subplots(figsize=(3.4, 2.3))
     bins = np.linspace(0, 1.0, 21)
     tx = dist['tx_S_ratio'].dropna().to_numpy()
@@ -160,27 +164,15 @@ def fig_rq1_shift_hist(dist, stats, dpi=300):
             edgecolor='white', linewidth=0.4)
     ax.hist(bhv, bins=bins, color=C_SUSP, alpha=0.55, label='Recovered neighborhood',
             edgecolor='white', linewidth=0.4)
-    ymax = ax.get_ylim()[1]
-    ax.set_ylim(0, ymax * 1.18)
     ax.axvline(0.5, color='black', linestyle='--', linewidth=0.7, alpha=0.5)
-    ax.text(0.505, ymax * 1.04, 'majority-S threshold', fontsize=6.4,
-            color='black', ha='left', va='bottom')
-
     ax.set_xlabel('Fraction of suspicious 1-hop neighbors', fontsize=8.5)
     ax.set_ylabel('# suspicious accounts', fontsize=8.5)
     ax.tick_params(labelsize=7.8)
-    ax.legend(fontsize=7.4, loc='upper left', frameon=False,
-              bbox_to_anchor=(0.0, 1.0))
+    # Place the legend above the plot to avoid overlap with the tall bars.
+    ax.legend(fontsize=7.4, loc='lower center', frameon=False,
+              bbox_to_anchor=(0.5, 1.0), ncol=2, borderaxespad=0.2)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    p_tx = stats['p_tx_majority_susp'] * 100
-    p_bhv = stats['p_bhv_majority_susp'] * 100
-    ax.text(0.99, 0.98,
-            f'Majority-S share\n{p_tx:.0f}% (tx) $\\to$ {p_bhv:.0f}% (recov.)',
-            transform=ax.transAxes, fontsize=7.0, va='top', ha='right',
-            color='#222222',
-            bbox=dict(boxstyle='round,pad=0.25', facecolor='white',
-                      edgecolor='#bbbbbb', linewidth=0.5))
     fig.tight_layout()
     pdf = os.path.join(OUT_DIR, 'fig_rq1_shift_hist.pdf')
     fig.savefig(pdf, bbox_inches='tight', dpi=dpi)
