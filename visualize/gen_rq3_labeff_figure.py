@@ -83,10 +83,11 @@ def main():
             ax.fill_between(x, m - s, m + s, color=style['color'], alpha=0.12, lw=0)
 
         ax.set_title(title, fontsize=11)
-        ax.set_xlabel('Train label fraction (\\%)')
+        ax.set_xlabel('Train label fraction')
         ax.set_xscale('log')
         ax.set_xticks([1, 5, 10])
-        ax.set_xticklabels(['1', '5', '10'])
+        ax.set_xticklabels(['1%', '5%', '10%'])
+        ax.invert_xaxis()  # decreasing labels left -> right (10% -> 1%)
         ax.grid(True, ls=':', alpha=0.5)
 
     axes[0].set_ylabel('$F1_{\\mathrm{susp}}$')
@@ -107,8 +108,12 @@ def main():
 
     plt.subplots_adjust(left=0.06, right=0.99, top=0.88, bottom=0.20, wspace=0.22)
     os.makedirs(os.path.dirname(FIG_OUT), exist_ok=True)
-    fig.savefig(FIG_OUT, bbox_inches='tight')
+    fig.savefig(FIG_OUT, bbox_inches='tight', dpi=300)
+    # Also write a 300-DPI PNG sibling for slides / quick preview
+    png_out = FIG_OUT.replace('.pdf', '.png')
+    fig.savefig(png_out, bbox_inches='tight', dpi=300)
     print(f'Saved: {FIG_OUT}')
+    print(f'Saved: {png_out}')
 
 
 if __name__ == '__main__':
