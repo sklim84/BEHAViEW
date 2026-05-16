@@ -610,7 +610,7 @@ def fig_rq3_baseline():
         ('BWGNN',     'Fraud',    (0.348, 0.022), (0.049, 0.001), (0.509, 0.021)),
         ('GAGA',      'Fraud',    (0.516, 0.006), (0.046, 0.004), (0.475, 0.031)),
         ('ConsisGAD', 'Fraud',    (0.234, 0.006), (0.045, 0.001), (0.456, 0.008)),
-        ('BehaView',  'Ours',     (0.673, 0.003), (0.066, 0.009), (0.679, 0.002)),
+        ('BEHAViEW',  'Ours',     (0.673, 0.003), (0.066, 0.009), (0.679, 0.002)),
     ]
 
     cat_color = {
@@ -626,56 +626,66 @@ def fig_rq3_baseline():
         'Ours':     'black',
     }
 
-    fig, axes = plt.subplots(1, 3, figsize=(13.5, 3.6))
-    x = np.arange(len(rows))
+    plot_rows = [rows[-1]] + rows[:-1]
+    y = np.arange(len(plot_rows))
 
+    fig, axes = plt.subplots(3, 1, figsize=(3.55, 7.85))
     for ax, (key, title, ymax) in zip(axes, datasets):
         col = {'HOFINET': 2, 'AMLworld': 3, 'AMLNet': 4}[key]
-        means = [r[col][0] for r in rows]
-        stds  = [r[col][1] for r in rows]
-        colors = [cat_color[r[1]] for r in rows]
-        edges  = [cat_edge[r[1]]  for r in rows]
-        lws    = [1.8 if r[1] == 'Ours' else 0.8 for r in rows]
+        means = [r[col][0] for r in plot_rows]
+        stds  = [r[col][1] for r in plot_rows]
+        colors = [cat_color[r[1]] for r in plot_rows]
+        edges  = [cat_edge[r[1]]  for r in plot_rows]
+        lws    = [1.8 if r[1] == 'Ours' else 0.7 for r in plot_rows]
 
-        bars = ax.bar(x, means, yerr=stds, color=colors, edgecolor=edges,
-                      linewidth=lws, capsize=2.5, error_kw={'elinewidth': 0.9})
+        ax.barh(y, means, xerr=stds, color=colors, edgecolor=edges,
+                linewidth=lws, capsize=2.0, height=0.62,
+                error_kw={'elinewidth': 0.8})
 
         # Highlight BehaView value on top
-        ours_idx = len(rows) - 1
-        ax.text(ours_idx, means[ours_idx] + stds[ours_idx] + ymax * 0.025,
-                f'{means[ours_idx]:.3f}', ha='center', fontsize=9,
+        ours_idx = 0
+        ax.text(means[ours_idx] + stds[ours_idx] + ymax * 0.015, ours_idx,
+                f'{means[ours_idx]:.3f}', ha='left', va='center', fontsize=8.8,
                 fontweight='bold', color='#1f4e79')
 
         # Reference line at BehaView value
-        ax.axhline(means[ours_idx], color='#1f4e79', linestyle=':',
-                   linewidth=0.8, alpha=0.5, zorder=0)
+        ax.axvline(means[ours_idx], color='#1f4e79', linestyle=':',
+                   linewidth=0.9, alpha=0.65, zorder=0)
 
-        ax.set_xticks(x)
-        ax.set_xticklabels([r[0] for r in rows], rotation=35, ha='right', fontsize=9)
-        ax.set_ylim(0, ymax)
-        ax.set_title(title, fontsize=12)
-        ax.set_ylabel(r'$F1_{\mathrm{susp}}$', fontsize=11)
-        ax.tick_params(axis='y', labelsize=10)
-        ax.grid(axis='y', alpha=0.25, zorder=0)
+        for sep in [0.5, 3.5, 6.5]:
+            ax.axhline(sep, color='#d9d9d9', linewidth=0.6, zorder=0)
+
+        ax.set_yticks(y)
+        ax.set_yticklabels([r[0] for r in plot_rows], fontsize=8.6)
+        ax.invert_yaxis()
+        ax.set_xlim(0, ymax)
+        ax.set_title(title, fontsize=10.5, fontweight='bold', pad=3)
+        ax.tick_params(axis='x', labelsize=8.6, pad=1)
+        ax.tick_params(axis='y', length=0, pad=2)
+        ax.grid(axis='x', alpha=0.25, zorder=0)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
 
     # Shared legend at top
     legend_handles = [
         mpatches.Patch(facecolor=cat_color['Tabular'], edgecolor=cat_edge['Tabular'],
-                       label='Tabular (XGB, LGBM, MLP)'),
+                       label='Tabular'),
         mpatches.Patch(facecolor=cat_color['Generic'], edgecolor=cat_edge['Generic'],
-                       label='Generic GNN (GCN, GAT, SAGE)'),
+                       label='Generic GNN'),
         mpatches.Patch(facecolor=cat_color['Fraud'],   edgecolor=cat_edge['Fraud'],
-                       label='Fraud-specific GNN (CIKM\'20--ICLR\'24)'),
+                       label='Fraud-GNN'),
         mpatches.Patch(facecolor=cat_color['Ours'],    edgecolor=cat_edge['Ours'],
-                       linewidth=1.5, label='BehaView (self-supervised, ours)'),
+                       linewidth=1.5, label='BEHAViEW'),
     ]
     fig.legend(handles=legend_handles, loc='upper center',
-               bbox_to_anchor=(0.5, 1.04), ncol=4, fontsize=10,
-               framealpha=0.95, edgecolor='#cccccc')
+               bbox_to_anchor=(0.5, 0.992), ncol=4, fontsize=7.2,
+               framealpha=0.95, edgecolor='#cccccc',
+               handlelength=0.9, handletextpad=0.3, columnspacing=0.55,
+               borderpad=0.3)
 
-    plt.tight_layout(rect=(0, 0, 1, 0.97))
+    axes[-1].set_xlabel(r'$F1_{\mathrm{susp}}$', fontsize=9.6, labelpad=2)
+    fig.subplots_adjust(left=0.31, right=0.99, top=0.895, bottom=0.055, hspace=0.34)
     path = os.path.join(OUT_DIR, 'fig_rq3_baseline.pdf')
     plt.savefig(path, bbox_inches='tight', dpi=300)
     plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
