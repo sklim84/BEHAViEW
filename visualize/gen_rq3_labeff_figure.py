@@ -46,13 +46,13 @@ def aggregate(df):
 
 # Plot config — distinct colors and markers
 STYLE = {
-    'BehaView':  dict(color='#d62728', marker='o', lw=2.4, ms=8, zorder=10),
-    'MLP':       dict(color='#7f7f7f', marker='s', lw=1.5, ms=6, ls='--'),
-    'XGBoost':   dict(color='#1f77b4', marker='^', lw=1.5, ms=6),
-    'LightGBM':  dict(color='#2ca02c', marker='v', lw=1.5, ms=6),
-    'GAT':       dict(color='#ff7f0e', marker='D', lw=1.5, ms=5),
-    'GCN':       dict(color='#9467bd', marker='P', lw=1.5, ms=6),
-    'CARE-GNN':  dict(color='#8c564b', marker='X', lw=1.5, ms=6),
+    'BehaView':  dict(color='#d62728', marker='o', lw=1.6, ms=5, zorder=10),
+    'MLP':       dict(color='#7f7f7f', marker='s', lw=1.0, ms=4, ls='--'),
+    'XGBoost':   dict(color='#1f77b4', marker='^', lw=1.0, ms=4),
+    'LightGBM':  dict(color='#2ca02c', marker='v', lw=1.0, ms=4),
+    'GAT':       dict(color='#ff7f0e', marker='D', lw=1.0, ms=3.5),
+    'GCN':       dict(color='#9467bd', marker='P', lw=1.0, ms=4),
+    'CARE-GNN':  dict(color='#8c564b', marker='X', lw=1.0, ms=4),
 }
 MODEL_ORDER = ['BehaView', 'XGBoost', 'LightGBM', 'MLP', 'GAT', 'GCN', 'CARE-GNN']
 
