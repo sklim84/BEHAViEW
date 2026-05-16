@@ -101,7 +101,7 @@ In anti-money laundering (AML) transaction graphs, suspicious accounts have pred
     \centering
     \includegraphics[width=0.98\columnwidth]{figures/fig_intro_topology_repair.pdf}
     \Description{Sampled induced 1-hop subgraphs of one suspicious account: tx forms a near-pure star with mostly benign neighbors; the recovered behavioral view forms a cluster of mostly suspicious peers.}
-  \caption{Topology repair on the induced 1-hop subgraph of a real \hofinet suspicious account (sampled from the data, not a schematic; flagged for a sudden pattern shift consistent with a mule-recipient role: 607 incoming transactions concentrated on 26 senders). Left: 26 transaction counterparts, only 1 suspicious (3.8\%); the 25 benign senders do not transact with each other, so the subgraph is a near-pure star. Right: behavioral k-NN ($k{=}10$) instead connects the ego to 10 behaviorally similar peers, 9 of them suspicious (90\%); the peers also appear in each other's top-$k$, forming a cohesive cluster (15 inter-peer edges). The repair replaces a benign-dominated star with a class-relevant cluster. S = suspicious, B = benign.}
+  \caption{Topology repair on the 1-hop subgraph of a real \hofinet suspicious account (sampled from the data, not a schematic). Left: the transaction graph forms a near-pure star with 26 counterparts, only 1 of them suspicious. Right: the behavioral k-NN view ($k{=}10$) instead forms a cluster of 10 peers, 9 of them suspicious. S = suspicious, B = benign.}
 \label{fig:intro_topology_repair}
 \end{figure}
 
