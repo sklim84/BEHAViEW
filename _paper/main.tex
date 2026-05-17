@@ -93,7 +93,7 @@ In anti-money laundering (AML) transaction graphs, suspicious accounts have pred
     \centering
     \includegraphics[width=\columnwidth]{figures/fig1_star_vs_recovered_cluster.pdf}
     \Description{Topology repair example from the actual HOFINET experiment data. A suspicious account has a benign-dominated transaction-star neighborhood, while the recovered behavioral-homophily graph recovers a suspicious peer cluster.}
-  \caption{Topology repair on a suspicious account from the actual \hofinet experiment data, not a schematic. Left: the observed transaction graph forms a near-pure star with 26 one-hop counterparties, only 1 of them suspicious. The red dashed ring marks a benign-labeled transaction neighbor whose behavioral k-NN neighborhood is 8/10 suspicious under the repaired topology. Right: the recovered neighborhood graph from the same node features ($k{=}10$) yields a compact peer cluster with 10 neighbors, 9 of them suspicious. Node colors use ground-truth labels: S = suspicious, B = benign. Solid gray edges are observed transactions; dashed brown edges are behavioral k-NN links.}
+  \caption{A suspicious account in \hofinet (real example). Left: the observed transaction graph forms a near-pure star with 26 one-hop counterparties, 1 of them suspicious. The red dashed ring marks a benign-labeled transaction neighbor whose behavioral k-NN neighborhood is 8/10 suspicious under the repaired topology. Right: the recovered neighborhood graph from the same node features ($k{=}10$) yields a compact peer cluster with 10 neighbors, 9 suspicious. S = suspicious, B = benign; solid gray edges are transactions, dashed brown edges are behavioral k-NN links.}
 \label{fig:intro_topology_repair}
 \end{figure}
 
