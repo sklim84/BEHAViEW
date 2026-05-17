@@ -89,7 +89,7 @@ In anti-money laundering (AML) transaction graphs, suspicious accounts have pred
 
 \section{Introduction}
 
-\begin{figure}[h]
+\begin{figure}[t]
     \centering
     \includegraphics[width=\columnwidth]{figures/fig_intro_topology_repair.pdf}
     \Description{Sampled induced 1-hop subgraphs of one suspicious account: tx forms a near-pure star with mostly benign neighbors; the recovered behavioral view forms a cluster of mostly suspicious peers.}
@@ -256,7 +256,7 @@ A line of work improves message passing when label homophily is low by separatin
 \subsection{GCL with Auxiliary Views}
 Self-supervised GCL learns representations by enforcing consistency across multiple graph views~\cite{velivckovic2018deep,you2020graph}. Most existing approaches either perturb a single input graph or form views at the model and representation level, leaving the underlying neighborhood structure essentially unchanged. Auxiliary-graph approaches introduce a separate view, such as a k-NN affinity graph~\cite{shang2023mlgcl}; however, when built from all available features, this view can entangle behavioral similarity with topology-correlated variables. \method constructs a topology-independent affinity graph from behavioral features only and uses it for topology repair, then studies when aggregation on the repaired topology preserves versus dilutes suspicious evidence. Unlike prior k-NN auxiliary views that mainly enrich an existing topology, we motivate the construction as topology repair: when the observed graph is adversarially manipulated to be heterophilous (e.g., mule networks), the recovered neighborhood graph replaces broken neighborhood structure so downstream learning can operate on class-relevant neighborhoods.
 
-\subsection{Fraud and Anomaly Detection}
+\subsection{Money Laundering and Fraud Detection}
 In AML and fraud detection, supervised GNNs can improve detection under class imbalance via neighborhood selection and reweighting~\cite{dou2020enhancing}. However, they typically require training-time labels that are delayed and limited in AML operations. Unsupervised anomaly detection provides label-free alternatives~\cite{ding2019dominant}, but is mostly evaluated on general graph benchmarks and does not directly address the suspicious-class neighborhood mismatch in transaction networks. \method targets this gap by combining topology-independent topology repair with self-supervised learning, and by analyzing aggregation-level signal preservation on the repaired topology.
 
 \section{Method: \method}
@@ -273,7 +273,7 @@ We group the node features available in a transaction network into behavioral, n
 
 The behavioral features capture transaction patterns via amount statistics, time-window frequencies, and transaction-type entropies (Table~\ref{tab:features}). Network-derived features (transaction counts and degrees) are input to the encoder but are excluded from the auxiliary view, while structural features (centrality, hub/authority, topology) are used only for analysis and auxiliary comparison. We denote by $\mathbf{X}^{\text{enc}}$ the behavioral and network-derived features given to the GNN encoder, and by $\mathbf{X}^{\text{bhv}}$ the 20 behavioral features used to construct a behavioral affinity graph. When suspicious accounts transact with benign ones to evade detection, the suspicious class exhibits low neighborhood homophily in the observed transaction topology. We counter this by recovering a topology-independent behavioral view (topology repair), linking accounts with similar behavior even if they are not directly connected by transactions.
 
-\begin{table}[h]
+\begin{table}[t]
 \centering
 \caption{Node feature taxonomy. Behavioral and network-derived features are used as GNN input, while  view construction uses only 20 behavioral variables.}
 \label{tab:features}
@@ -384,11 +384,10 @@ We assess \method in four phases, moving from mechanism to practical deployment.
 \end{itemize}
 
 \subsection{Experimental Setting}
-\textbf{Datasets.} We use three AML datasets (Table~\ref{tab:datasets}). \hofinet includes about 4.7M synthetic transactions derived from real activity on a national interbank settlement network, modeling 40 months of household and corporate transfers. AMLworld~\cite{amlpatterns2024realistic}, the NeurIPS 2023 open synthetic benchmark, models eight transaction patterns (e.g., fan-out, scatter-gather, cycle); we use the HI-Small variant (high illicit ratio, small size). AMLNet~\cite{huda2025amlnet}, a small synthetic benchmark for the high-prevalence regime, shares AMLworld’s feature schema.
 
-\textbf{Account-level labels.} All three datasets provide transaction-level suspicious labels. Following standard graph-based AML and fraud detection practices~\cite{dou2020enhancing,liu2021pick}, we max-aggregate to the account level: an account is suspicious (label$=1$) if it appears on either side of any suspicious transaction, and normal (label$=0$) otherwise. The resulting suspicious-account ratios are 2.13\% (\hofinet), 1.23\% (AMLworld), and 13.52\% (AMLNet) (Table~\ref{tab:datasets}).
+We evaluate self-supervised models by freezing the encoder and training Logistic Regression~\cite{pedregosa2011scikit} on embeddings $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$. All experiments use Python 3.12, PyTorch 2.10, CUDA 12.8, and NVIDIA H100 80GB GPUs.
 
-\begin{table}[ht]
+\begin{table}[t]
 \centering
 \caption{Dataset statistics. $\rho$ = suspicious account ratio.}
 \label{tab:datasets}
@@ -405,23 +404,26 @@ AMLNet            &  11{,}000 & 1{,}090{,}172 & 13.52\% & Synthetic (simulator) 
 \end{tabular}
 \end{table}
 
-\textbf{Ablation settings and encoders.} We evaluate four settings that cross graph view and contrastive level: (a) transaction graph + node contrast, (b) behavioral view + node contrast, (c) transaction graph + subgraph pooling, and (d) behavioral view + subgraph pooling. These settings are tested with nine encoders spanning per-layer BN (GBT, DGI+BN, MVGRL+BN, GRACE+BN, GIN), final-only BN (BGRL), and BN-less variants (DGI, MVGRL, GRACE). All encoders use the same BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) and hyperparameters (lr=5e-4, hidden=256, $L$=2, dropout=0.2, 200 epochs); Appendix~\ref{app:loss_table} verifies that this substitution does not penalize the baselines.
+\subsubsection{Datasets} We use three AML datasets (Table~\ref{tab:datasets}). \hofinet includes about 4.7M synthetic transactions derived from real activity on a national interbank settlement network, modeling 40 months of household and corporate transfers. AMLworld~\cite{amlpatterns2024realistic}, the NeurIPS 2023 open synthetic benchmark, models eight transaction patterns (e.g., fan-out, scatter-gather, cycle); we use the HI-Small variant (high illicit ratio, small size). AMLNet~\cite{huda2025amlnet}, a small synthetic benchmark for the high-prevalence regime, shares AMLworld’s feature schema.
 
-% --- Deprecated baseline list (11 models for Table 6 single-snapshot comparison) ---
-% \textbf{Supervised baselines.} We apply class-weight correction to 11 supervised models: generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}, GraphSAGE~\cite{hamilton2017inductive}), tabular methods (MLP, LightGBM~\cite{lightgbm2017}, XGBoost~\cite{xgboost2016}), and fraud- and anomaly-specific GNNs (CARE-GNN~\cite{dou2020enhancing}, PC-GNN~\cite{liu2021pick}, BWGNN~\cite{tang2022rethinking}, GAGA~\cite{wang2023label}, ConsisGAD~\cite{chen2024consisgad}). Since our datasets are homogeneous single-relation graphs of account-to-account transfers, we evaluate the single-relation versions of the fraud-specific GNN baselines (see Section~\ref{subsec:rq3}).
-% --- End deprecated ---
-\textbf{Supervised baselines.} For the label-efficiency comparison (Section~\ref{subsec:rq3}), we evaluate six supervised baselines spanning three families: tabular (MLP, XGBoost~\cite{xgboost2016}, LightGBM~\cite{lightgbm2017}), generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}), and fraud-specific GNN (CARE-GNN~\cite{dou2020enhancing}). MLP follows the standard convention common in fraud-GNN literature (stacked Linear$+$ReLU; no BatchNorm). All baselines use class-weight correction and share the same 22 behavioral features as \method's encoder input.
+\subsubsection{Account-level labels} All three datasets provide transaction-level suspicious labels. Following standard graph-based AML and fraud detection practices~\cite{dou2020enhancing,liu2021pick}, we max-aggregate to the account level: an account is suspicious (label$=1$) if it appears on either side of any suspicious transaction, and normal (label$=0$) otherwise. The resulting suspicious-account ratios are 2.13\% (\hofinet), 1.23\% (AMLworld), and 13.52\% (AMLNet) (Table~\ref{tab:datasets}).
 
-\textbf{Evaluation protocol.} The primary metric is suspicious-class F1 ($F1_{\text{susp}}$); AUROC and AUPRC are secondary. We use a 10\%/10\%/80\% train/val/test split (encoders are trained self-supervised; labels only train the Logistic Regression head; therefore, 10\% of labeled data suffices). For paired comparisons, the split is fixed per seed. We report mean$\pm$std over four seeds (2024--2027). Statistical significance uses a 4-seed paired $t$-test with Holm--Bonferroni correction; seed-level raw results and reproduction scripts are also available at this anonymized link.
 
-\textbf{Evaluation environment.} We evaluate self-supervised models by freezing the encoder and training Logistic Regression~\cite{pedregosa2011scikit} on embeddings $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$. All experiments use Python 3.12, PyTorch 2.10, CUDA 12.8, and NVIDIA H100 80GB GPUs.
+
+\subsubsection{Ablation settings and encoders} We evaluate four settings that cross graph view and contrastive level: (a) transaction graph + node contrast, (b) behavioral view + node contrast, (c) transaction graph + subgraph pooling, and (d) behavioral view + subgraph pooling. These settings are tested with nine encoders spanning per-layer BN (GBT, DGI+BN, MVGRL+BN, GRACE+BN, GIN), final-only BN (BGRL), and BN-less variants (DGI, MVGRL, GRACE). All encoders use the same BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) and hyperparameters (lr=5e-4, hidden=256, $L$=2, dropout=0.2, 200 epochs); Appendix~\ref{app:loss_table} verifies that this substitution does not penalize the baselines.
+
+\subsubsection{Supervised baselines.} For the label-efficiency comparison (Section~\ref{subsec:rq3}), we evaluate six supervised baselines spanning three families: tabular (MLP, XGBoost~\cite{xgboost2016}, LightGBM~\cite{lightgbm2017}), generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}), and fraud-specific GNN (CARE-GNN~\cite{dou2020enhancing}). MLP follows the standard convention common in fraud-GNN literature (stacked Linear$+$ReLU; no BatchNorm). All baselines use class-weight correction and share the same 22 behavioral features as \method's encoder input.
+
+\subsubsection{Evaluation Metrics} The primary metric is suspicious-class F1 ($F1_{\text{susp}}$); AUROC and AUPRC are secondary. We use a 10\%/10\%/80\% train/val/test split (encoders are trained self-supervised; labels only train the Logistic Regression head; therefore, 10\% of labeled data suffices). For paired comparisons, the split is fixed per seed. We report mean$\pm$std over four seeds (2024--2027). Statistical significance uses a 4-seed paired $t$-test with Holm--Bonferroni correction; seed-level raw results and reproduction scripts are also available at this anonymized link.
+
+
 
 \subsection{Homophily Recovery (RQ1)}\label{subsec:rq1}
 RQ1 tests whether the topology-independent recovered neighborhood graph repairs the suspicious-class topology relative to the transaction graph.
 
 \textbf{Quantitative gains across all 9 encoders.} Replacing the transaction topology with the recovered neighborhood graph consistently outperforms the baseline across all nine encoders (Table~\ref{tab:rq1}), with gains of +84\% to +205\% for the six encoders with BN and +23\% to +28\% for the three without BN. For the six BN-equipped encoders, a four-seed paired $t$-test remains significant after Holm--Bonferroni correction (adjusted $p < 4 \times 10^{-5}$).
 
-\begin{table}[h]
+\begin{table}[t]
 \centering
 \caption{$F1_{\text{susp}}$ on \hofinet for nine encoders across the four view-by-level ablation settings (4-seed mean$\pm$std). \textit{Paired BN}: three GCN encoder families (DGI, MVGRL, GRACE) with and without per-layer BN. \textit{Native BN}: reference encoders (GBT, BGRL, GIN). The \textbf{Native loss} column lists each encoder's loss in its original paper; every encoder here is trained with the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to isolate the view-by-level effect. Appendix~\ref{app:loss_table} verifies the substitution does not penalize the baselines. Best per row in \textbf{bold}, second-best \underline{underlined}.}
 \label{tab:rq1}
@@ -448,7 +450,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 \end{tabular}}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[t]
 \centering
 \caption{S-S:S-B edge ratio and homophily by graph type across the three AML datasets. Best per dataset in bold, second-best underlined (higher homophily and a smaller S-B multiplier in 1:$x$ are better). The behavioral homophily recovery graph repairs the suspicious-class topology, while the structural-view ablation (\hofinet only) does not.}
 \label{tab:ss_sb}
@@ -478,9 +480,9 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \textbf{From the case study to Table~\ref{tab:rq1}.} For the Figure~\ref{fig:intro_topology_repair} account, the encoder's aggregation neighborhood is $3.8\%$ suspicious in (a), $7.4\%$ in (c), $90.0\%$ in (b), and $90.9\%$ in (d). The $\le 7.4\%$ signals in (a)/(c) push the account into the benign region (false negative, contributing to the GBT scores $0.266$ and $0.197$), while the $\ge 90\%$ signals in (b)/(d) classify it correctly ($0.671$ and $0.673$); pooling (c$\to$d) sharpens this gap because the suspicious ego reinforces a suspicious-peer cluster but not a benign-dominated star. The single-account flip generalizes: across all $9{,}644$ suspicious accounts (Figure~\ref{fig:rq1_shift_hist}), $47.7\%\to 71.6\%$ have a majority-suspicious 1-hop ego after repair, and $66.1\%$ of the $5{,}044$ majority-benign-ego accounts flip to majority-S. Four further checks rule out a \hofinet-specific cause: (i) feature-specific: structural-feature k-NN worsens the ratio to 1:9.7 (Table~\ref{tab:ss_sb}); (ii) encoder-agnostic: all 10 encoders show the same direction of (a)$\to$(b) gain; (iii) cross-dataset: AMLworld and AMLNet replicate the gain (Tables~\ref{tab:ss_sb},~\ref{tab:rq4}); (iv) theoretically aligned: the measured homophily gap lies within $0.019$ of the Theorem~\ref{thm:combined} bound.
 
-\begin{figure}[h]
+\begin{figure}[t]
     \centering
-    \includegraphics[width=0.7\columnwidth]{figures/fig_rq1_shift_hist.pdf}
+    \includegraphics[width=0.85\columnwidth]{figures/fig_rq1_shift_hist.pdf}
 \caption{Population-level S-ratio shift across all 9{,}644 suspicious \hofinet accounts. Topology repair shifts the bimodal transaction-graph distribution (gray) past the majority-suspicious threshold (dashed): $47.7\%\to 71.6\%$ majority-S 1-hop egos.}
 \label{fig:rq1_shift_hist}
 \end{figure}
@@ -493,7 +495,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 \label{subsec:rq2}
 RQ1 verified topology repair in the recovered neighborhood graph; RQ2 asks when aggregation (subgraph pooling) helps versus hurts, and how the repaired topology changes this trade-off. Pooling is not uniformly beneficial on the raw transaction graph; however, on the repaired topology, it can amplify suspicious evidence, with the clearest gains under suspicious-class-oriented downstream scoring.
 
-\begin{figure}[h]
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.7\columnwidth]{figures/fig_rq2_ablation.pdf}
 \caption{$F1_{\text{susp}}$ over four ablation settings of the two design axes (graph view $\times$ contrastive level) on \hofinet, averaged over 4 per-layer BN encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN). Settings: (a) tx-view+node, (b) bhv-view+node, (c) tx-view+pool, (d) bhv-view+pool (proposed).}
