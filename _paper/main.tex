@@ -330,25 +330,25 @@ Because the Euclidean distance between two L2-normalized vectors is monotonic in
     \mathcal{E}_{\text{bhv}} = \{(v_i, v_j) \mid v_j \in \operatorname{kNN}(v_i, k)\}.
 \end{equation}
 
-We use the symmetrized (bidirectional) version of this recovered neighborhood graph for message passing and pooling; accordingly, we add $(v_j, v_i)$ whenever $(v_i, v_j) \in \mathcal{E}_{\text{bhv}}$.
+We use the symmetrized (bidirectional) version of this recovered neighborhood graph for message passing and pooling, adding $(v_j, v_i)$ whenever $(v_i, v_j) \in \mathcal{E}_{\text{bhv}}$.
 
-Here, $\operatorname{kNN}(v_i, k)$ denotes the set of $k$ nodes closest (in Euclidean distance) to $\tilde{\mathbf{x}}_i$, with $k=10$ by default.
+Here, $\operatorname{kNN}(v_i, k)$ is the set of $k$ nodes closest in Euclidean distance to $\tilde{\mathbf{x}}_i$, with $k=10$ by default.
 
-Money-laundering accounts that split transactions and layer transfers often show similar patterns in amount distributions, time-window frequencies, and transaction-type entropies. The recovered neighborhood graph thus links suspicious accounts that are not directly connected by transactions, recovering suspicious-to-suspicious neighborhoods missing in the transaction topology.
+Money-laundering accounts that split transactions and layer transfers tend to share similar amount distributions, time-window frequencies, and transaction-type entropies. The recovered neighborhood graph therefore links suspicious accounts not directly connected by transactions, restoring suspicious-to-suspicious neighborhoods missing from the transaction topology.
 
 \subsection{Topology-Repair GNN Encoder}
 \label{subsec:dual_view}
-\textbf{Topology-repair contrastive branches.} Contrastive learning aligns the observed transaction topology, which captures transfer structure, with the recovered neighborhood topology, which captures behavioral homophily for the same account. \method forms these branches from $\mathcal{G}_{\text{trans}}$ and $\mathcal{G}_{\text{bhv}}$.
+\textbf{Topology-repair contrastive branches.} Contrastive learning aligns the observed transaction topology, which captures transfer structure, with the recovered neighborhood topology, which captures behavioral homophily of the same account. \method builds these two branches from $\mathcal{G}_{\text{trans}}$ and $\mathcal{G}_{\text{bhv}}$.
 
-\textbf{Observed and repaired topologies.} Using only the transaction topology mixes suspicious and benign accounts, while using only the recovered neighborhood graph loses transaction-structure information. \method learns a shared account representation across both branches, so embeddings capture both transaction structure and behavioral homophily.
+\textbf{Observed and repaired topologies.} Using only the transaction topology mixes suspicious and benign accounts, while using only the recovered neighborhood graph discards transaction-structure information. \method jointly learns account representations from both branches so embeddings capture both transaction structure and behavioral homophily.
 
-\textbf{GNN encoder.} A shared online encoder $f_\theta$ outputs embeddings $\mathbf{H}^{(1)} = f_\theta(\mathbf{X}^{\text{enc}}, \mathcal{E}_{\text{trans}})$ and $\mathbf{H}^{(2)} = f_\theta(\mathbf{X}^{\text{enc}}, \mathcal{E}_{\text{bhv}})$. The target encoder $f_\xi$ is an EMA copy that provides stop-gradient representations for the opposite BYOL branch. The online encoder stacks GCNConv~\cite{kipf2016semi} layers with batch normalization, nonlinear activation, and dropout. \method is encoder-agnostic and supports nine encoders, including GIN~\cite{xu2018powerful}, MVGRL, and GBT; Section~\ref{subsec:rq2} studies the effect of batch normalization.
+\textbf{GNN encoder.} A shared online encoder $f_\theta$ produces embeddings $\mathbf{H}^{(1)} = f_\theta(\mathbf{X}^{\text{enc}}, \mathcal{E}_{\text{trans}})$ and $\mathbf{H}^{(2)} = f_\theta(\mathbf{X}^{\text{enc}}, \mathcal{E}_{\text{bhv}})$. The target encoder $f_\xi$ is an EMA copy that provides stop-gradient representations for the opposite BYOL branch. The online encoder stacks GCNConv~\cite{kipf2016semi} layers with batch normalization, nonlinearity, and dropout. \method is encoder-agnostic and supports nine encoders, including GIN~\cite{xu2018powerful}, MVGRL, and GBT; Section~\ref{subsec:rq2} studies the impact of batch normalization.
 
 \subsection{Subgraph Pooling}
 \label{subsec:subgraph_pool}
-\textbf{Subgraph-level signal aggregation.} \method compares not only individual node representations but also a subgraph representation that bundles each account with its neighbors (Subgraph Pooling in Figure~\ref{fig:framework}). This reflects the idea that whether an account is suspicious often becomes clearer from its relationships with neighboring counterparts than from its own attributes alone.
+\textbf{Subgraph-level signal aggregation.} \method compares both individual node representations and a subgraph representation that pools each account with its neighbors (Subgraph Pooling in Figure~\ref{fig:framework}). This captures the idea that an account’s suspiciousness is often clearer from its relationships with neighbors than from its own attributes alone.
 
-\textbf{Subgraph representation.} For each topology branch $t \in \{1,2\}$, we form the subgraph representation of node $v_i$ by averaging its own representation with the representations of its neighbors in that branch:
+\textbf{Subgraph representation.} For each topology branch $t \in \{1,2\}$, we define the subgraph representation of node $v_i$ as the average of its own representation and those of its neighbors in that branch:
 \begin{equation}\label{eq:subgraph_pool}
     \mathbf{s}_i^{(t)} = \frac{1}{|\mathcal{N}^{(t)}(v_i)| + 1}
     \left(\mathbf{h}_i^{(t)} + \sum_{v_j \in \mathcal{N}^{(t)}(v_i)} \mathbf{h}_j^{(t)}\right)
@@ -360,13 +360,8 @@ Here $\mathcal{N}^{(1)}(v_i)$ is the neighborhood of $v_i$ in the transaction to
 
 \textbf{Pooling variants.} We use mean pooling by default. Other pooling choices are possible, including similarity-weighted pooling (HAP). We report its expected signal-preservation behavior in Appendix~\ref{app:theory} (Proposition~\ref{thm:hap}).
 
-\subsection{Training and Inference}
-\label{subsec:contrastive_learning}
-
-Algorithm~\ref{alg:behaview} summarizes \method end-to-end: Stage~1 builds the recovered neighborhood graph (Section~\ref{subsec:knn_view}); Stage~2 trains the encoder via a symmetric BYOL-style loss on the two topology branches; Stage~3 concatenates the per-branch representations at inference.
-
 \begin{algorithm}[t]
-\caption{\method: Training and Inference}
+\caption{Training and Inference}
 \label{alg:behaview}
 \KwIn{$\mathcal{G}_{\text{trans}}$, $\mathbf{X}^{\text{bhv}}$, $\mathbf{X}^{\text{enc}}$, neighbors $k$, epochs $E$, momentum $m$, learning rate $\eta$}
 \KwOut{Node embeddings $\{\mathbf{z}_i\}_{i=1}^{N}$}
@@ -390,6 +385,11 @@ Initialize online encoder $f_\theta$, shared projector $g$, predictor $q$;\ targ
 \tcc{Stage 3: inference (frozen encoder)}
 $\mathbf{z}_i \gets [\mathbf{s}_i^{(1)} \,\Vert\, \mathbf{s}_i^{(2)}]$ \tcp*[r]{Eq.~\eqref{eq:concat}; node-level: $[\mathbf{h}_i^{(1)} \Vert \mathbf{h}_i^{(2)}]$}
 \end{algorithm}
+
+\subsection{Training and Inference}
+\label{subsec:contrastive_learning}
+
+Algorithm~\ref{alg:behaview} summarizes \method end-to-end: Stage~1 builds the recovered neighborhood graph (Section~\ref{subsec:knn_view}); Stage~2 trains the encoder via a symmetric BYOL-style loss on the two topology branches; Stage~3 concatenates the per-branch representations at inference.
 
 \textbf{BYOL loss.} The loss maximizes cosine similarity between representations from the two topology branches:
 \begin{equation}\label{eq:loss}
