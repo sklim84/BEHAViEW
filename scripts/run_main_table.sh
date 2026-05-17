@@ -76,9 +76,17 @@ echo "  SETTINGS=$SETTINGS"
 echo "  SEEDS=$SEEDS"
 echo "  OUTPUT (hofinet)=$OUTPUT_DIR_HOFINET / (amlworld)=$OUTPUT_DIR_AMLWORLD / (amlnet)=$OUTPUT_DIR_AMLNET"
 
+# is_done $NAME $TMP $FINAL: 0 (done, skip) | 1 (not done, run)
+is_done() {
+    local NAME="$1" TMP="$2" FINAL="$3"
+    [ -f "$TMP"   ] && grep -q ",${NAME}," "$TMP"   2>/dev/null && return 0
+    [ -f "$FINAL" ] && grep -q ",${NAME}," "$FINAL" 2>/dev/null && return 0
+    return 1
+}
+
 run_one() {
-    local DS_TAG="$1" NODE="$2" EDGE="$3" KNN="$4" RESULT="$5"
-    local ENC="$6" SETTING="$7" SEED="$8"
+    local DS_TAG="$1" NODE="$2" EDGE="$3" KNN="$4" RESULT="$5" FINAL="$6"
+    local ENC="$7" SETTING="$8" SEED="$9"
 
     local FLAGS=""
     case "$SETTING" in
@@ -90,6 +98,10 @@ run_one() {
     esac
 
     local NAME="${DS_TAG}_${ENC}_${SETTING}_s${SEED}"
+    if is_done "$NAME" "$RESULT" "$FINAL"; then
+        echo "[$(date)] [skip] $NAME (already in CSV)"
+        return
+    fi
     echo "[$(date)] $NAME"
     python -u models/subgraph_cl.py \
         --model_name "$NAME" \
@@ -129,15 +141,20 @@ for DS in $DATASETS; do
     esac
 
     RESULT="${OUT_DIR}/.tmp_${DS}_main_sweep_${TAG}.csv"
+    case "$DS" in
+        hofinet)  FINAL="${OUT_DIR}/main_sweep.csv" ;;
+        amlworld) FINAL="${OUT_DIR}/amlworld_main_sweep.csv" ;;
+        amlnet)   FINAL="${OUT_DIR}/amlnet_main_sweep.csv" ;;
+    esac
     echo ""
-    echo "[$(date)] === Dataset: $DS -> $RESULT ==="
+    echo "[$(date)] === Dataset: $DS -> tmp=$RESULT, final=$FINAL ==="
 
     for ENC in $ENCODERS; do
         echo ""
         echo "----- $DS_TAG / $ENC -----"
         for SETTING in $SETTINGS; do
             for SEED in $SEEDS; do
-                run_one "$DS_TAG" "$NODE" "$EDGE" "$KNN" "$RESULT" \
+                run_one "$DS_TAG" "$NODE" "$EDGE" "$KNN" "$RESULT" "$FINAL" \
                         "$ENC" "$SETTING" "$SEED"
             done
         done
