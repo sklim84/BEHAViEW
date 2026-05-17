@@ -14,7 +14,7 @@ SEEDS="${SEEDS:-2024 2025 2026 2027}"
 MODELS="${MODELS:-lgbm xgb}"
 RATIOS="${RATIOS:-0.01 0.05 0.10}"
 
-OUT_DIR="results/labeff_behav_tmp"
+OUT_DIR="results/rq3/.tmp_boosting_behav"
 FINAL="results/rq3/boosting_behav.csv"
 
 mkdir -p "$OUT_DIR"

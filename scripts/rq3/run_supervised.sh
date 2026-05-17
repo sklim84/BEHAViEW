@@ -15,7 +15,7 @@ SEEDS="${SEEDS:-2024 2025 2026 2027}"
 MODELS="${MODELS:-mlp xgb lgbm gcn gat caregnn}"
 RATIOS="${RATIOS:-0.01 0.05 0.10}"
 
-OUT_DIR="results/labeff_full_tmp/${DATASET}"
+OUT_DIR="results/rq3/.tmp_supervised/${DATASET}"
 FINAL="results/rq3/supervised_${DATASET}.csv"
 
 mkdir -p "$OUT_DIR"
