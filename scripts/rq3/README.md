@@ -4,7 +4,6 @@
 |---|---|---|
 | `run_behaview.sh` | `results/rq3/behaview_${ds}.csv` | BehaView at {1%, 5%, 10%} labels; encoder picked per dataset (BGRL/GBT) |
 | `run_supervised.sh` | `results/rq3/supervised_${ds}.csv` | GCN, GAT, GraphSAGE, MLP, XGBoost, LightGBM, CARE-GNN |
-| `run_bare_mlp.sh` | append to `results/rq3/supervised_${ds}.csv` | bare MLP (Linear+ReLU only); replaces modern MLP rows |
 | `run_bwgnn_gaga.sh` | `results/rq3/bwgnn_gaga_${ds}.csv` | BWGNN + GAGA |
 | `run_caregnn_pcgnn.sh` | `results/rq3/caregnn_pcgnn_${ds}.csv` | CARE-GNN + PC-GNN |
 | `run_consisgad.sh` | `results/rq3/consisgad_${ds}.csv` | ConsisGAD |
