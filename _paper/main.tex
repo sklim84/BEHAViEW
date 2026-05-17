@@ -80,13 +80,6 @@
 
 
 \begin{abstract}
-% In anti-money laundering (AML) transaction graphs, suspicious accounts are surrounded by many benign ones; as a result, standard GNN aggregation weakens the already rare suspicious signal. We trace this to a mismatch between topology and behavior: the adversarially manipulated transaction network is a poor indicator of homophily within the suspicious class.
-
-% We present \method, a graph contrastive learning framework for behavioral-view-driven homophily recovery. \method builds a behavioral, topology-independent view that connects accounts according to similarities in their transaction patterns (amount distributions, temporal activity, and transaction-type entropy), while deliberately omitting any features based on graph connectivity. On the Home/Firm banking Network (\hofinet), the suspicious ego-neighborhood ratio improves from 1:5.7 to 1:1.4, and the global edge homophily rises from 0.690 to 0.981.
-
-% \method improves suspicious-account detection on \hofinet, AMLworld, and AMLNet; subgraph-level pooling on the behavioral view yields additional gains. On \hofinet, its self-supervised embeddings come within 0.006 $F1_{\text{susp}}$ of a supervised MLP and outperform five GNNs tailored to fraud and anomaly detection. 
-% Because suspicious-transaction labels in AML arrive only after lengthy investigations, labeled data are both scarce and delayed; even with just 1\% of transactions labeled, \method achieves $F1_{\text{susp}}{=}0.654$, illustrating strong self-supervised performance under label-delayed AML conditions.
-
 In anti-money laundering (AML) transaction graphs, suspicious accounts have predominantly benign neighbors. This heterophilous neighborhood structure causes graph neural network (GNN) aggregation to dilute an already rare suspicious signal. We trace this to a mismatch between topology and behavior: the manipulated transaction network fails to reflect homophily within the suspicious class. To address this mismatch, we present \method, a graph contrastive learning framework that performs topology repair through behavioral homophily recovery. \method builds a behavioral, topology-independent view that connects accounts by similarities in their transaction patterns, such as amount distributions. By design, the view uses no features derived from graph connectivity. Our account transfer network, called \hofinet, comprises retail inter-bank account transfers via mobile or internet banking. On \hofinet, the repair raises the suspicious ego-neighborhood ratio from 1:5.7 to 1:1.4. \method outperforms standard transaction-view baselines across three AML datasets, with subgraph-level pooling on the recovered view adding further gains. At 1\% labels, \method achieves the highest $F1_{\text{susp}}$ on all three datasets, exceeding the strongest supervised baseline by 0.010--0.021. These findings position \method as a label-light building block for money laundering detection under realistic label-delay constraints.
 \end{abstract}
 
@@ -95,13 +88,12 @@ In anti-money laundering (AML) transaction graphs, suspicious accounts have pred
 \maketitle
 
 \section{Introduction}
-% Korean drafts below are kept inside \iffalse blocks for reference and are not compiled.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.98\columnwidth]{figures/fig_intro_topology_repair.pdf}
+    \includegraphics[width=\columnwidth]{figures/fig_intro_topology_repair.pdf}
     \Description{Sampled induced 1-hop subgraphs of one suspicious account: tx forms a near-pure star with mostly benign neighbors; the recovered behavioral view forms a cluster of mostly suspicious peers.}
-  \caption{Topology repair on the 1-hop subgraph of a real \hofinet suspicious account (sampled from the data, not a schematic). Left: the transaction graph forms a near-pure star with 26 counterparts, only 1 of them suspicious. Right: the behavioral k-NN view ($k{=}10$) instead forms a cluster of 10 peers, 9 of them suspicious. S = suspicious, B = benign.}
+  \caption{Topology repair on the 1-hop subgraph of a real \hofinet suspicious account (sampled from the data, not a schematic). Left: the transaction graph forms a near-pure star with 26 counterparts, only 1 of them suspicious. Right: the behavioral k-NN view ($k{=}10$) instead forms a cluster of 10 peers, 9 of them suspicious. \BLUE{The badge $d_S$ in each panel is the Euclidean distance, measured in the 3D PCA layout of the trained-encoder embeddings, from the ego to the centroid of its suspicious behavioral peers; a smaller $d_S$ means topology repair has pulled the ego closer to its suspicious cluster in representation space ($d_S$ drops from $0.72$ in (a) to $0.57$ in (b)).} S = suspicious, B = benign.}
 \label{fig:intro_topology_repair}
 \end{figure}
 
@@ -163,11 +155,11 @@ We propose \method, a graph contrastive learning framework that operationalizes 
   },
   projbox/.style={
     draw=purple!60, fill=purple!6, rounded corners=4pt,
-    minimum width=2.0cm, minimum height=1.2cm, align=center, thick
+    minimum width=2.5cm, minimum height=1.2cm, align=center, thick
   },
   lossbox/.style={
     draw=red!60, fill=red!6, rounded corners=4pt,
-    minimum width=2.0cm, minimum height=1.5cm, align=center, thick
+    minimum width=2.5cm, minimum height=1.5cm, align=center, thick
   },
   infbox/.style={
     draw=green!60!black, fill=green!6, rounded corners=4pt,
@@ -203,7 +195,7 @@ We propose \method, a graph contrastive learning framework that operationalizes 
 \node[poolbox_oth, right=0.5cm of enc1] (pool1)
   {Subgraph Pool\\{tx-graph neighbors}};
 \node[poolbox_our, right=0.5cm of enc2] (pool2)
-  {Subgraph Pool\\behave. sim. neighbors};
+  {Subgraph Pool\\bhv. sim. neighbors};
 \draw[myarrow] (enc1.east) -- (pool1.west);
 \draw[myarrow] (enc2.east) -- (pool2.west);
 \node[above=0.2cm of pool1, font=\bfseries, text=black] {Subgraph Pooling};
@@ -429,27 +421,27 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \begin{table}[h]
 \centering
-\caption{$F1_{\text{susp}}$ on \hofinet for nine encoders across the four view-by-level ablation settings (4-seed mean$\pm$std). \textit{Paired BN}: three GCN encoder families (DGI, MVGRL, GRACE) with and without per-layer BN. \textit{Native BN}: reference encoders (GBT, BGRL, GIN). Best per row in \textbf{bold}, second-best \underline{underlined}.}
+\caption{$F1_{\text{susp}}$ on \hofinet for nine encoders across the four view-by-level ablation settings (4-seed mean$\pm$std). \textit{Paired BN}: three GCN encoder families (DGI, MVGRL, GRACE) with and without per-layer BN. \textit{Native BN}: reference encoders (GBT, BGRL, GIN). \BLUE{The \textbf{Native loss} column lists each encoder's loss in its original paper (all with global minimum $\mathcal{L}^{\star}=0$ at the configuration noted in Appendix~\ref{app:loss_table}); every encoder here is trained with the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}, also $\mathcal{L}^{\star}=0$) to isolate the view-by-level effect.} Best per row in \textbf{bold}, second-best \underline{underlined}.}
 \label{tab:rq1}
 \resizebox{\columnwidth}{!}{%
-\begin{tabular}{llccccc}
+\begin{tabular}{lllcccccc}
 \toprule
-\textbf{Category} & \textbf{Encoder} & \textbf{BN} & \makecell{\textbf{Tx graph}\\\textbf{node}} & \makecell{\textbf{Bhv view}\\\textbf{node}} & \makecell{\textbf{Tx graph}\\\textbf{pool}} & \makecell{\textbf{Bhv view}\\\textbf{pool}} \\
+\textbf{Category} & \textbf{Encoder} & \textbf{BN} & \BLUE{\makecell{\textbf{Native loss}\\\textbf{($\mathcal{L}^{\star}=0$)}}} & \makecell{\textbf{Tx graph}\\\textbf{node}} & \makecell{\textbf{Bhv view}\\\textbf{node}} & \makecell{\textbf{Tx graph}\\\textbf{pool}} & \makecell{\textbf{Bhv view}\\\textbf{pool}} \\
 \midrule
 \multirow{6}{*}{\makecell[l]{Paired\\BN}}
-  & DGI       & \xmark & 0.043{\scriptsize±.001} & \underline{0.054}{\scriptsize±.006} & 0.048{\scriptsize±.004} & \textbf{0.068}{\scriptsize±.004} \\
-  & DGI+BN    & \cmark & 0.266{\scriptsize±.010} & \underline{0.670}{\scriptsize±.004} & 0.198{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.002} \\
-\cmidrule(l){2-7}
-  & MVGRL     & \xmark & 0.043{\scriptsize±.001} & \underline{0.055}{\scriptsize±.007} & 0.048{\scriptsize±.003} & \textbf{0.072}{\scriptsize±.008} \\
-  & MVGRL+BN  & \cmark & 0.266{\scriptsize±.010} & \underline{0.671}{\scriptsize±.004} & 0.198{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.003} \\
-\cmidrule(l){2-7}
-  & GRACE     & \xmark & 0.044{\scriptsize±.001} & \underline{0.054}{\scriptsize±.005} & 0.045{\scriptsize±.003} & \textbf{0.070}{\scriptsize±.008} \\
-  & GRACE+BN  & \cmark & 0.286{\scriptsize±.004} & \underline{0.670}{\scriptsize±.004} & 0.216{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.003} \\
+  & DGI       & \xmark & \BLUE{JSD BCE}        & 0.043{\scriptsize±.001} & \underline{0.054}{\scriptsize±.006} & 0.048{\scriptsize±.004} & \textbf{0.068}{\scriptsize±.004} \\
+  & DGI+BN    & \cmark & \BLUE{JSD BCE}        & 0.266{\scriptsize±.010} & \underline{0.670}{\scriptsize±.004} & 0.198{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.002} \\
+\cmidrule(l){2-8}
+  & MVGRL     & \xmark & \BLUE{JSD multi-view} & 0.043{\scriptsize±.001} & \underline{0.055}{\scriptsize±.007} & 0.048{\scriptsize±.003} & \textbf{0.072}{\scriptsize±.008} \\
+  & MVGRL+BN  & \cmark & \BLUE{JSD multi-view} & 0.266{\scriptsize±.010} & \underline{0.671}{\scriptsize±.004} & 0.198{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.003} \\
+\cmidrule(l){2-8}
+  & GRACE     & \xmark & \BLUE{InfoNCE NT-Xent} & 0.044{\scriptsize±.001} & \underline{0.054}{\scriptsize±.005} & 0.045{\scriptsize±.003} & \textbf{0.070}{\scriptsize±.008} \\
+  & GRACE+BN  & \cmark & \BLUE{InfoNCE NT-Xent} & 0.286{\scriptsize±.004} & \underline{0.670}{\scriptsize±.004} & 0.216{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.003} \\
 \midrule
 \multirow{3}{*}{\makecell[l]{Native\\BN}}
-  & GBT             & \cmark & 0.266{\scriptsize±.010} & \underline{0.671}{\scriptsize±.003} & 0.197{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.003} \\
-  & BGRL  & \cmark & 0.306{\scriptsize±.012} & \underline{0.561}{\scriptsize±.008} & 0.253{\scriptsize±.016} & \textbf{0.639}{\scriptsize±.005} \\
-  & GIN   & \cmark & 0.181{\scriptsize±.035} & \underline{0.555}{\scriptsize±.038} & 0.127{\scriptsize±.001} & \textbf{0.578}{\scriptsize±.021} \\
+  & GBT  & \cmark & \BLUE{Barlow Twins}   & 0.266{\scriptsize±.010} & \underline{0.671}{\scriptsize±.003} & 0.197{\scriptsize±.002} & \textbf{0.673}{\scriptsize±.003} \\
+  & BGRL & \cmark & \BLUE{BYOL bootstrap} & 0.306{\scriptsize±.012} & \underline{0.561}{\scriptsize±.008} & 0.253{\scriptsize±.016} & \textbf{0.639}{\scriptsize±.005} \\
+  & GIN  & \cmark & \BLUE{supervised CE}  & 0.181{\scriptsize±.035} & \underline{0.555}{\scriptsize±.038} & 0.127{\scriptsize±.001} & \textbf{0.578}{\scriptsize±.021} \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -730,6 +722,39 @@ CARE-GNN & 0.117{\scriptsize±.012} & 0.110{\scriptsize±.007} & 0.108{\scriptsi
 \bottomrule
 \end{tabular}}
 \end{table*}
+
+
+\section{\BLUE{Encoder Backbones and Unified Bootstrap Loss}}
+\label{app:loss_table}
+
+\BLUE{For a clean isolation of the topology-repair effect from the loss-formulation effect, every encoder in our experiments shares the same BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}), regardless of the native loss used in its original paper. Table~\ref{tab:loss_table} documents that substitution, lists each native loss's global minimum $\mathcal{L}^{\star}$ from the cited reference, and pairs it with the best $F1_{\text{susp}}$ each encoder reaches under \method.}
+
+\begin{table*}[h]
+\centering
+\caption{\BLUE{Encoder backbones used in our experiments, their native loss in the original paper, that loss's global minimum $\mathcal{L}^{\star}$ as defined in the cited reference, the unified BYOL-style bootstrap loss used by \method (Eq.~\eqref{eq:loss}), and the best $F1_{\text{susp}}$ each encoder reaches under \method on \hofinet (Table~\ref{tab:rq1}). All nine encoders attain their best score in setting (d) (recovered neighborhood graph + subgraph pooling), supporting the claim that topology repair is the binding factor under a fixed loss. The two ``measured final loss'' entries are from the seed-2024 reproduction runs (Section~\ref{subsec:rq1}); other final-loss values were not re-collected for this submission and are reported as ``---''.}}
+\label{tab:loss_table}
+\resizebox{\textwidth}{!}{%
+{\color{blue}%
+\begin{tabular}{lllllc}
+\toprule
+\textbf{Encoder} & \textbf{Native loss (original paper)} & \textbf{Native $\mathcal{L}^{\star}$} & \textbf{Loss in \method} & \makecell{\textbf{Best $F1_{\text{susp}}$}\\(setting)} & \makecell{\textbf{Final loss}\\(seed 2024)} \\
+\midrule
+DGI~\cite{velivckovic2018deep}      & JSD-style discriminator BCE          & $0$ when $D$ separates pos.\ from corrupted~\cite{velivckovic2018deep} & BYOL bootstrap & 0.068 (d) & --- \\
+DGI+BN~\cite{velivckovic2018deep}   & JSD-style discriminator BCE          & $0$ when $D$ separates pos.\ from corrupted~\cite{velivckovic2018deep} & BYOL bootstrap & 0.673 (d) & 0.564 (b), 0.060 (a) \\
+MVGRL~\cite{hassani2020contrastive} & JSD discriminator, multi-view        & $0$ when $D$ separates view pairs~\cite{hassani2020contrastive}        & BYOL bootstrap & 0.072 (d) & --- \\
+MVGRL+BN~\cite{hassani2020contrastive} & JSD discriminator, multi-view     & $0$ when $D$ separates view pairs~\cite{hassani2020contrastive}        & BYOL bootstrap & 0.673 (d) & --- \\
+GRACE~\cite{zhu2020deep}            & InfoNCE (NT-Xent) with negatives     & $\to 0$ as $\tau\!\to\!0$, with positives $\gg$ negatives~\cite{zhu2020deep} & BYOL bootstrap & 0.070 (d) & --- \\
+GRACE+BN~\cite{zhu2020deep}         & InfoNCE (NT-Xent) with negatives     & $\to 0$ as $\tau\!\to\!0$, with positives $\gg$ negatives~\cite{zhu2020deep} & BYOL bootstrap & 0.673 (d) & --- \\
+GBT~\cite{bielak2022graph}          & Barlow Twins cross-correlation       & $0$ at cross-correlation $C\!=\!I$~\cite{bielak2022graph}             & BYOL bootstrap & 0.673 (d) & --- \\
+BGRL~\cite{thakoor2021large}        & BYOL bootstrap (same family)         & $0$ at $\hat p\!=\!\hat z$~\cite{thakoor2021large}                    & BYOL bootstrap & 0.639 (d) & --- \\
+GIN~\cite{xu2018powerful}           & supervised classifier cross-entropy  & $0$ at perfect classification~\cite{xu2018powerful}                   & BYOL bootstrap & 0.578 (d) & --- \\
+\bottomrule
+\end{tabular}}}
+\end{table*}
+
+\BLUE{\textbf{Why we substitute the loss.} The four ablation settings (a)/(b)/(c)/(d) differ only in (i) which graph the second contrastive view uses and (ii) whether subgraph pooling is applied. If each encoder kept its native loss (some adversarial JSD, some NT-Xent, some Barlow Twins), the gain a row reports could be attributed either to the topology repair we are studying or to the loss function each encoder happens to use, and the comparison across rows would conflate the two. Fixing the loss to a single BYOL-style bootstrap loss for every encoder (Eq.~\eqref{eq:loss}) removes that confound and lets the four-setting ablation isolate the view-by-level factor we care about.}
+
+\BLUE{\textbf{What the two measured final-loss values say.} The BYOL-style bootstrap loss has the same global minimum as the BGRL row of the table, $\mathcal{L}^{\star}=0$ at $\hat p=\hat z$~\cite{thakoor2021large}. On DGI+BN the seed-2024 reproduction runs (Section~\ref{subsec:rq1}) end at $\mathcal{L}=0.564$ in setting (b) and $\mathcal{L}=0.060$ in setting (a). The very low (a) value sits close to that $\mathcal{L}^{\star}=0$ via the trivial constant solution that Theorem~\ref{thm:bn_collapse} flags as the BYOL pathology; the (b) value is an order of magnitude higher, indicating that with two genuinely different views (tx and recovered) the encoder cannot drive the loss toward the collapse minimizer. The 0.266 vs.\ 0.670 $F1_{\text{susp}}$ gap between (a) and (b) is therefore not a matter of training convergence quality but a matter of \emph{what} the encoder was forced to encode in order to drive the loss down.}
 
 
 \section{Theory: Proofs and Empirical Checks}
