@@ -190,7 +190,7 @@ On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:
 \node[inputbox] (txgraph) {Transaction\\Graph $\mathcal{G}_{\text{trans}}$};
 % --- COLUMN 2: Topology branches ---
 \node[view1, right=1.0cm of txgraph, yshift=+1.4cm] (v1)
-  {Observed topology\\{Augmented $\mathcal{G}_{\text{trans}}$}\\{(edge/feat.\ drop)}};
+  {Observed topology\\{$\mathcal{G}_{\text{trans}}$}};
 \node[view2, right=1.0cm of txgraph, yshift=-1.4cm] (v2)
   {{Recovered topology}\\{ $\mathcal{G}_{\text{bhv}}$ (top-$k$ sim.)}};
 \draw[myarrow] (txgraph.east) -- ++(0.4,0) |- (v1.west);
@@ -215,12 +215,12 @@ On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:
 \node[above=0.2cm of pool1, font=\bfseries, text=black] {Subgraph Pooling};
 % --- COLUMN 5: Projectors ---
 \node[projbox, right=0.5cm of pool1] (proj1)
-  {Projector\\$g_\theta$};
+  {Projector $g$\\+ Predictor $q$};
 \node[projbox, right=0.5cm of pool2] (proj2)
-  {Target Projector\\$g_\xi$ (stop-grad.)};
+  {Projector $g$\\(shared, stop-grad.)};
 \draw[myarrow] (pool1.east) -- (proj1.west);
 \draw[myarrow] (pool2.east) -- (proj2.west);
-\node[above=0.2cm of proj1, font=\bfseries, text=purple!70] {Projector};
+\node[above=0.2cm of proj1, font=\bfseries, text=purple!70] {Projector + Predictor};
 % --- COLUMN 6: Loss + Inference ---
 \node[lossbox, right=0.5cm of proj1, yshift=-1.4cm] (loss)
   {BYOL Loss $\mathcal{L}_B$\\{symmetric, no neg.}};
@@ -249,9 +249,9 @@ On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:
     \hline
     & \textbf{Setting} & \textbf{Topology} & \textbf{Level} \\
     \hline
-    {\color{blue!60}$\blacksquare$} & (a) & Aug.\ $\mathcal{G}_{\text{trans}}$ & Node \\
+    {\color{blue!60}$\blacksquare$} & (a) & $\mathcal{G}_{\text{trans}}$ & Node \\
     {\color{orange!80}$\blacksquare$} & (b) & Recovered & Node \\
-    {\color{blue!30}$\blacksquare$} & (c) & Aug.\ $\mathcal{G}_{\text{trans}}$ & Subgraph \\
+    {\color{blue!30}$\blacksquare$} & (c) & $\mathcal{G}_{\text{trans}}$ & Subgraph \\
     {\color{orange!60}$\blacksquare$} & \textbf{(d)} & Recovered & Subgraph \\
     \hline
   \end{tabular}
@@ -346,11 +346,11 @@ Money-laundering accounts that split transactions and layer transfers often show
 
 \subsection{Topology-Repair GNN Encoder}
 \label{subsec:dual_view}
-\textbf{Topology-repair contrastive branches.} Contrastive learning aligns the observed transaction topology, which captures transfer structure, with the recovered neighborhood topology, which captures behavioral homophily for the same account. \method forms these branches from $\mathcal{G}_{\text{trans}}$ and $\mathcal{G}_{\text{bhv}}$, with stochastic edge dropping and feature masking applied during training.
+\textbf{Topology-repair contrastive branches.} Contrastive learning aligns the observed transaction topology, which captures transfer structure, with the recovered neighborhood topology, which captures behavioral homophily for the same account. \method forms these branches from $\mathcal{G}_{\text{trans}}$ and $\mathcal{G}_{\text{bhv}}$.
 
 \textbf{Observed and repaired topologies.} Using only the transaction topology mixes suspicious and benign accounts, while using only the recovered neighborhood graph loses transaction-structure information. \method learns a shared account representation across both branches, so embeddings capture both transaction structure and behavioral homophily.
 
-\textbf{GNN encoder.} We apply stochastic edge dropping and feature masking ($p_e{=}p_f{=}0.3$) to the transaction graph and recovered neighborhood graph to form two contrastive branches. A shared online encoder $f_\theta$ outputs embeddings $\mathbf{H}^{(1)} = f_\theta(\mathbf{X}^{\text{enc}}, \tilde{\mathcal{E}}_{\text{trans}})$ and $\mathbf{H}^{(2)} = f_\theta(\mathbf{X}^{\text{enc}}, \tilde{\mathcal{E}}_{\text{bhv}})$. The target encoder $f_\xi$ is an EMA copy that provides stop-gradient representations for the opposite BYOL branch. The online encoder stacks GCNConv~\cite{kipf2016semi} layers with batch normalization, nonlinear activation, and dropout. \method is encoder-agnostic and supports nine encoders, including GIN~\cite{xu2018powerful}, MVGRL, and GBT; Section~\ref{subsec:rq2} studies the effect of batch normalization.
+\textbf{GNN encoder.} A shared online encoder $f_\theta$ outputs embeddings $\mathbf{H}^{(1)} = f_\theta(\mathbf{X}^{\text{enc}}, \mathcal{E}_{\text{trans}})$ and $\mathbf{H}^{(2)} = f_\theta(\mathbf{X}^{\text{enc}}, \mathcal{E}_{\text{bhv}})$. The target encoder $f_\xi$ is an EMA copy that provides stop-gradient representations for the opposite BYOL branch. The online encoder stacks GCNConv~\cite{kipf2016semi} layers with batch normalization, nonlinear activation, and dropout. \method is encoder-agnostic and supports nine encoders, including GIN~\cite{xu2018powerful}, MVGRL, and GBT; Section~\ref{subsec:rq2} studies the effect of batch normalization.
 
 \subsection{Subgraph Pooling}
 \label{subsec:subgraph_pool}
@@ -370,22 +370,46 @@ Here $\mathcal{N}^{(1)}(v_i)$ is the neighborhood of $v_i$ in the transaction to
 
 \subsection{Training and Inference}
 \label{subsec:contrastive_learning}
-\textbf{Projector and BYOL loss.} Subgraph-pooled representations pass through a projector $g$ and a predictor $q$ and are trained with a BYOL-style loss~\cite{grill2020bootstrap} (Projector and BYOL Loss in Figure~\ref{fig:framework}). Instead of pushing other accounts as negatives, the loss pulls together representations of the same account across the observed and repaired topology branches. Both branches are encoded by the online encoder $f_\theta$ and the target encoder $f_\xi$, and the loss sums the $1{\to}2$ and $2{\to}1$ directions. The target encoder is a momentum copy of the online encoder ($\xi \leftarrow m\xi + (1-m)\theta$, $m=0.99$), retaining most of the previous target while slowly incorporating new information.
 
-We denote the loss input representation by $\mathbf{r}_i^{(t)}$. In our setting, $\mathbf{r}_i^{(t)}=\mathbf{s}_i^{(t)}$; in the node-level ablation, $\mathbf{r}_i^{(t)}=\mathbf{h}_i^{(t)}$. Let $\mathbf{r}_{\xi,i}^{(t)}$ be the corresponding target-branch representation, and $g_\xi$ the target-branch projector. The BYOL loss maximizes cosine similarity between representations from the two topology branches:
+Algorithm~\ref{alg:behaview} summarizes \method end-to-end: Stage~1 builds the recovered neighborhood graph (Section~\ref{subsec:knn_view}); Stage~2 trains the encoder via a symmetric BYOL-style loss on the two topology branches; Stage~3 concatenates the per-branch representations at inference.
+
+\begin{algorithm}[t]
+\caption{\method: Training and Inference}
+\label{alg:behaview}
+\KwIn{$\mathcal{G}_{\text{trans}}$, $\mathbf{X}^{\text{bhv}}$, $\mathbf{X}^{\text{enc}}$, neighbors $k$, epochs $E$, momentum $m$, learning rate $\eta$}
+\KwOut{Node embeddings $\{\mathbf{z}_i\}_{i=1}^{N}$}
+\BlankLine
+\tcc{Stage 1: recovered neighborhood graph (one-shot)}
+$\tilde{\mathbf{X}}^{\text{bhv}} \gets \mathrm{L2norm}(\mathrm{StandardScaler}(\mathbf{X}^{\text{bhv}}))$\;
+$\mathcal{G}_{\text{bhv}} \gets$ symmetrize($\mathrm{kNN}_k(\tilde{\mathbf{X}}^{\text{bhv}})$) \tcp*[r]{Eqs.~\eqref{eq:l2norm},~\eqref{eq:knn_edge}}
+\BlankLine
+\tcc{Stage 2: self-supervised training (BYOL-style)}
+Initialize online encoder $f_\theta$, shared projector $g$, predictor $q$;\ target $\xi \gets \theta$\;
+\For{$\text{epoch}=1$ \KwTo $E$}{
+  \ForEach{$t \in \{1,2\}$, $\mathcal{G}^{(1)}{=}\mathcal{G}_{\text{trans}}, \mathcal{G}^{(2)}{=}\mathcal{G}_{\text{bhv}}$}{
+    $\mathbf{h}^{(t)} \gets f_\theta(\mathbf{X}^{\text{enc}}, \mathcal{G}^{(t)})$;\quad $\mathbf{h}_\xi^{(t)} \gets f_\xi(\mathbf{X}^{\text{enc}}, \mathcal{G}^{(t)})$\;
+    $\mathbf{s}^{(t)} \gets \mathrm{MeanPool}_{\mathcal{G}^{(t)}}(\mathbf{h}^{(t)})$ \tcp*[r]{settings (c),(d); Eq.~\eqref{eq:subgraph_pool}}
+  }
+  Compute $\mathcal{L}$ via Eq.~\eqref{eq:loss} (stop-grad on target branch)\;
+  $\theta \gets \theta - \eta \nabla_\theta \mathcal{L}$;\quad
+  $\xi \gets m \xi + (1-m) \theta$\;
+}
+\BlankLine
+\tcc{Stage 3: inference (frozen encoder)}
+$\mathbf{z}_i \gets [\mathbf{s}_i^{(1)} \,\Vert\, \mathbf{s}_i^{(2)}]$ \tcp*[r]{Eq.~\eqref{eq:concat}; node-level: $[\mathbf{h}_i^{(1)} \Vert \mathbf{h}_i^{(2)}]$}
+\end{algorithm}
+
+\textbf{BYOL loss.} The loss maximizes cosine similarity between representations from the two topology branches:
 \begin{equation}\label{eq:loss}
-    \mathcal{L} = \sum_{t \in \{1,2\}} \left(2 - 2 \cdot \frac{1}{N}\sum_{i=1}^{N} \frac{q(g(\mathbf{r}_i^{(t)})) \cdot g_\xi(\mathbf{r}_{\xi,i}^{(3-t)})}{\|q(g(\mathbf{r}_i^{(t)}))\| \cdot \|g_\xi(\mathbf{r}_{\xi,i}^{(3-t)})\|}\right)
+    \mathcal{L} = \sum_{t \in \{1,2\}} \left(2 - 2 \cdot \frac{1}{N}\sum_{i=1}^{N} \frac{q(g(\mathbf{r}_i^{(t)})) \cdot g(\mathbf{r}_{\xi,i}^{(3-t)})}{\|q(g(\mathbf{r}_i^{(t)}))\| \cdot \|g(\mathbf{r}_{\xi,i}^{(3-t)})\|}\right)
 \end{equation}
+where $g$ is the projector shared between the online and target paths (stop-gradient on the target), $q$ is the predictor (online only), $\mathbf{r}_i^{(t)}{=}\mathbf{s}_i^{(t)}$ in our default setting ($\mathbf{h}_i^{(t)}$ in the node-level ablation), and $\mathbf{r}_{\xi,i}^{(t)}$ is the target-encoder representation. The target encoder $f_\xi$ is an EMA copy of $f_\theta$ ($\xi \leftarrow m\xi + (1-m)\theta$, $m{=}0.99$).
 
-Here $g$ and $q$ are the projection and predictor heads, and $\mathbf{r}_{\xi,i}^{(\cdot)}$ is the input representation obtained from the target encoder branch.
-
-\textbf{Inference.} At inference, we freeze the encoder and concatenate the observed-topology and repaired-topology representations to obtain the final embedding (right side of Figure~\ref{fig:framework}). In the subgraph-level setting, we concatenate subgraph representations:
+\textbf{Inference.} We freeze the encoder and concatenate the per-branch representations:
 \begin{equation}\label{eq:concat}
     \mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}].
 \end{equation}
-For node-level ablations, we use $\mathbf{z}_i = [\mathbf{h}_i^{(1)} \| \mathbf{h}_i^{(2)}]$.
-
-Encoder architectures and training hyperparameters are available via an anonymized link for double-blind review.
+Node-level ablations use $\mathbf{z}_i = [\mathbf{h}_i^{(1)} \| \mathbf{h}_i^{(2)}]$. Encoder architectures and training hyperparameters are available via an anonymized link for double-blind review.
 
 \section{Experiments}
 \label{sec:experiments}
@@ -737,7 +761,7 @@ GIN~\cite{xu2018powerful}              & supervised CE          & \cmark & 0.585
 
 \textbf{BEHAViEW loss robustness.} On setting (d) with the GBT encoder, the four contrastive losses yield $F1_{\text{susp}}=0.667, 0.667, 0.668, 0.668$ (BootstrapLatent, BarlowTwins, InfoNCE, JSD; 4 seeds), confirming that the (d) framework, not the loss formulation, drives BEHAViEW's performance.
 
-\textbf{Low loss at setting (a) is structural, not BYOL-specific.} In setting (a), the two branches are stochastic perturbations of the same transaction graph, so the encoder can minimize loss by learning a near-identity mapping that aligns nearly identical inputs. Theorem~\ref{thm:bn_collapse} excludes the strictly constant solution of BN-less encoders but still allows low-information solutions when the branches are too similar to demand discriminative features. Table~\ref{tab:loss_ab_check} shows this effect is loss-agnostic: on DGI+BN, all four contrastive losses yield much lower final loss at (a) than at (b), while $F1_{\text{susp}}$ remains low at (a) ($\approx 0.26$) and recovers at (b) ($\approx 0.66$). Thus, the (a)/(b) gap reflects what the encoder must encode to reduce the loss, not training convergence quality.
+\textbf{Low loss at setting (a) is structural, not BYOL-specific.} Setting (a)'s two branches share the same transaction graph; the only stochasticity comes from encoder-internal dropout, so the encoder can minimize loss by learning a near-identity mapping that aligns dropout-perturbed copies of the same input. Theorem~\ref{thm:bn_collapse} excludes the strictly constant solution of BN-less encoders but still allows low-information solutions when the branches are too similar to demand discriminative features. Table~\ref{tab:loss_ab_check} shows this effect is loss-agnostic: on DGI+BN, all four contrastive losses yield much lower final loss at (a) than at (b), while $F1_{\text{susp}}$ remains low at (a) ($\approx 0.26$) and recovers at (b) ($\approx 0.66$). Thus, the (a)/(b) gap reflects what the encoder must encode to reduce the loss, not training convergence quality.
 \begin{table}[h]
 \centering
 \caption{DGI+BN on \hofinet across four contrastive losses, 4-seed mean. Setting (a): two perturbations of the transaction graph. Setting (b): transaction branch vs.\ recovered-neighborhood branch.}
