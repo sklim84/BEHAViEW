@@ -251,10 +251,10 @@ On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:
 \subsection{Heterophily-aware GNNs}
 A line of work improves message passing when label homophily is low by separating ego and neighbor embeddings, modifying propagation, or decoupling structure from attributes (e.g., H2GCN~\cite{zhu2020beyond}, Geom-GCN~\cite{pei2020geom}, LINKX~\cite{zhu2021linkx}). These models still operate on the observed transaction topology; in AML, suspicious accounts intentionally mix with benign counterparties, which can make suspicious--suspicious edges structurally scarce. \method complements heterophily-aware propagation by repairing the topology itself: it builds a class-relevant neighborhood structure from a topology-independent behavioral homophily recovery graph.
 
-\subsection{Self-supervised GCL and auxiliary-view design}
+\subsection{GCL with Auxiliary Views}
 Self-supervised GCL learns representations by enforcing consistency across multiple graph views~\cite{velivckovic2018deep,you2020graph}. Most existing approaches either perturb a single input graph or form views at the model and representation level, leaving the underlying neighborhood structure essentially unchanged. Auxiliary-graph approaches introduce a separate view, such as a k-NN affinity graph~\cite{shang2023mlgcl}; however, when built from all available features, this view can entangle behavioral similarity with topology-correlated variables. \method constructs a topology-independent affinity graph from behavioral features only and uses it for topology repair, then studies when aggregation on the repaired topology preserves versus dilutes suspicious evidence. Unlike prior k-NN auxiliary views that mainly enrich an existing topology, we motivate the construction as topology repair: when the observed graph is adversarially manipulated to be heterophilous (e.g., mule networks), the recovered neighborhood graph replaces broken neighborhood structure so downstream learning can operate on class-relevant neighborhoods.
 
-\subsection{AML and fraud detection, and unsupervised anomaly detection under label delay}
+\subsection{Fraud and Anomaly Detection}
 In AML and fraud detection, supervised GNNs can improve detection under class imbalance via neighborhood selection and reweighting~\cite{dou2020enhancing}. However, they typically require training-time labels that are delayed and limited in AML operations. Unsupervised anomaly detection provides label-free alternatives~\cite{ding2019dominant}, but is mostly evaluated on general graph benchmarks and does not directly address the suspicious-class neighborhood mismatch in transaction networks. \method targets this gap by combining topology-independent topology repair with self-supervised learning, and by analyzing aggregation-level signal preservation on the repaired topology.
 
 \section{Method: \method}
@@ -300,7 +300,7 @@ Topology         & kcore, triangle                  & 2 &  &  \\
 \end{tabular}}
 \end{table}
 
-\subsection{Recovered Neighborhood Graph for Topology Repair}
+\subsection{Recovered Neighborhood Graph}
 \label{subsec:knn_view}
 \method realizes topology repair as a concrete graph object: a topology-independent recovered neighborhood graph $\mathcal{G}_{\text{bhv}}$ that replaces the heterophilous suspicious-class neighborhoods of the transaction topology. Standard augmentation-based GCL produces contrastive inputs by dropping edges or masking features on the original graph, so the underlying transaction neighborhoods are left intact. We instead build $\mathcal{G}_{\text{bhv}}$ independently of the edge structure of $\mathcal{G}_{\text{trans}}$ (Figure~\ref{fig:framework}) and use only behavioral features, so that the repair does not leak connectivity-derived information back into the construction.
 
@@ -412,7 +412,7 @@ AMLNet            &  11{,}000 & 1{,}090{,}172 & 13.52\% & Synthetic (simulator) 
 
 \textbf{Evaluation environment.} We evaluate self-supervised models by freezing the encoder and training Logistic Regression~\cite{pedregosa2011scikit} on embeddings $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$. All experiments use Python 3.12, PyTorch 2.10, CUDA 12.8, and NVIDIA H100 80GB GPUs.
 
-\subsection{Behavioral Homophily Recovery (RQ1)}\label{subsec:rq1}
+\subsection{Homophily Recovery (RQ1)}\label{subsec:rq1}
 RQ1 tests whether the topology-independent recovered neighborhood graph repairs the suspicious-class topology relative to the transaction graph.
 
 \textbf{Quantitative gains across all 9 encoders.} Replacing the transaction topology with the recovered neighborhood graph consistently outperforms the baseline across all nine encoders (Table~\ref{tab:rq1}), with gains of +84\% to +205\% for the six encoders with BN and +23\% to +28\% for the three without BN. For the six BN-equipped encoders, a four-seed paired $t$-test remains significant after Holm--Bonferroni correction (adjusted $p < 4 \times 10^{-5}$).
@@ -485,7 +485,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \textbf{Additional checks.} Seed-level analyses show that constructing the recovered neighborhood graph from behavioral features alone outperforms an all-feature baseline (analogous to MLGCL- and GCPAL-style view construction) by $+0.040$ $F1_{\text{susp}}$ on \hofinet. The repair is a one-time preprocessing step (608.9\,s on \hofinet). We report an additional pooling variant (HAP) in Appendix~\ref{app:theory}.
 
-\subsection{Signal Preservation under Aggregation (RQ2)}
+\subsection{Signal Preservation (RQ2)}
 \label{subsec:rq2}
 RQ1 verified topology repair in the recovered neighborhood graph; RQ2 asks when aggregation (subgraph pooling) helps versus hurts, and how the repaired topology changes this trade-off. Pooling is not uniformly beneficial on the raw transaction graph; however, on the repaired topology, it can amplify suspicious evidence, with the clearest gains under suspicious-class-oriented downstream scoring.
 
@@ -580,7 +580,7 @@ Self-sup.\ (proposed) & \method & 0.673{\scriptsize±.003} & \underline{0.991}{\
 \end{table*}
 \fi  % --- END deprecated tab:rq3 ---
 
-\subsection{Self-Supervised AML Detection under Label Scarcity (RQ3)}
+\subsection{Label-Efficiency (RQ3)}
 \label{subsec:rq3}
 
 RQ3 asks whether \method's self-supervised representation remains competitive with supervised baselines as labels become scarce. We vary the train label fraction in $\{1\%, 5\%, 10\%\}$ and compare \method against six supervised baselines spanning three families: tabular (MLP, XGBoost~\cite{xgboost2016}, LightGBM~\cite{lightgbm2017}), generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}), and fraud-specific GNN (CARE-GNN~\cite{dou2020enhancing}). MLP follows the standard convention (stacked Linear$+$ReLU; no BatchNorm) common in fraud-GNN literature. All models share the same 22 behavioral features; \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet and AMLNet, BGRL on AMLworld).
