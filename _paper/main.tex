@@ -549,41 +549,6 @@ Under the BYOL-style bootstrap loss~\eqref{eq:loss}, the trivial constant soluti
 \textbf{Empirical check for the stability analysis.} At setting (a), BN-less encoders achieve $F1_{\text{susp}} \approx 0.04$, close to the \hofinet random-classifier upper bound $2\rho/(1+\rho) \approx 0.042$ (the maximum $F1_{\text{susp}}$ at a positive rate $\rho$), indicating that unstable training can wash out the suspicious-class signal in low-prevalence regimes.
 The practical severity depends on prevalence: at low prevalence ($\rho \leq 2\%$), the bound is already $\approx 0.04$; hence, instability leaves little usable suspicious-class evidence. On AMLNet ($\rho = 13.52\%$), BN-less DGI still reaches $F1_{\text{susp}} \approx 0.40$ (Section~\ref{subsec:rq4}); consequently, the absolute impact is smaller. The BN-conditional pattern extends beyond the BYOL bootstrap loss: bare DGI, MVGRL, and GRACE under their paper-native JSD and InfoNCE losses also collapse to $F1_{\text{susp}} \approx 0.07$ (Table~\ref{tab:loss_table}), so the mechanism in Theorem~\ref{thm:bn_collapse} is BN-conditional rather than loss-specific. Overall, the results align with a single mechanism: homophily recovery provides class-relevant neighborhoods, sign-flip explains when aggregation can dilute them, and normalization mainly modulates whether this mechanism is realized.
 
-\iffalse  % --- BEGIN deprecated tab:rq3 (replaced by Fig fig:rq3_labeff label-efficiency curve) ---
-\begin{table*}[h]
-\centering
-\caption{\BLUE{[실험방향 전환 필요 - 고민중]}RQ3 (full numerical details for Figure~\ref{fig:rq3_baseline}): Self-supervised \method vs.\ 11 supervised baselines (4-seed mean$\pm$std on the 80\% holdout; identical test indices for paired comparison). For each dataset and metric, the best score is in \textbf{bold} and the second-best is \underline{underlined} (ties shared). \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet and AMLNet, BGRL on AMLworld). Fraud-GNN baselines are simplified single-relation variants (see Section~\ref{subsec:rq3} for the retained core mechanism per method).}
-\label{tab:rq3}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{ll ccc ccc ccc}
-\toprule
-& & \multicolumn{3}{c}{\textbf{\hofinet ($\rho{=}2.13\%$)}} & \multicolumn{3}{c}{\textbf{AMLworld ($\rho{=}1.23\%$)}} & \multicolumn{3}{c}{\textbf{AMLNet ($\rho{=}13.52\%$)}} \\
-\cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
-\textbf{Category} & \textbf{Model} & \textbf{$F1_{\text{susp}}$} & \textbf{AUROC} & \textbf{AUPRC} & \textbf{$F1_{\text{susp}}$} & \textbf{AUROC} & \textbf{AUPRC} & \textbf{$F1_{\text{susp}}$} & \textbf{AUROC} & \textbf{AUPRC} \\
-\midrule
-\multirow{3}{*}{Tabular}
-  & XGBoost   & 0.675{\scriptsize±.001} & \textbf{0.992}{\scriptsize±.000} & \textbf{0.665}{\scriptsize±.005} & \textbf{0.073}{\scriptsize±.002} & \textbf{0.753}{\scriptsize±.003} & \textbf{0.037}{\scriptsize±.001} & 0.699{\scriptsize±.007} & 0.938{\scriptsize±.002} & 0.785{\scriptsize±.012} \\
-  & LightGBM  & 0.670{\scriptsize±.001} & \textbf{0.992}{\scriptsize±.000} & \underline{0.662}{\scriptsize±.002} & \underline{0.070}{\scriptsize±.002} & \underline{0.752}{\scriptsize±.003} & \textbf{0.037}{\scriptsize±.001} & 0.687{\scriptsize±.011} & 0.936{\scriptsize±.004} & 0.781{\scriptsize±.013} \\
-  & MLP       & \textbf{0.679}{\scriptsize±.002} & \underline{0.991}{\scriptsize±.000} & 0.616{\scriptsize±.009} & 0.048{\scriptsize±.002} & 0.695{\scriptsize±.014} & 0.024{\scriptsize±.001} & \textbf{0.714}{\scriptsize±.005} & \textbf{0.945}{\scriptsize±.001} & \underline{0.797}{\scriptsize±.008} \\
-\midrule
-\multirow{3}{*}{Generic GNN}
-  & GCN       & 0.250{\scriptsize±.007} & 0.935{\scriptsize±.017} & 0.316{\scriptsize±.045} & 0.045{\scriptsize±.001} & 0.703{\scriptsize±.007} & 0.022{\scriptsize±.001} & 0.467{\scriptsize±.006} & 0.785{\scriptsize±.011} & 0.476{\scriptsize±.022} \\
-  & GAT       & 0.534{\scriptsize±.024} & 0.988{\scriptsize±.001} & 0.565{\scriptsize±.010} & 0.047{\scriptsize±.001} & 0.701{\scriptsize±.013} & 0.023{\scriptsize±.001} & 0.500{\scriptsize±.047} & 0.803{\scriptsize±.013} & 0.562{\scriptsize±.039} \\
-  & GraphSAGE & \underline{0.677}{\scriptsize±.002} & \textbf{0.992}{\scriptsize±.000} & 0.610{\scriptsize±.004} & 0.050{\scriptsize±.001} & 0.671{\scriptsize±.013} & 0.024{\scriptsize±.001} & \underline{0.708}{\scriptsize±.007} & \underline{0.940}{\scriptsize±.005} & \textbf{0.806}{\scriptsize±.005} \\
-\midrule
-\multirow{5}{*}{Fraud-spec.\ GNN}
-  & CARE-GNN  & 0.108{\scriptsize±.007} & 0.625{\scriptsize±.005} & 0.094{\scriptsize±.003} & 0.041{\scriptsize±.000} & 0.711{\scriptsize±.003} & 0.024{\scriptsize±.000} & 0.443{\scriptsize±.013} & 0.770{\scriptsize±.007} & 0.418{\scriptsize±.007} \\
-  & PC-GNN    & 0.245{\scriptsize±.005} & 0.952{\scriptsize±.003} & 0.358{\scriptsize±.008} & 0.044{\scriptsize±.001} & 0.702{\scriptsize±.006} & 0.022{\scriptsize±.001} & 0.458{\scriptsize±.006} & 0.783{\scriptsize±.016} & 0.476{\scriptsize±.025} \\
-  & BWGNN     & 0.348{\scriptsize±.022} & 0.928{\scriptsize±.042} & 0.369{\scriptsize±.077} & 0.049{\scriptsize±.001} & 0.745{\scriptsize±.007} & \underline{0.030}{\scriptsize±.001} & 0.509{\scriptsize±.021} & 0.818{\scriptsize±.010} & 0.500{\scriptsize±.032} \\
-  & GAGA      & 0.516{\scriptsize±.006} & 0.984{\scriptsize±.004} & 0.476{\scriptsize±.011} & 0.046{\scriptsize±.004} & 0.713{\scriptsize±.012} & 0.025{\scriptsize±.002} & 0.475{\scriptsize±.031} & 0.785{\scriptsize±.027} & 0.420{\scriptsize±.051} \\
-  & ConsisGAD & 0.234{\scriptsize±.006} & 0.953{\scriptsize±.003} & 0.348{\scriptsize±.008} & 0.045{\scriptsize±.001} & 0.704{\scriptsize±.005} & 0.024{\scriptsize±.001} & 0.456{\scriptsize±.008} & 0.785{\scriptsize±.016} & 0.483{\scriptsize±.034} \\
-\midrule
-Self-sup.\ (proposed) & \method & 0.673{\scriptsize±.003} & \underline{0.991}{\scriptsize±.000} & 0.604{\scriptsize±.006} & 0.066{\scriptsize±.009} & 0.608{\scriptsize±.030} & 0.027{\scriptsize±.001} & 0.679{\scriptsize±.002} & 0.928{\scriptsize±.001} & 0.751{\scriptsize±.005} \\
-\bottomrule
-\end{tabular}}
-\end{table*}
-\fi  % --- END deprecated tab:rq3 ---
-
 \subsection{Label-Efficiency (RQ3)}
 \label{subsec:rq3}
 
