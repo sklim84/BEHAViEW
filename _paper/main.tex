@@ -360,11 +360,6 @@ Here $\mathcal{N}^{(1)}(v_i)$ is the neighborhood of $v_i$ in the transaction to
 
 \textbf{Pooling variants.} We use mean pooling by default, but other options are possible, including similarity-weighted pooling (HAP). We analyze its expected signal-preservation behavior in Appendix~\ref{app:theory} (Proposition~\ref{thm:hap}).
 
-\subsection{Training and Inference}
-\label{subsec:contrastive_learning}
-
-Algorithm~\ref{alg:behaview} summarizes \method's three stages: recovered-neighborhood construction (Section~\ref{subsec:knn_view}), self-supervised training under a symmetric BYOL-style loss, and inference via per-branch concatenation.
-
 \begin{algorithm}[t]
 \caption{Training and Inference}
 \label{alg:behaview}
@@ -390,6 +385,11 @@ Initialize online encoder $f_\theta$, shared projector $g$, predictor $q$;\ targ
 \tcc{Stage 3: inference (frozen encoder)}
 $\mathbf{z}_i \gets [\mathbf{s}_i^{(1)} \,\Vert\, \mathbf{s}_i^{(2)}]$ \tcp*[r]{Eq.~\eqref{eq:concat}; node-level: $[\mathbf{h}_i^{(1)} \Vert \mathbf{h}_i^{(2)}]$}
 \end{algorithm}
+
+\subsection{Training and Inference}
+\label{subsec:contrastive_learning}
+
+Algorithm~\ref{alg:behaview} summarizes \method's three stages: recovered-neighborhood construction (Section~\ref{subsec:knn_view}), self-supervised training under a symmetric BYOL-style loss, and inference via per-branch concatenation.
 
 The Stage~2 loss maximizes cosine similarity between the two topology branches:
 \begin{equation}\label{eq:loss}
