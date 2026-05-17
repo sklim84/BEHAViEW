@@ -729,34 +729,51 @@ CARE-GNN & 0.117{\scriptsize±.012} & 0.110{\scriptsize±.007} & 0.108{\scriptsi
 \section{Loss Substitution: Native vs.\ Unified BYOL Bootstrap}
 \label{app:loss_table}
 
-Every encoder in Tables~\ref{tab:rq1} and \ref{tab:rq4} uses the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to isolate the view-by-level factor from the loss formulation. Table~\ref{tab:loss_table} verifies the substitution on \hofinet, setting (d), 4 seeds. BN-equipped baselines under their paper-native losses match the BYOL bootstrap result within $\pm 0.006$; bare DGI, MVGRL, and GRACE collapse under both their native JSD/InfoNCE and BYOL bootstrap, indicating that the collapse pathology of Theorem~\ref{thm:bn_collapse} is BN-conditional rather than loss-specific.
+Every encoder in Tables~\ref{tab:rq1} and \ref{tab:rq4} uses the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to isolate the view-by-level factor from the loss formulation. Table~\ref{tab:loss_table} verifies the substitution on \hofinet, setting (d), 4 seeds. BN-equipped baselines under their paper-native losses match the BYOL bootstrap result within $\pm 0.001$. Bare DGI, MVGRL, and GRACE collapse under both their native JSD/InfoNCE and BYOL bootstrap, indicating that the collapse pathology of Theorem~\ref{thm:bn_collapse} is BN-conditional rather than loss-specific.
 
 \begin{table*}[h]
 \centering
-\caption{Loss substitution check on \hofinet, setting (d), 4-seed mean$\pm$std. \textbf{BYOL}: unified BYOL bootstrap loss used in Table~\ref{tab:rq1}. \textbf{Native}: each encoder trained with its paper-native loss on the same (d) framework. $\Delta = \text{Native} - \text{BYOL}$. GIN's original paper uses supervised cross-entropy and has no contrastive native loss, so the Native column is omitted.}
+\caption{Loss substitution check on \hofinet, setting (d), 4-seed mean$\pm$std. \textbf{BYOL}: unified BYOL bootstrap loss; values are independent re-runs under the current code, paired with the Native column to remove run-to-run drift. \textbf{Native}: each encoder trained with its paper-native loss on the same (d) framework. $\Delta = \text{Native} - \text{BYOL}$. GIN's original paper uses supervised cross-entropy and has no contrastive native loss, so the Native column is omitted.}
 \label{tab:loss_table}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{llcccc}
 \toprule
 \textbf{Encoder} & \textbf{Native loss} & \textbf{BN} & \textbf{BYOL} $F1_{\text{susp}}$ & \textbf{Native} $F1_{\text{susp}}$ & $\Delta$ \\
 \midrule
-DGI~\cite{velivckovic2018deep}         & JSD BCE                & \xmark & 0.068{\scriptsize±.004} & 0.074{\scriptsize±.010} & $+0.006$ \\
-DGI+BN~\cite{velivckovic2018deep}      & JSD BCE                & \cmark & 0.673{\scriptsize±.002} & 0.668{\scriptsize±.002} & $-0.005$ \\
-MVGRL~\cite{hassani2020contrastive}    & JSD multi-view         & \xmark & 0.072{\scriptsize±.008} & 0.074{\scriptsize±.004} & $+0.002$ \\
-MVGRL+BN~\cite{hassani2020contrastive} & JSD multi-view         & \cmark & 0.673{\scriptsize±.003} & 0.668{\scriptsize±.001} & $-0.005$ \\
-GRACE~\cite{zhu2020deep}               & InfoNCE NT-Xent        & \xmark & 0.070{\scriptsize±.008} & 0.071{\scriptsize±.010} & $+0.001$ \\
-GRACE+BN~\cite{zhu2020deep}            & InfoNCE NT-Xent        & \cmark & 0.673{\scriptsize±.003} & 0.670{\scriptsize±.002} & $-0.003$ \\
-GBT~\cite{bielak2022graph}             & Barlow Twins           & \cmark & 0.673{\scriptsize±.003} & 0.667{\scriptsize±.003} & $-0.006$ \\
-BGRL~\cite{thakoor2021large}           & BYOL bootstrap (same)  & \cmark & 0.639{\scriptsize±.005} & 0.627{\scriptsize±.003} & $-0.012$\textsuperscript{$\dagger$} \\
-GIN~\cite{xu2018powerful}              & supervised CE          & \cmark & 0.578{\scriptsize±.021} & ---                     & ---      \\
+DGI~\cite{velivckovic2018deep}         & JSD BCE                & \xmark & 0.066{\scriptsize±.008} & 0.074{\scriptsize±.010} & $+0.008$ \\
+DGI+BN~\cite{velivckovic2018deep}      & JSD BCE                & \cmark & 0.667{\scriptsize±.002} & 0.668{\scriptsize±.002} & $+0.001$ \\
+MVGRL~\cite{hassani2020contrastive}    & JSD multi-view         & \xmark & 0.065{\scriptsize±.005} & 0.074{\scriptsize±.004} & $+0.009$ \\
+MVGRL+BN~\cite{hassani2020contrastive} & JSD multi-view         & \cmark & 0.667{\scriptsize±.001} & 0.668{\scriptsize±.001} & $+0.001$ \\
+GRACE~\cite{zhu2020deep}               & InfoNCE NT-Xent        & \xmark & 0.066{\scriptsize±.008} & 0.071{\scriptsize±.010} & $+0.005$ \\
+GRACE+BN~\cite{zhu2020deep}            & InfoNCE NT-Xent        & \cmark & 0.670{\scriptsize±.003} & 0.670{\scriptsize±.002} & $\phantom{+}0.000$ \\
+GBT~\cite{bielak2022graph}             & Barlow Twins           & \cmark & 0.667{\scriptsize±.002} & 0.667{\scriptsize±.003} & $\phantom{+}0.000$ \\
+BGRL~\cite{thakoor2021large}           & BYOL bootstrap (same)  & \cmark & 0.628{\scriptsize±.001} & 0.627{\scriptsize±.003} & $-0.001$ \\
+GIN~\cite{xu2018powerful}              & supervised CE          & \cmark & 0.585{\scriptsize±.027} & ---                     & ---      \\
 \bottomrule
 \end{tabular}}
-
-\vspace{2pt}
-\footnotesize\textsuperscript{$\dagger$}BGRL's native loss is the same BYOL bootstrap; the gap reflects run-to-run variance between the Table~\ref{tab:rq1} sweep and this verification run.
 \end{table*}
 
 \textbf{BEHAViEW loss robustness.} On setting (d) with the GBT encoder, the four contrastive losses yield $F1_{\text{susp}}=0.667, 0.667, 0.668, 0.668$ (BootstrapLatent, BarlowTwins, InfoNCE, JSD; 4 seeds), confirming that the (d) framework, not the loss formulation, drives BEHAViEW's performance.
+
+\textbf{Low loss at setting (a) is structural, not BYOL-specific.} Setting (a)'s two views are stochastic perturbations of the same transaction graph, so an encoder can drive the loss down by learning a near-identity mapping that aligns near-identical inputs. Theorem~\ref{thm:bn_collapse} rules out the strictly constant solution that BN-less encoders fall into, but it does not prevent low-information solutions when the two views are too similar to require discriminative encoding. Table~\ref{tab:loss_ab_check} shows that this account is loss-agnostic: on DGI+BN, all four contrastive losses produce a substantially lower final loss at (a) than at (b), while $F1_{\text{susp}}$ stays low at (a) ($\approx 0.26$) and recovers at (b) ($\approx 0.66$). The gap between (a) and (b) is therefore not a matter of training convergence quality but of what the encoder is forced to encode to drive the loss down.
+
+\begin{table}[h]
+\centering
+\caption{DGI+BN on \hofinet across four contrastive losses, 4-seed mean. Setting (a): two perturbations of the transaction graph. Setting (b): transaction view vs.\ recovered behavioral view. Lower final loss at (a) with low $F1_{\text{susp}}$ indicates near-identity alignment, not Theorem~\ref{thm:bn_collapse}'s constant-solution pathology.}
+\label{tab:loss_ab_check}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Loss} & \textbf{(a) $\mathcal{L}_{\text{final}}$} & \textbf{(a) $F1_{\text{susp}}$} & \textbf{(b) $\mathcal{L}_{\text{final}}$} & \textbf{(b) $F1_{\text{susp}}$} \\
+\midrule
+BootstrapLatent & $\phantom{-}0.05$  & 0.266 & $\phantom{-1}0.45$ & 0.664 \\
+Barlow Twins    & $\phantom{-}2.86$  & 0.270 & $\phantom{-}11.89$ & 0.664 \\
+InfoNCE         & $\phantom{-}6.74$  & 0.263 & $\phantom{-1}7.55$ & 0.664 \\
+JSD             & $-0.43$            & 0.255 & $\phantom{-1}{-0.20}$ & 0.666 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Cross-dataset consistency.} The substitution holds beyond \hofinet. On AMLworld ($\rho{=}1.23\%$), the three BN-equipped baselines under native losses reach $F1_{\text{susp}}=0.048$ (DGI+BN, JSD), $0.049$ (MVGRL+BN, JSD), and $0.054$ (GRACE+BN, InfoNCE); on AMLNet ($\rho{=}13.52\%$), they reach $0.678, 0.678, 0.674$ respectively. These match the BYOL bootstrap results in Table~\ref{tab:rq4} for the same encoders within $\pm 0.005$, confirming that the loss substitution does not penalize baselines on either the low- or high-prevalence regime.
 
 
 \section{Theory: Proofs and Empirical Checks}
