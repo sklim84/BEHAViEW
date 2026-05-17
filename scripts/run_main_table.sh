@@ -34,7 +34,9 @@
 #   SETTINGS    space-separated subset of {a b c d}
 #   SEEDS       space-separated seed list
 #   TAG         suffix for the temp CSV (default: gpu${GPU})
-#   OUTPUT_DIR  output directory (default: results/main_table)
+#   OUTPUT_DIR_HOFINET / OUTPUT_DIR_AMLWORLD / OUTPUT_DIR_AMLNET
+#               per-dataset output dirs (defaults: results/main_table,
+#               results/rq4, results/rq4)
 #
 # Example (4-GPU parallel):
 #   GPU=0 ENCODERS="gbt bgrl dgi"        DATASETS=hofinet  TAG=g0 bash scripts/run_main_table.sh &
@@ -52,10 +54,14 @@ ENCODERS="${ENCODERS:-gbt bgrl dgi mvgrl grace dgi_bn mvgrl_bn grace_bn gin}"
 SETTINGS="${SETTINGS:-a b c d}"
 SEEDS="${SEEDS:-2024 2025 2026 2027}"
 TAG="${TAG:-gpu${GPU}}"
-OUTPUT_DIR="${OUTPUT_DIR:-results/main_table}"
+# Per-dataset output directories: HOFINET (RQ1) and AMLworld/AMLNet (RQ4).
+# Override OUTPUT_DIR_${DS} to point elsewhere.
+OUTPUT_DIR_HOFINET="${OUTPUT_DIR_HOFINET:-results/main_table}"
+OUTPUT_DIR_AMLWORLD="${OUTPUT_DIR_AMLWORLD:-results/rq4}"
+OUTPUT_DIR_AMLNET="${OUTPUT_DIR_AMLNET:-results/rq4}"
 HP="--lr 0.0005 --hidden_dim 256 --gconv_nlayers 2"
 
-mkdir -p "$OUTPUT_DIR"
+mkdir -p "$OUTPUT_DIR_HOFINET" "$OUTPUT_DIR_AMLWORLD" "$OUTPUT_DIR_AMLNET"
 
 export PYTORCH_CUDA_ALLOC_CONF="max_split_size_mb:256,expandable_segments:True"
 
@@ -68,7 +74,7 @@ echo "  DATASETS=$DATASETS"
 echo "  ENCODERS=$ENCODERS"
 echo "  SETTINGS=$SETTINGS"
 echo "  SEEDS=$SEEDS"
-echo "  OUTPUT_DIR=$OUTPUT_DIR"
+echo "  OUTPUT (hofinet)=$OUTPUT_DIR_HOFINET / (amlworld)=$OUTPUT_DIR_AMLWORLD / (amlnet)=$OUTPUT_DIR_AMLNET"
 
 run_one() {
     local DS_TAG="$1" NODE="$2" EDGE="$3" KNN="$4" RESULT="$5"
@@ -103,23 +109,26 @@ for DS in $DATASETS; do
             NODE="HOFINET_NODE_FEAT"
             EDGE="HOFINET_EDGES"
             KNN="HOFINET_KNN_BEHAV_k10"
+            OUT_DIR="$OUTPUT_DIR_HOFINET"
             ;;
         amlworld)
             DS_TAG="aml"
             NODE="amlworld/AMLWORLD_NODE_FEAT"
             EDGE="amlworld/AMLWORLD_EDGES"
             KNN="amlworld/AMLWORLD_KNN_BEHAV_k10"
+            OUT_DIR="$OUTPUT_DIR_AMLWORLD"
             ;;
         amlnet)
             DS_TAG="amlnet"
             NODE="amlnet/AMLNET_NODE_FEAT"
             EDGE="amlnet/AMLNET_EDGES"
             KNN="amlnet/AMLNET_KNN_BEHAV_k10"
+            OUT_DIR="$OUTPUT_DIR_AMLNET"
             ;;
         *) echo "unknown dataset: $DS"; exit 1 ;;
     esac
 
-    RESULT="${OUTPUT_DIR}/.tmp_${DS}_${TAG}.csv"
+    RESULT="${OUT_DIR}/.tmp_${DS}_main_sweep_${TAG}.csv"
     echo ""
     echo "[$(date)] === Dataset: $DS -> $RESULT ==="
 
