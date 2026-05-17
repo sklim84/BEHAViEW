@@ -360,6 +360,11 @@ Here $\mathcal{N}^{(1)}(v_i)$ is the neighborhood of $v_i$ in the transaction to
 
 \textbf{Pooling variants.} We use mean pooling by default. Other pooling choices are possible, including similarity-weighted pooling (HAP). We report its expected signal-preservation behavior in Appendix~\ref{app:theory} (Proposition~\ref{thm:hap}).
 
+\subsection{Training and Inference}
+\label{subsec:contrastive_learning}
+
+Algorithm~\ref{alg:behaview} summarizes \method's three stages: recovered-neighborhood construction (Section~\ref{subsec:knn_view}), self-supervised training under a symmetric BYOL-style loss, and inference via per-branch concatenation.
+
 \begin{algorithm}[t]
 \caption{Training and Inference}
 \label{alg:behaview}
@@ -386,22 +391,17 @@ Initialize online encoder $f_\theta$, shared projector $g$, predictor $q$;\ targ
 $\mathbf{z}_i \gets [\mathbf{s}_i^{(1)} \,\Vert\, \mathbf{s}_i^{(2)}]$ \tcp*[r]{Eq.~\eqref{eq:concat}; node-level: $[\mathbf{h}_i^{(1)} \Vert \mathbf{h}_i^{(2)}]$}
 \end{algorithm}
 
-\subsection{Training and Inference}
-\label{subsec:contrastive_learning}
-
-Algorithm~\ref{alg:behaview} summarizes \method end-to-end: Stage~1 builds the recovered neighborhood graph (Section~\ref{subsec:knn_view}); Stage~2 trains the encoder via a symmetric BYOL-style loss on the two topology branches; Stage~3 concatenates the per-branch representations at inference.
-
-\textbf{BYOL loss.} The loss maximizes cosine similarity between representations from the two topology branches:
+The Stage~2 loss maximizes cosine similarity between the two topology branches:
 \begin{equation}\label{eq:loss}
     \mathcal{L} = \sum_{t \in \{1,2\}} \left(2 - 2 \cdot \frac{1}{N}\sum_{i=1}^{N} \frac{q(g(\mathbf{r}_i^{(t)})) \cdot g(\mathbf{r}_{\xi,i}^{(3-t)})}{\|q(g(\mathbf{r}_i^{(t)}))\| \cdot \|g(\mathbf{r}_{\xi,i}^{(3-t)})\|}\right)
 \end{equation}
-where $g$ is the projector shared between the online and target paths (stop-gradient on the target), $q$ is the predictor (online only), $\mathbf{r}_i^{(t)}{=}\mathbf{s}_i^{(t)}$ in our default setting ($\mathbf{h}_i^{(t)}$ in the node-level ablation), and $\mathbf{r}_{\xi,i}^{(t)}$ is the target-encoder representation. The target encoder $f_\xi$ is an EMA copy of $f_\theta$ ($\xi \leftarrow m\xi + (1-m)\theta$, $m{=}0.99$).
+where $g$ is the projector shared between online and target paths (stop-gradient on the target), $q$ is the predictor on the online path, $\mathbf{r}_i^{(t)}{=}\mathbf{s}_i^{(t)}$ ($\mathbf{h}_i^{(t)}$ in the node-level ablation), and $\mathbf{r}_{\xi,i}^{(t)}$ is the target-encoder representation. We use momentum $m{=}0.99$ for the EMA target update.
 
-\textbf{Inference.} We freeze the encoder and concatenate the per-branch representations:
+At inference, embeddings are
 \begin{equation}\label{eq:concat}
-    \mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}].
+    \mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}],
 \end{equation}
-Node-level ablations use $\mathbf{z}_i = [\mathbf{h}_i^{(1)} \| \mathbf{h}_i^{(2)}]$. Encoder architectures and training hyperparameters are available via an anonymized link for double-blind review.
+with $\mathbf{z}_i = [\mathbf{h}_i^{(1)} \| \mathbf{h}_i^{(2)}]$ for the node-level ablation. Encoder architectures and remaining hyperparameters are at the anonymized link.
 
 \section{Experiments}
 \label{sec:experiments}
