@@ -7,7 +7,8 @@ parser.add_argument('--model_name', type=str, default='GRACE_w_cen')
 parser.add_argument('--node_data_name', type=str, default='HOFINET_NODE_FEAT')
 parser.add_argument('--edge_data_name', type=str, default='HOFINET_EDGES')
 parser.add_argument('--metric_save_path', type=str, default='./results/exp_results.csv')
-parser.add_argument('--loss', type=str, default='InfoNCE')
+parser.add_argument('--loss', type=str, default='BootstrapLatent',
+                    choices=['BootstrapLatent', 'BarlowTwins', 'InfoNCE', 'JSD'])
 parser.add_argument('--gpu', type=str, default='0')
 parser.add_argument('--device', type=str, default='auto',
                     choices=['auto', 'cuda', 'mps', 'cpu'],

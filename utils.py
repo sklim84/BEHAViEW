@@ -66,7 +66,7 @@ def create_loss(loss_name):
     raise ValueError(f"Unknown loss: {loss_name}")
 
 
-def build_result_dict(model_name, args, test_result, ari_score, sil_score, use_cen=True):
+def build_result_dict(model_name, args, test_result, ari_score, sil_score, use_cen=True, final_loss=None):
     """실험 결과 딕셔너리를 구성한다."""
     return {
         'Model': model_name,
@@ -79,6 +79,7 @@ def build_result_dict(model_name, args, test_result, ari_score, sil_score, use_c
         'proj_dim': getattr(args, 'proj_dim', -1),
         'gconv_nlayers': args.gconv_nlayers if use_cen else -1,
         'loss': args.loss,
+        'final_loss': final_loss,
         'pre_1': test_result['pre_1'],
         'rec_1': test_result['rec_1'],
         'f1_1': test_result['f1_1'],

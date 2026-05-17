@@ -454,17 +454,86 @@ class SubgraphCL(nn.Module):
 
 
 def bootstrap_loss(p1, p2, t1, t2):
-    """BYOL-style bootstrap loss — negative sample 불필요."""
+    """BYOL-style bootstrap loss; no negatives required."""
     loss = (2 - 2 * F.cosine_similarity(p1, t2.detach(), dim=-1).mean()
           + 2 - 2 * F.cosine_similarity(p2, t1.detach(), dim=-1).mean())
     return loss
 
 
-def train(model, x, edge_index_v1, edge_index_v2, optimizer):
+def barlow_twins_loss(p1, p2, lambda_=None, eps=1e-5):
+    """Cross-correlation matrix loss (Zbontar et al., 2021)."""
+    N, D = p1.shape
+    if lambda_ is None:
+        lambda_ = 1.0 / D
+    z1 = (p1 - p1.mean(0)) / (p1.std(0) + eps)
+    z2 = (p2 - p2.mean(0)) / (p2.std(0) + eps)
+    c = (z1.T @ z2) / N
+    eye = torch.eye(D, dtype=torch.bool, device=c.device)
+    on_diag = (1 - c.diagonal()).pow(2).sum()
+    off_diag = c[~eye].pow(2).sum()
+    return on_diag + lambda_ * off_diag
+
+
+def infonce_loss(p1, p2, tau=0.5, k=2048):
+    """GRACE-style symmetric InfoNCE with anchor subsampling for memory."""
+    N = p1.shape[0]
+    if N > k:
+        idx = torch.randperm(N, device=p1.device)[:k]
+        p1 = p1[idx]
+        p2 = p2[idx]
+    z1 = F.normalize(p1, dim=-1)
+    z2 = F.normalize(p2, dim=-1)
+
+    def _half(za, zb):
+        sim_ab = za @ zb.t() / tau
+        sim_aa = za @ za.t() / tau
+        exp_ab = torch.exp(sim_ab)
+        exp_aa = torch.exp(sim_aa)
+        pos = exp_ab.diag()
+        denom = exp_ab.sum(1) + exp_aa.sum(1) - exp_aa.diag()
+        return -torch.log(pos / denom).mean()
+
+    return (_half(z1, z2) + _half(z2, z1)) * 0.5
+
+
+def jsd_loss(p1, p2, k=2048):
+    """JSD discriminative loss (DGI-style) with anchor subsampling."""
+    import math
+    N = p1.shape[0]
+    if N > k:
+        idx = torch.randperm(N, device=p1.device)[:k]
+        p1 = p1[idx]
+        p2 = p2[idx]
+    Nk = p1.shape[0]
+    sim = p1 @ p2.t()
+    eye = torch.eye(Nk, dtype=torch.bool, device=sim.device)
+    pos_sim = sim[eye]
+    neg_sim = sim[~eye]
+    E_pos = (math.log(2) - F.softplus(-pos_sim)).mean()
+    E_neg = (F.softplus(-neg_sim) + neg_sim - math.log(2)).mean()
+    return E_neg - E_pos
+
+
+_LOSS_REGISTRY = {
+    'BootstrapLatent': lambda p1, p2, t1, t2: bootstrap_loss(p1, p2, t1, t2),
+    'BarlowTwins':     lambda p1, p2, t1, t2: barlow_twins_loss(p1, p2),
+    'InfoNCE':         lambda p1, p2, t1, t2: infonce_loss(p1, p2),
+    'JSD':             lambda p1, p2, t1, t2: jsd_loss(p1, p2),
+}
+
+
+def compute_loss(loss_name, p1, p2, t1, t2):
+    if loss_name not in _LOSS_REGISTRY:
+        raise ValueError(f"Unknown --loss '{loss_name}'. "
+                         f"Choose from {list(_LOSS_REGISTRY)}.")
+    return _LOSS_REGISTRY[loss_name](p1, p2, t1, t2)
+
+
+def train(model, x, edge_index_v1, edge_index_v2, optimizer, loss_name='BootstrapLatent'):
     model.train()
     optimizer.zero_grad()
     _, _, p1, p2, t1, t2 = model(x, edge_index_v1, edge_index_v2)
-    loss = bootstrap_loss(p1, p2, t1, t2)
+    loss = compute_loss(loss_name, p1, p2, t1, t2)
     loss.backward()
     optimizer.step()
     model.update_target_encoder()
@@ -547,11 +616,14 @@ def main(args):
     optimizer = Adam(model.parameters(), lr=args.lr)
 
     epochs = getattr(args, 'epochs', 200)
+    final_loss = float('nan')
     with tqdm(total=epochs, desc='(T)') as pbar:
         for epoch in range(1, epochs + 1):
-            loss = train(model, data.x, edge_index_v1, edge_index_v2, optimizer)
+            loss = train(model, data.x, edge_index_v1, edge_index_v2, optimizer, args.loss)
+            final_loss = loss
             pbar.set_postfix({'loss': f'{loss:.4f}'})
             pbar.update()
+    print(f'(L) {args.model_name}: final_loss={final_loss:.6f} ({args.loss})')
 
     # Evaluation
     z = get_embeddings(model, data.x, edge_index_v1, edge_index_v2)
@@ -578,7 +650,7 @@ def main(args):
             name = args.model_name
         print(f'(E)[{variant}] {name}: F1Mi={r["micro_f1"]:.4f}, '
               f'F1Ma={r["macro_f1"]:.4f}, F1_susp={r["f1_1"]:.4f}, τ={r["threshold"]:.3f}')
-        rows.append(build_result_dict(name, args, r, ari_score, sil_score, use_cen=False))
+        rows.append(build_result_dict(name, args, r, ari_score, sil_score, use_cen=False, final_loss=final_loss))
     save_results_to_csv(rows, args.metric_save_path)
 
 
