@@ -93,7 +93,7 @@ In anti-money laundering (AML) transaction graphs, suspicious accounts have pred
     \centering
     \includegraphics[width=\columnwidth]{figures/fig1_star_vs_recovered_cluster.pdf}
     \Description{Topology repair example from the actual HOFINET experiment data. A suspicious account has a benign-dominated transaction-star neighborhood, while the recovered behavioral-homophily graph recovers a suspicious peer cluster.}
-  \caption{Topology repair on a suspicious account from the actual \hofinet experiment data, not a schematic. Left: the observed transaction graph forms a near-pure star with 26 one-hop counterparties, only 1 of them suspicious; the red dashed ring marks a benign-labeled transaction neighbor whose behavioral k-NN neighborhood is 8/10 suspicious under the repaired topology. Right: the recovered neighborhood graph constructed from the same experimental node features ($k{=}10$) recovers a compact peer cluster with 10 neighbors, 9 of them suspicious. Node colors use the ground-truth experimental labels: S = suspicious and B = benign; solid gray edges are observed transactions and dashed brown edges are behavioral-homophily k-NN links.}
+  \caption{Topology repair on a suspicious account from the actual \hofinet experiment data, not a schematic. Left: the observed transaction graph forms a near-pure star with 26 one-hop counterparties, only 1 of them suspicious. The red dashed ring marks a benign-labeled transaction neighbor whose behavioral k-NN neighborhood is 8/10 suspicious under the repaired topology. Right: the recovered neighborhood graph from the same node features ($k{=}10$) yields a compact peer cluster with 10 neighbors, 9 of them suspicious. Node colors use ground-truth labels: S = suspicious, B = benign. Solid gray edges are observed transactions; dashed brown edges are behavioral k-NN links.}
 \label{fig:intro_topology_repair}
 \end{figure}
 
@@ -101,7 +101,7 @@ In anti-money laundering (AML) transaction graphs, suspicious accounts have pred
     \centering
     \includegraphics[width=0.96\textwidth]{figures/fig_multihop_correspondence.pdf}
     \Description{One-to-one correspondence between the recovered behavioral-homophily neighborhood and the original multi-hop transaction topology for the same suspicious account. Numbered nodes identify the same accounts across the two panels.}
-  \caption{One-to-one correspondence between topology repair and the original multi-hop transaction topology for the same suspicious account from the actual \hofinet experiment data. Left: the union of shortest transaction paths from the ego account to the recovered accounts, together with the separate transaction component containing recovered nodes 1 and 4. Right: the recovered behavioral-homophily k-NN graph. Numbers identify the same accounts in both panels, and dotted gray connectors show the 1:1 correspondence. Eight of ten recovered nodes are reachable in the ego transaction component (one at 2 hops and seven at 4 hops), while recovered nodes 1 and 4 are connected by their own 4-hop transaction path in another component.}
+  \caption{One-to-one correspondence between topology repair and the multi-hop transaction topology for the same \hofinet account. Left: shortest transaction paths from the ego account to the recovered accounts, plus the separate transaction component containing recovered nodes 1 and 4. Right: the recovered behavioral-homophily k-NN graph. Numbers identify the same accounts in both panels; dotted gray connectors show the 1:1 correspondence. Eight of ten recovered nodes are reachable in the ego transaction component (one at 2 hops, seven at 4 hops). Recovered nodes 1 and 4 are connected by a 4-hop transaction path in another component.}
 \label{fig:multihop_correspondence}
 \end{figure*}
 
@@ -423,7 +423,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \begin{table}[t]
 \centering
-\caption{$F1_{\text{susp}}$ on \hofinet for nine encoders across the four topology-by-level ablation settings (4-seed mean$\pm$std). \textit{Paired BN}: three GCN encoder families (DGI, MVGRL, GRACE) with and without per-layer BN. \textit{Native BN}: reference encoders (GBT, BGRL, GIN). The \textbf{Native loss} column lists each encoder's loss in its original paper; every encoder here is trained with the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to isolate the topology-repair effect. Appendix~\ref{app:loss_table} verifies the substitution does not penalize the baselines. Best per row in \textbf{bold}, second-best \underline{underlined}.}
+\caption{$F1_{\text{susp}}$ on \hofinet for nine encoders across the four topology-by-level ablation settings (4-seed mean$\pm$std). \textit{Paired BN}: three GCN encoder families (DGI, MVGRL, GRACE) with and without per-layer BN. \textit{Native BN}: reference encoders (GBT, BGRL, GIN). The \textbf{Native loss} column lists each encoder's loss in its original paper. Every encoder here is trained with the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to isolate the topology-repair effect. Appendix~\ref{app:loss_table} verifies the substitution does not penalize the baselines. Best per row in \textbf{bold}, second-best \underline{underlined}.}
 \label{tab:rq1}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lllcccccc}
@@ -450,7 +450,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \begin{table}[t]
 \centering
-\caption{S-S:S-B edge ratio and homophily by graph type across the three AML datasets. Best per dataset in bold, second-best underlined (higher homophily and a smaller S-B multiplier in 1:$x$ are better). The behavioral homophily recovery graph repairs the suspicious-class topology, while the structural-feature recovery ablation (\hofinet only) does not.}
+\caption{S-S:S-B edge ratio and homophily by graph type across the three AML datasets. Best per dataset in bold, second-best underlined (higher homophily and a smaller S-B multiplier in 1:$x$ are better).}
 \label{tab:ss_sb}
 \small
 \setlength{\tabcolsep}{5pt}
@@ -481,7 +481,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.95\columnwidth]{figures/fig_rq1_shift_hist.pdf}
-\caption{Population-level S-ratio shift across all 9{,}644 suspicious \hofinet accounts. Topology repair shifts the bimodal transaction-graph distribution (gray) past the majority-suspicious threshold (dashed): $47.7\%\to 71.6\%$ majority-S 1-hop egos.}
+\caption{Distribution of 1-hop ego S-ratio across all 9{,}644 suspicious \hofinet accounts: transaction graph (gray) versus repaired topology (colored), with the majority-suspicious threshold dashed.}
 \label{fig:rq1_shift_hist}
 \end{figure}
 
@@ -573,7 +573,7 @@ RQ3 asks whether \method's self-supervised representation remains competitive wi
 
 \begin{table}[t]
 \centering
-\caption{RQ4: $F1_{\text{susp}}$ on AMLworld ($\rho{=}1.23\%$) and AMLNet ($\rho{=}13.52\%$) across the four topology-by-level settings (4-seed mean$\pm$std).}
+\caption{Cross-dataset $F1_{\text{susp}}$ on AMLworld ($\rho{=}1.23\%$) and AMLNet ($\rho{=}13.52\%$) across the four topology-by-level settings (4-seed mean$\pm$std).}
 \label{tab:rq4}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{ccccccc}
@@ -672,7 +672,7 @@ Table~\ref{tab:label_eff_full} reports the per-cell numbers underlying Figure~\r
 
 \begin{table*}[t]
 \centering
-\caption{Full numerical results for Figure~\ref{fig:rq3_labeff}: $F1_{\text{susp}}$ (4-seed mean$\pm$std) across train label fractions $\{1\%, 5\%, 10\%\}$ on three AML datasets. Best per (dataset, fraction) in \textbf{bold}, second-best \underline{underlined}. \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet and AMLNet, BGRL on AMLworld); MLP follows the standard fraud-GNN convention (Linear$+$ReLU, no BatchNorm).}
+\caption{Full numerical results for Figure~\ref{fig:rq3_labeff}: $F1_{\text{susp}}$ (4-seed mean$\pm$std) across train label fractions $\{1\%, 5\%, 10\%\}$ on three AML datasets. Best per (dataset, fraction) in \textbf{bold}, second-best \underline{underlined}. \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet and AMLNet, BGRL on AMLworld). MLP follows the standard fraud-GNN convention (Linear$+$ReLU, no BatchNorm).}
 \label{tab:label_eff_full}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{l ccc ccc ccc}
@@ -726,7 +726,7 @@ GIN~\cite{xu2018powerful}              & supervised CE          & \cmark & 0.585
 
 \begin{table}[h]
 \centering
-\caption{DGI+BN on \hofinet across four contrastive losses, 4-seed mean. Setting (a): two perturbations of the transaction graph. Setting (b): transaction branch vs.\ recovered-neighborhood branch. Lower final loss at (a) with low $F1_{\text{susp}}$ indicates near-identity alignment, not Theorem~\ref{thm:bn_collapse}'s constant-solution pathology.}
+\caption{DGI+BN on \hofinet across four contrastive losses, 4-seed mean. Setting (a): two perturbations of the transaction graph. Setting (b): transaction branch vs.\ recovered-neighborhood branch.}
 \label{tab:loss_ab_check}
 \begin{tabular}{lcccc}
 \toprule
