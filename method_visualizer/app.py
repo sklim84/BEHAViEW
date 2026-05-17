@@ -158,8 +158,8 @@ SETTINGS = {
 C_BENIGN = "#4E79A7"
 C_SUSPICIOUS = "#D64045"
 C_EGO = "#F0A000"
-C_TX_EDGE = "rgba(86, 99, 111, 0.22)"
-C_BHV_EDGE = "rgba(214, 64, 69, 0.20)"
+C_TX_EDGE = "#5F6F7D"
+C_BHV_EDGE = "#B66A3C"
 C_MAP_EDGE = "rgba(107, 114, 128, 0.28)"
 C_BOX = "rgba(148, 163, 184, 0.45)"
 
@@ -239,7 +239,7 @@ def load_comparison_results(dataset_name: str) -> pd.DataFrame:
             for model, grp in df.groupby("model"):
                 rows.append(
                     {
-                            "family": "지도학습/표형 기준선",
+                        "family": "지도학습/표형 기준선",
                         "method": model.upper(),
                         "encoder": model,
                         "setting": "",
@@ -540,42 +540,129 @@ def method_representation(
     return np.nan_to_num(Z_out), edge_groups
 
 
-def reduce_to_suspicious_3d(
+def graph_edges_for_layout(edge_groups: list[tuple[str, np.ndarray, str]], max_edges: int, seed: int) -> np.ndarray:
+    chunks = [edges for _, edges, _ in edge_groups if edges.size]
+    if not chunks:
+        return np.empty((0, 2), dtype=np.int64)
+    edges = np.vstack(chunks).astype(np.int64, copy=False)
+    if len(edges) > max_edges * 2:
+        edges = sample_edges(edges, max_edges * 2, seed)
+    lo = np.minimum(edges[:, 0], edges[:, 1])
+    hi = np.maximum(edges[:, 0], edges[:, 1])
+    edges = unique_edges(np.column_stack([lo, hi]))
+    if len(edges) > max_edges:
+        edges = sample_edges(edges, max_edges, seed + 17)
+    return edges
+
+
+def initialize_graph_coords(Z: np.ndarray, seed: int) -> np.ndarray:
+    rng = np.random.default_rng(seed)
+    n = len(Z)
+    coords = rng.normal(0.0, 1.0, size=(n, 3))
+    Z = np.nan_to_num(Z)
+    if Z.ndim == 2 and Z.shape[1] > 0:
+        dims = min(3, Z.shape[1])
+        coords[:, :dims] += StandardScaler().fit_transform(Z[:, :dims])
+    coords = np.nan_to_num(coords)
+    coords -= coords.mean(axis=0, keepdims=True)
+    scale = np.std(coords, axis=0, keepdims=True)
+    coords = coords / np.maximum(scale, 1e-6)
+    return coords
+
+
+def enforce_minimum_node_spacing(coords: np.ndarray, min_distance: float, seed: int, rounds: int = 4) -> np.ndarray:
+    if len(coords) <= 2 or min_distance <= 0:
+        return coords
+
+    rng = np.random.default_rng(seed)
+    coords = coords + rng.normal(0.0, min_distance * 0.03, size=coords.shape)
+    neighbor_k = min(8, len(coords) - 1)
+
+    for _ in range(rounds):
+        nn = NearestNeighbors(n_neighbors=neighbor_k + 1, algorithm="auto")
+        nn.fit(coords)
+        distances, indices = nn.kneighbors(coords)
+        delta = np.zeros_like(coords)
+
+        for rank in range(1, neighbor_k + 1):
+            other = indices[:, rank]
+            diff = coords - coords[other]
+            dist = distances[:, rank].reshape(-1, 1) + 1e-6
+            mask = distances[:, rank] < min_distance
+            if not mask.any():
+                continue
+            push = 0.5 * (min_distance - dist) * diff / dist
+            push = np.clip(push, -0.06, 0.06)
+            delta[mask] += push[mask]
+            np.add.at(delta, other[mask], -push[mask])
+
+        coords += delta / max(1, neighbor_k)
+        coords -= coords.mean(axis=0, keepdims=True)
+
+    return coords
+
+
+def graph_layout_3d(
     Z: np.ndarray,
     y: np.ndarray,
-    reducer: str,
+    edge_groups: list[tuple[str, np.ndarray, str]],
     seed: int,
-    perplexity: int,
-    tsne_iter: int,
+    iterations: int,
+    max_layout_edges: int,
+    node_spacing: float,
 ) -> tuple[np.ndarray, float]:
-    Z = StandardScaler().fit_transform(np.nan_to_num(Z))
-    axis = suspicious_axis(Z, y)
-    susp = Z @ axis
-    residual = Z - np.outer(susp, axis)
+    """Force-directed 3D graph layout driven by the displayed graph edges."""
+    n = len(y)
+    coords = initialize_graph_coords(Z, seed)
+    edges = graph_edges_for_layout(edge_groups, max_layout_edges, seed)
+    if n == 0:
+        return coords, 0.0
+    if edges.size == 0:
+        gap = 0.0 if len(np.unique(y)) < 2 else float(np.linalg.norm(coords[y == 1].mean(0) - coords[y == 0].mean(0)))
+        return coords, gap
 
-    if reducer == "t-SNE":
-        max_perplexity = max(5, min(perplexity, (len(Z) - 1) // 3))
-        yz = TSNE(
-            n_components=2,
-            perplexity=max_perplexity,
-            init="pca",
-            learning_rate="auto",
-            max_iter=tsne_iter,
-            random_state=seed,
-        ).fit_transform(residual)
-    else:
-        if residual.shape[1] >= 2:
-            yz = PCA(n_components=2, random_state=seed).fit_transform(residual)
-        else:
-            yz = np.column_stack([residual[:, 0], np.zeros(len(residual))])
+    rng = np.random.default_rng(seed + 101)
+    src = edges[:, 0]
+    tgt = edges[:, 1]
+    degree = np.bincount(np.concatenate([src, tgt]), minlength=n).reshape(-1, 1)
+    degree_scale = 1.0 / np.sqrt(np.maximum(degree, 1.0))
+    node_spacing = float(np.clip(node_spacing, 0.6, 2.8))
+    rest_length = 0.38 * node_spacing
+    step = 0.045
+    repulse_pairs = min(max(n * 5, 2500), 45000)
+    repulse_strength = 0.012 * node_spacing
 
-    coords = np.column_stack([susp, yz])
-    coords = StandardScaler().fit_transform(coords)
+    for _ in range(int(iterations)):
+        delta = np.zeros_like(coords)
+
+        diff = coords[tgt] - coords[src]
+        dist = np.linalg.norm(diff, axis=1, keepdims=True) + 1e-6
+        spring = step * (dist - rest_length) * diff / dist
+        np.add.at(delta, src, spring)
+        np.add.at(delta, tgt, -spring)
+
+        a = rng.integers(0, n, size=repulse_pairs)
+        b = rng.integers(0, n, size=repulse_pairs)
+        mask = a != b
+        a = a[mask]
+        b = b[mask]
+        diff = coords[a] - coords[b]
+        dist2 = np.sum(diff * diff, axis=1, keepdims=True) + 0.05
+        repel = repulse_strength * diff / dist2
+        np.add.at(delta, a, repel)
+        np.add.at(delta, b, -repel)
+
+        delta -= 0.018 * coords * degree_scale
+        coords += np.clip(delta, -0.16 * node_spacing, 0.16 * node_spacing)
+        coords -= coords.mean(axis=0, keepdims=True)
+
+    coords = StandardScaler().fit_transform(np.nan_to_num(coords))
+    coords = enforce_minimum_node_spacing(coords, min_distance=0.09 * node_spacing, seed=seed + 211)
     if len(np.unique(y)) < 2:
         gap = 0.0
     else:
-        gap = abs(coords[y == 1, 0].mean() - coords[y == 0, 0].mean())
-    return coords, float(gap)
+        gap = float(np.linalg.norm(coords[y == 1].mean(axis=0) - coords[y == 0].mean(axis=0)))
+    return coords, gap
 
 
 def sample_edges(edges: np.ndarray, max_edges: int, seed: int) -> np.ndarray:
@@ -586,7 +673,16 @@ def sample_edges(edges: np.ndarray, max_edges: int, seed: int) -> np.ndarray:
     return edges[idx]
 
 
-def edge_trace(coords: np.ndarray, edges: np.ndarray, color: str, name: str, max_edges: int, seed: int):
+def edge_trace(
+    coords: np.ndarray,
+    edges: np.ndarray,
+    color: str,
+    name: str,
+    max_edges: int,
+    seed: int,
+    edge_width: int,
+    edge_opacity: float,
+):
     if not PLOTLY_AVAILABLE or edges.size == 0 or max_edges <= 0:
         return None
     edges = sample_edges(edges, max_edges, seed)
@@ -602,9 +698,10 @@ def edge_trace(coords: np.ndarray, edges: np.ndarray, color: str, name: str, max
         y=ys,
         z=zs,
         mode="lines",
-        line={"color": color, "width": 1},
+        line={"color": color, "width": edge_width},
+        opacity=edge_opacity,
         hoverinfo="skip",
-        name=name,
+        name=f"{name} ({len(edges):,})",
         showlegend=True,
     )
 
@@ -614,8 +711,11 @@ def plot_3d(
     sample: pd.DataFrame,
     edge_groups: list[tuple[str, np.ndarray, str]],
     title: str,
-    reducer: str,
     max_edges: int,
+    edge_width: int,
+    edge_opacity: float,
+    node_size_scale: float,
+    coordinate_tick: float,
     seed: int,
 ):
     y = sample["label"].to_numpy()
@@ -629,15 +729,15 @@ def plot_3d(
         return
 
     fig = go.Figure()
-    per_group_edge_budget = max(1, max_edges // max(1, len(edge_groups)))
+    per_group_edge_budget = max(1, max_edges)
     for i, (name, edges, color) in enumerate(edge_groups):
-        trace = edge_trace(coords, edges, color, name, per_group_edge_budget, seed + i)
+        trace = edge_trace(coords, edges, color, name, per_group_edge_budget, seed + i, edge_width, edge_opacity)
         if trace is not None:
             fig.add_trace(trace)
 
     for label_value, label_name, color, size in [
-        (0, "정상", C_BENIGN, 3.2),
-        (1, "의심", C_SUSPICIOUS, 5.0),
+        (0, "정상", C_BENIGN, 2.8 * node_size_scale),
+        (1, "의심", C_SUSPICIOUS, 4.4 * node_size_scale),
     ]:
         mask = y == label_value
         if not mask.any():
@@ -648,26 +748,39 @@ def plot_3d(
                 y=coords[mask, 1],
                 z=coords[mask, 2],
                 mode="markers",
-                marker={"size": size, "color": color, "opacity": 0.82, "line": {"width": 0}},
+                marker={"size": size, "color": color, "opacity": 0.88, "line": {"width": 0}},
                 text=np.array(hover, dtype=object)[mask],
                 hovertemplate="%{text}<extra></extra>",
                 name=label_name,
             )
         )
 
+    axis_style = {
+        "showgrid": True,
+        "gridcolor": "rgba(148, 163, 184, 0.28)",
+        "zeroline": False,
+        "dtick": coordinate_tick,
+        "title": {"text": ""},
+        "showticklabels": False,
+        "ticks": "",
+        "showspikes": False,
+    }
+
     fig.update_layout(
         title={"text": title, "x": 0.02, "xanchor": "left"},
         margin={"l": 0, "r": 0, "t": 46, "b": 0},
         height=620,
         scene={
-            "xaxis_title": "의심 성분",
-            "yaxis_title": f"{reducer} 성분 1",
-            "zaxis_title": f"{reducer} 성분 2",
+            "xaxis": axis_style,
+            "yaxis": axis_style,
+            "zaxis": axis_style,
             "camera": {"eye": {"x": 1.45, "y": 1.35, "z": 0.92}},
         },
         legend={"orientation": "h", "x": 0.0, "y": 1.02},
     )
     st.plotly_chart(fig, width="stretch")
+    visible_edges = [f"{name}: {len(edges):,}" for name, edges, _ in edge_groups]
+    st.caption("계산된 엣지 수 - " + " / ".join(visible_edges))
 
 
 def selected_metric(dataset_name: str, encoder: str, setting: str) -> dict[str, float] | None:
@@ -833,7 +946,6 @@ def plot_graph_diagnostics(tx_metrics: dict[str, float | int | str], bhv_metrics
 with st.sidebar:
     st.header("데이터")
     dataset_name = st.selectbox("데이터셋", list(DATASETS.keys()), index=0)
-    reducer = st.radio("3D 축소 방법", ["PCA", "t-SNE"], horizontal=True)
     n_points = st.slider("샘플 수", min_value=800, max_value=12_000, value=3_000, step=200)
     suspicious_share = st.slider("샘플 내 의심 비율", min_value=0.05, max_value=0.70, value=0.35, step=0.05)
     seed = st.number_input("랜덤 시드", min_value=0, max_value=99_999, value=2025, step=1)
@@ -880,9 +992,13 @@ with st.sidebar:
     loss_strength = st.slider("시각화 loss 프로파일 강도", min_value=0.0, max_value=1.0, value=0.45, step=0.05)
 
     st.header("렌더링")
-    max_edges = st.slider("그래프당 최대 엣지 수", min_value=0, max_value=8_000, value=2_000, step=250)
-    perplexity = st.slider("t-SNE perplexity", min_value=5, max_value=80, value=30, step=5, disabled=reducer != "t-SNE")
-    tsne_iter = st.slider("t-SNE 반복 수", min_value=250, max_value=1_500, value=500, step=250, disabled=reducer != "t-SNE")
+    max_edges = st.slider("엣지 유형별 최대 표시 수", min_value=0, max_value=20_000, value=6_000, step=500)
+    edge_width = st.slider("엣지 선 두께", min_value=1, max_value=8, value=4, step=1)
+    edge_opacity = st.slider("엣지 선 불투명도", min_value=0.10, max_value=1.00, value=0.82, step=0.05)
+    node_spacing = st.slider("노드 간 좌표 간격", min_value=0.6, max_value=2.8, value=1.7, step=0.1)
+    node_size_scale = st.slider("노드 표시 크기", min_value=0.45, max_value=1.30, value=0.75, step=0.05)
+    coordinate_tick = st.slider("좌표 눈금 단위", min_value=0.05, max_value=0.50, value=0.10, step=0.05)
+    layout_iterations = st.slider("3D 그래프 배치 반복 수", min_value=10, max_value=120, value=45, step=5)
 
 
 st.title("BehaView 3D 기법 비교기")
@@ -891,8 +1007,8 @@ st.caption(
 )
 
 st.info(
-    "모든 3D 그래프의 x축은 의심 성분입니다. 샘플 라벨의 클래스 중심 차이를 축으로 두고, "
-    "나머지 두 축은 PCA 또는 t-SNE가 채워 의심 방향이 명시적으로 보이게 했습니다."
+    "3D 출력은 선택한 기법이 사용하는 실제 엣지로 배치한 force-directed 그래프입니다. "
+    "노드 색은 라벨, 선은 거래 엣지와 복구 k-NN 엣지를 나타내며, 선 두께와 노드 간 좌표 간격은 왼쪽 렌더링 메뉴에서 조정할 수 있습니다."
 )
 
 df_all = load_nodes(dataset_name)
@@ -923,7 +1039,7 @@ render_metric_cards(sample, tx_metrics, bhv_metrics, left_metric, right_metric)
 
 st.markdown("---")
 
-with st.spinner("기법별 표현과 3D 좌표를 계산하는 중입니다..."):
+with st.spinner("기법별 표현과 실제 3D 그래프 배치를 계산하는 중입니다..."):
     left_Z, left_edges = method_representation(
         X,
         labels,
@@ -956,17 +1072,18 @@ with st.spinner("기법별 표현과 3D 좌표를 계산하는 중입니다...")
         cycle_alpha,
         loss_strength,
     )
-    left_coords, left_gap = reduce_to_suspicious_3d(left_Z, labels, reducer, int(seed), perplexity, tsne_iter)
-    right_coords, right_gap = reduce_to_suspicious_3d(right_Z, labels, reducer, int(seed) + 7, perplexity, tsne_iter)
+    layout_edge_budget = max(1, max(max_edges * 3, int(n_points * 6)))
+    left_coords, left_gap = graph_layout_3d(left_Z, labels, left_edges, int(seed), layout_iterations, layout_edge_budget, node_spacing)
+    right_coords, right_gap = graph_layout_3d(right_Z, labels, right_edges, int(seed) + 7, layout_iterations, layout_edge_budget, node_spacing)
 
-left_title = f"왼쪽: {method_label(left_encoder, left_setting, left_loss)} | 의심 F1 {metric_text(left_metric, 'f1')} | 분리도 {left_gap:.2f}"
-right_title = f"오른쪽: {method_label(right_encoder, right_setting, right_loss)} | 의심 F1 {metric_text(right_metric, 'f1')} | 분리도 {right_gap:.2f}"
+left_title = f"왼쪽: {method_label(left_encoder, left_setting, left_loss)} | 의심 F1 {metric_text(left_metric, 'f1')} | 3D 군집거리 {left_gap:.2f}"
+right_title = f"오른쪽: {method_label(right_encoder, right_setting, right_loss)} | 의심 F1 {metric_text(right_metric, 'f1')} | 3D 군집거리 {right_gap:.2f}"
 
 col_left, col_right = st.columns(2)
 with col_left:
-    plot_3d(left_coords, sample, left_edges, left_title, reducer, max_edges, int(seed))
+    plot_3d(left_coords, sample, left_edges, left_title, max_edges, edge_width, edge_opacity, node_size_scale, coordinate_tick, int(seed))
 with col_right:
-    plot_3d(right_coords, sample, right_edges, right_title, reducer, max_edges, int(seed) + 11)
+    plot_3d(right_coords, sample, right_edges, right_title, max_edges, edge_width, edge_opacity, node_size_scale, coordinate_tick, int(seed) + 11)
 
 st.markdown("---")
 
