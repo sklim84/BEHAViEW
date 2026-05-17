@@ -1,0 +1,11 @@
+# RQ2 results — Signal Preservation (Table 5, Figure rq2_bn)
+
+| File | Source script | Content |
+|---|---|---|
+| `paired_t_test.csv` | `scripts/rq2/compute_paired_t_test.py` | Holm-Bonferroni paired t-test results (long format) used by Table 5 / `tab:bn_summary` |
+| `paired_t_test_bn.csv` | (companion, BN-specific) | BN-focused subset of the paired t-tests |
+| `pool_variants.csv` | `scripts/rq2/run_pool_variants.sh` | HAP / Cycle pool alternatives on HOFINET (4 encoders × {c,d} × pool variant × 4 seeds) |
+
+`compute_paired_t_test.py` reads from `results/rq1/main_sweep.csv` and
+`results/rq4/amlworld_main_sweep.csv`, so a refreshed RQ1/RQ4 sweep
+automatically updates the inputs.

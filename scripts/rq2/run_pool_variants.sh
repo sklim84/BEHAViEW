@@ -22,7 +22,7 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 NODE="hofinet/HOFINET_NODE_FEAT"
 EDGE="hofinet/HOFINET_EDGES"
 KNN="hofinet/HOFINET_KNN_BEHAV_k10"
-RESULT="./results/exp_results_pool_variants.csv"
+RESULT="./results/rq2/pool_variants.csv"
 
 run_one() {
     local ENC="$1"

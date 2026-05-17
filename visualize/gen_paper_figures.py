@@ -32,7 +32,7 @@ def fig2_ablation_matrix():
     GRACE+BN), 4 seeds, on the corrected 80% holdout (Gate 1 sweep).
     """
     import pandas as pd
-    df = pd.read_csv('results/exp_results_hofinet_ab.csv')
+    df = pd.read_csv('results/rq1/main_sweep.csv')
     parsed = []
     for n in df['Model']:
         parts = n.split('_')
@@ -143,11 +143,11 @@ def fig4_bn_effect():
     amplification, and BN-free encoders gain in absolute floor terms.
 
     Reads from corrected sweep results (Gate 1):
-        results/exp_results_hofinet_ab.csv
+        results/rq1/main_sweep.csv
     """
     import pandas as pd
 
-    csv_path = 'results/exp_results_hofinet_ab.csv'
+    csv_path = 'results/rq1/main_sweep.csv'
     df = pd.read_csv(csv_path)
     parsed = []
     for name in df['Model']:

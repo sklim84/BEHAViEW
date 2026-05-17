@@ -1,0 +1,13 @@
+# RQ1 results — Homophily Recovery (Table 3, Table 4, Figure 1)
+
+| File | Source script | Coverage |
+|---|---|---|
+| `main_sweep.csv` | `scripts/rq1/run_main_sweep.sh` | 9 encoders × 4 settings (a/b/c/d) × 4 seeds on HOFINET (Table 3 / `tab:rq1`) |
+| `case_study/` | `visualize/gen_case_study_figures.py` (input fixtures) | Per-account stats and distributions used to generate Figure 1 (intro topology repair) |
+
+Table 4 (`tab:ss_sb`, S-S:S-B ratio across datasets) is derived
+analytically from the dataset structure, not from a sweep CSV.
+
+Re-running `scripts/rq1/run_main_sweep.sh` writes per-tag temp files
+under this directory; `scripts/merge_main_table.sh` consolidates them
+into `main_sweep.csv` in-place.

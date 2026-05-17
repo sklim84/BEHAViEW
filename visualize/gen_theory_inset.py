@@ -64,7 +64,7 @@ def parse_csv(path, ds_prefix):
     return pd.DataFrame(rows)
 
 ds_data = {
-    'HOFINET':  parse_csv('results/exp_results_hofinet_ab.csv', 'hof'),
+    'HOFINET':  parse_csv('results/rq1/main_sweep.csv', 'hof'),
     'AMLworld': parse_csv('results/exp_results_amlworld.csv', 'aml'),
     'AMLNet':   parse_csv('results/exp_results_amlnet.csv', 'amlnet'),
 }

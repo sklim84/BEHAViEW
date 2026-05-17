@@ -8,11 +8,11 @@ Computes:
                 Holm-Bonferroni within dataset (Gate 1 new analysis).
 
 Inputs:
-  results/exp_results_hofinet_ab.csv
-  results/exp_results_amlworld.csv
+  results/rq1/main_sweep.csv
+  results/rq4/amlworld_main_sweep.csv
 
 Output:
-  results/exp_results_paired_t_test.csv  (long-format with raw + Holm p-values)
+  results/rq2/paired_t_test.csv  (long-format with raw + Holm p-values)
 """
 from __future__ import annotations
 
@@ -132,11 +132,11 @@ def run_tests(df, dataset, metric="f1_1"):
 
 if __name__ == "__main__":
     rows = []
-    for ds, path in [("HOFINET", "results/exp_results_hofinet_ab.csv"),
-                     ("AMLworld", "results/exp_results_amlworld.csv")]:
+    for ds, path in [("HOFINET", "results/rq1/main_sweep.csv"),
+                     ("AMLworld", "results/rq4/amlworld_main_sweep.csv")]:
         df = load(path)
         rows.extend(run_tests(df, ds))
     out = pd.DataFrame(rows)
-    out.to_csv("results/exp_results_paired_t_test.csv", index=False)
+    out.to_csv("results/rq2/paired_t_test.csv", index=False)
     print(out.to_string(index=False))
-    print(f"\nSaved: results/exp_results_paired_t_test.csv ({len(out)} rows)")
+    print(f"\nSaved: results/rq2/paired_t_test.csv ({len(out)} rows)")

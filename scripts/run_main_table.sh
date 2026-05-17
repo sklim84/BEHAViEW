@@ -16,9 +16,9 @@
 #       was silently ignored in the previous code but is now a real
 #       implementation, so this flag is set explicitly.
 #
-# Output: results/main_table/${DATASET}.csv
+# Output: results/rq1/${DATASET}.csv
 #         Each parallel dispatch writes to a per-tag temp file
-#         (results/main_table/.tmp_${DATASET}_${TAG}.csv) to avoid
+#         (results/rq1/.tmp_${DATASET}_${TAG}.csv) to avoid
 #         CSV append races; merge with merge_main_table.sh after
 #         all dispatches finish.
 #
@@ -35,7 +35,7 @@
 #   SEEDS       space-separated seed list
 #   TAG         suffix for the temp CSV (default: gpu${GPU})
 #   OUTPUT_DIR_HOFINET / OUTPUT_DIR_AMLWORLD / OUTPUT_DIR_AMLNET
-#               per-dataset output dirs (defaults: results/main_table,
+#               per-dataset output dirs (defaults: results/rq1,
 #               results/rq4, results/rq4)
 #
 # Example (4-GPU parallel):
@@ -56,7 +56,7 @@ SEEDS="${SEEDS:-2024 2025 2026 2027}"
 TAG="${TAG:-gpu${GPU}}"
 # Per-dataset output directories: HOFINET (RQ1) and AMLworld/AMLNet (RQ4).
 # Override OUTPUT_DIR_${DS} to point elsewhere.
-OUTPUT_DIR_HOFINET="${OUTPUT_DIR_HOFINET:-results/main_table}"
+OUTPUT_DIR_HOFINET="${OUTPUT_DIR_HOFINET:-results/rq1}"
 OUTPUT_DIR_AMLWORLD="${OUTPUT_DIR_AMLWORLD:-results/rq4}"
 OUTPUT_DIR_AMLNET="${OUTPUT_DIR_AMLNET:-results/rq4}"
 HP="--lr 0.0005 --hidden_dim 256 --gconv_nlayers 2"
