@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================
 # BehaView label-efficiency sweep for AMLworld and AMLNet
-# (HOFINET already in results/exp_results_label_fraction.csv).
+# (HOFINET already in results/rq3/behaview_hofinet.csv).
 #
 # Env vars: GPU, DATASET (amlworld/amlnet), ENCODER, KNN
 # 1 setting (d) × 3 fractions × 4 seeds = 12 runs/dataset
@@ -29,7 +29,7 @@ else
     echo "Unknown dataset: $DATASET"; exit 1
 fi
 
-RESULT="results/exp_results_behaview_labeff_${DATASET}.csv"
+RESULT="results/rq3/behaview_${DATASET}.csv"
 HP="--lr 0.0005 --hidden_dim 256 --gconv_nlayers 2"
 
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True

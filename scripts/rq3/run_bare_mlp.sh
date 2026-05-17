@@ -4,7 +4,7 @@
 # no BatchNorm, no Dropout). Replaces modern MLP rows.
 #
 # Env vars: GPU, DATASET (hofinet/amlworld/amlnet)
-# Output: appended to results/exp_results_labeff_${DATASET}.csv
+# Output: appended to results/rq3/supervised_${DATASET}.csv
 # =============================================================
 set -e
 
@@ -13,7 +13,7 @@ DATASET="${DATASET:-hofinet}"
 SEEDS="${SEEDS:-2024 2025 2026 2027}"
 RATIOS="${RATIOS:-0.01 0.05 0.10}"
 
-FINAL="results/exp_results_labeff_${DATASET}.csv"
+FINAL="results/rq3/supervised_${DATASET}.csv"
 TMP_DIR="results/bare_mlp_tmp/${DATASET}"
 mkdir -p "$TMP_DIR"
 

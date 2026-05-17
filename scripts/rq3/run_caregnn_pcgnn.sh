@@ -10,6 +10,6 @@ for DS in hofinet amlworld amlnet; do
     python -u models/supervised_baselines.py \
         --gpu "$GPU" --seeds 2024 2025 2026 2027 \
         --dataset "$DS" --models caregnn pcgnn \
-        --result_file "./results/exp_results_caregnn_pcgnn_${DS}.csv"
+        --result_file "./results/rq3/caregnn_pcgnn_${DS}.csv"
 done
 echo "[$(date)] === DONE ==="

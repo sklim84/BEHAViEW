@@ -24,16 +24,16 @@ FIG_OUT = os.path.join(ROOT, '_paper', 'figures', 'fig_rq3_labeff.pdf')
 
 def load_behaview(ds):
     if ds == 'hofinet':
-        df = pd.read_csv(os.path.join(RESULTS, 'exp_results_label_fraction.csv'))
+        df = pd.read_csv(os.path.join(RESULTS, 'rq3/behaview_hofinet.csv'))
         df['train_ratio'] = df['Model'].apply(lambda m: float(m.split('_r')[1].split('_s')[0]))
     else:
-        df = pd.read_csv(os.path.join(RESULTS, f'exp_results_behaview_labeff_{ds}.csv'))
+        df = pd.read_csv(os.path.join(RESULTS, f'rq3/behaview_{ds}.csv'))
         df['train_ratio'] = df['Model'].apply(lambda m: float(m.split('_r')[1].split('_s')[0]))
     return df[['train_ratio', 'f1_1']].assign(model='BehaView')
 
 
 def load_supervised(ds):
-    df = pd.read_csv(os.path.join(RESULTS, f'exp_results_labeff_{ds}.csv'))
+    df = pd.read_csv(os.path.join(RESULTS, f'rq3/supervised_{ds}.csv'))
     rename = {'mlp': 'MLP', 'xgb': 'XGBoost', 'lgbm': 'LightGBM',
               'gat': 'GAT', 'gcn': 'GCN', 'caregnn': 'CARE-GNN'}
     df['model'] = df['model'].map(rename)

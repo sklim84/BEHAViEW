@@ -27,7 +27,7 @@ echo "[$(date)] === Additional experiments (corrected protocol) ==="
 echo "  GPU=$GPU"
 
 # ============= (A) Label fraction =============
-RESULT_A="./results/exp_results_label_fraction.csv"
+RESULT_A="./results/rq3/behaview_hofinet.csv"
 echo ""
 echo "[$(date)] (A) Label fraction sensitivity → $RESULT_A"
 for RATIO in 0.01 0.05 0.10; do
