@@ -35,6 +35,9 @@ datasets/elliptic/processed/*.pt
 datasets/elliptic/*.npz
 datasets/elliptic2/*.csv
 datasets/elliptic_plus_plus/repo/
+datasets/hofinet
+datasets/amlworld
+results/embeddings
 
 # Local-only idea development workspace (not pushed to GitHub)
 _idea_dev/
@@ -50,5 +53,5 @@ main.log
 main.out 
 main.pdf
 *.synctex.gz
-datasets/.DS_Store
-_paper/.DS_Store
+.DS_Store
+
