@@ -1,52 +1,78 @@
 #!/bin/bash
 # =============================================================
-# Gate 1 — Main table sweep on corrected 10/10/80 split
+# Main table sweep — re-run for Tables 3 (tab:rq1) and 6 (tab:rq4)
+# under the current code revision.
 #
-# 10 encoders × 4 settings (a/b/c/d) × 4 seeds × 2 datasets = 320 runs
-# Replaces all paper Tables 1-3 cells which were produced under the
-# PyGCL get_split valid/test inversion; uses utils.make_split for the
-# corrected protocol.
+# 9 encoders x 4 settings (a/b/c/d) x 4 seeds x DATASET
+# = 144 runs per dataset on HOFINET
+# = 64 runs per dataset on AMLworld / AMLNet (4 encoders only)
 #
-# Output:
-#   - HOFINET  → results/exp_results_hofinet_ab.csv  (ab = "ablation"; full 4-setting)
-#   - AMLworld → results/exp_results_amlworld.csv
+# Encoder set:
+#   HOFINET: gbt bgrl dgi mvgrl grace dgi_bn mvgrl_bn grace_bn gin
+#   Cross-dataset (Table 6): bgrl gbt dgi_bn grace_bn
 #
-# Parallel launch on two GPUs (default 6, 7):
-#   GPU=6 DATASETS=hofinet  bash scripts/run_main_table.sh &
-#   GPU=7 DATASETS=amlworld bash scripts/run_main_table.sh &
+# Loss: BootstrapLatent (matches the unified BYOL bootstrap used
+#       by Table 9). Earlier scripts used --loss BarlowTwins, which
+#       was silently ignored in the previous code but is now a real
+#       implementation, so this flag is set explicitly.
+#
+# Output: results/main_table/${DATASET}.csv
+#         Each parallel dispatch writes to a per-tag temp file
+#         (results/main_table/.tmp_${DATASET}_${TAG}.csv) to avoid
+#         CSV append races; merge with merge_main_table.sh after
+#         all dispatches finish.
+#
+# Process management:
+#   - setsid creates a new process group so all children share PGID
+#   - trap on EXIT/INT/TERM kills the whole group, avoiding orphan
+#     python processes that previously held GPU memory
+#
+# Env vars (all overridable):
+#   GPU         single GPU index (e.g., 0)
+#   DATASETS    space-separated subset of {hofinet amlworld amlnet}
+#   ENCODERS    space-separated encoder subset
+#   SETTINGS    space-separated subset of {a b c d}
+#   SEEDS       space-separated seed list
+#   TAG         suffix for the temp CSV (default: gpu${GPU})
+#   OUTPUT_DIR  output directory (default: results/main_table)
+#
+# Example (4-GPU parallel):
+#   GPU=0 ENCODERS="gbt bgrl dgi"        DATASETS=hofinet  TAG=g0 bash scripts/run_main_table.sh &
+#   GPU=1 ENCODERS="mvgrl grace dgi_bn"  DATASETS=hofinet  TAG=g1 bash scripts/run_main_table.sh &
+#   GPU=2 ENCODERS="mvgrl_bn grace_bn gin" DATASETS=hofinet TAG=g2 bash scripts/run_main_table.sh &
+#   GPU=3 ENCODERS="bgrl gbt dgi_bn grace_bn" DATASETS="amlworld amlnet" TAG=g3 bash scripts/run_main_table.sh &
 #   wait
-#
-# Sequential (single GPU):
-#   GPU=6 bash scripts/run_main_table.sh
+#   bash scripts/merge_main_table.sh
 # =============================================================
 set -e
 
-# --- Configuration (env-overridable) ---
 GPU="${GPU:-0}"
-DATASETS="${DATASETS:-hofinet amlworld}"
-SEEDS="${SEEDS:-2024 2025 2026 2027}"
-ENCODERS="${ENCODERS:-gbt bgrl dgi mvgrl grace gca dgi_bn mvgrl_bn grace_bn gin}"
+DATASETS="${DATASETS:-hofinet amlworld amlnet}"
+ENCODERS="${ENCODERS:-gbt bgrl dgi mvgrl grace dgi_bn mvgrl_bn grace_bn gin}"
 SETTINGS="${SETTINGS:-a b c d}"
+SEEDS="${SEEDS:-2024 2025 2026 2027}"
+TAG="${TAG:-gpu${GPU}}"
+OUTPUT_DIR="${OUTPUT_DIR:-results/main_table}"
 HP="--lr 0.0005 --hidden_dim 256 --gconv_nlayers 2"
 
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+mkdir -p "$OUTPUT_DIR"
 
-echo "[$(date)] === Gate 1 main table sweep ==="
-echo "  GPU=$GPU"
+export PYTORCH_CUDA_ALLOC_CONF="max_split_size_mb:256,expandable_segments:True"
+
+# Process-group cleanup: kill all children on signal so no orphans linger.
+PGID=$$
+trap 'echo "[$(date)] cleanup: killing PGID $PGID"; kill -- -$PGID 2>/dev/null; exit 130' INT TERM
+
+echo "[$(date)] === main_table sweep (TAG=$TAG, GPU=$GPU, PGID=$PGID) ==="
 echo "  DATASETS=$DATASETS"
-echo "  SEEDS=$SEEDS"
 echo "  ENCODERS=$ENCODERS"
 echo "  SETTINGS=$SETTINGS"
+echo "  SEEDS=$SEEDS"
+echo "  OUTPUT_DIR=$OUTPUT_DIR"
 
 run_one() {
-    local DS_TAG="$1"      # hof | aml
-    local NODE="$2"        # node_data_name
-    local EDGE="$3"        # edge_data_name
-    local KNN="$4"         # knn_graph name
-    local RESULT="$5"      # output CSV
-    local ENC="$6"
-    local SETTING="$7"
-    local SEED="$8"
+    local DS_TAG="$1" NODE="$2" EDGE="$3" KNN="$4" RESULT="$5"
+    local ENC="$6" SETTING="$7" SEED="$8"
 
     local FLAGS=""
     case "$SETTING" in
@@ -58,7 +84,6 @@ run_one() {
     esac
 
     local NAME="${DS_TAG}_${ENC}_${SETTING}_s${SEED}"
-
     echo "[$(date)] $NAME"
     python -u models/subgraph_cl.py \
         --model_name "$NAME" \
@@ -67,40 +92,36 @@ run_one() {
         --node_data_name "$NODE" --edge_data_name "$EDGE" \
         --skip_tsne \
         --metric_save_path "$RESULT" \
-        $HP --loss BarlowTwins \
-        $FLAGS 2>&1 | grep -E "^\(E\)" || true
+        $HP --loss BootstrapLatent \
+        $FLAGS 2>&1 | grep -E "^\((E|L)\)" || true
 }
 
 for DS in $DATASETS; do
     case "$DS" in
         hofinet)
             DS_TAG="hof"
-            NODE="hofinet/HOFINET_NODE_FEAT"
-            EDGE="hofinet/HOFINET_EDGES"
-            KNN="hofinet/HOFINET_KNN_BEHAV_k10"
-            RESULT="./results/exp_results_hofinet_ab.csv"
+            NODE="HOFINET_NODE_FEAT"
+            EDGE="HOFINET_EDGES"
+            KNN="HOFINET_KNN_BEHAV_k10"
             ;;
         amlworld)
             DS_TAG="aml"
             NODE="amlworld/AMLWORLD_NODE_FEAT"
             EDGE="amlworld/AMLWORLD_EDGES"
             KNN="amlworld/AMLWORLD_KNN_BEHAV_k10"
-            RESULT="./results/exp_results_amlworld.csv"
             ;;
         amlnet)
             DS_TAG="amlnet"
             NODE="amlnet/AMLNET_NODE_FEAT"
             EDGE="amlnet/AMLNET_EDGES"
             KNN="amlnet/AMLNET_KNN_BEHAV_k10"
-            RESULT="./results/exp_results_amlnet.csv"
             ;;
-        *)
-            echo "unknown dataset: $DS"; exit 1
-            ;;
+        *) echo "unknown dataset: $DS"; exit 1 ;;
     esac
 
+    RESULT="${OUTPUT_DIR}/.tmp_${DS}_${TAG}.csv"
     echo ""
-    echo "[$(date)] === Dataset: $DS → $RESULT ==="
+    echo "[$(date)] === Dataset: $DS -> $RESULT ==="
 
     for ENC in $ENCODERS; do
         echo ""
@@ -115,4 +136,4 @@ for DS in $DATASETS; do
 done
 
 echo ""
-echo "[$(date)] === Sweep complete ==="
+echo "[$(date)] === sweep complete (TAG=$TAG) ==="
