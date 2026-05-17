@@ -111,12 +111,12 @@ Our framing departs from prior k-NN auxiliary views (e.g., MLGCL) in two ways. F
 On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:5.7 to 1:1.4; AMLworld~\cite{amlpatterns2024realistic} and AMLNet exhibit the same pattern. Our contributions are summarized below.
 
 \begin{itemize}
-    \item \textbf{Topology repair via behavioral homophily recovery.} We build a topology-independent recovered neighborhood graph from behavioral features alone. The repair is characterized empirically (homophily, S-S:S-B ratio) and theoretically via a DCSBM-based bound (Appendix~\ref{app:theory}).
+    \item \textbf{Topology repair via behavioral homophily recovery.} We build a topology-independent recovered neighborhood graph. The repair is characterized empirically (homophily, S-S:S-B ratio) and theoretically via a DCSBM-based bound (Appendix~\ref{app:theory}).
 
     % --- Deprecated contribution bullet (single 1% snapshot) ---
     % \item \textbf{From recovered homophily to usable representations under label delay.} \method acquires representations that remain competitive on three AML datasets with BYOL-style self-supervision, even in a cold-start scenario with under 1\% labeled data ($F1_{\text{susp}}{=}0.654$).
     % --- End deprecated ---
-    \item \textbf{Label-efficiency analysis.} We characterize \method against supervised tabular and GNN baselines at 1\%, 5\%, and 10\% labels on three AML datasets. This addresses the cold-start regime AML production faces under multi-month label delays.
+    \item \textbf{Self-supervised representations under label scarcity.} \method's frozen representations remain competitive with supervised tabular and GNN baselines in the cold-start regime, addressing the multi-month label delays typical of AML.
 
     \item \textbf{Signal preservation under aggregation.} A sign-flip threshold characterizes when pooling on the repaired topology preserves versus dilutes the suspicious signal; we validate the predicted regime empirically.
 \end{itemize}
