@@ -65,8 +65,8 @@ def parse_csv(path, ds_prefix):
 
 ds_data = {
     'HOFINET':  parse_csv('results/rq1/main_sweep.csv', 'hof'),
-    'AMLworld': parse_csv('results/exp_results_amlworld.csv', 'aml'),
-    'AMLNet':   parse_csv('results/exp_results_amlnet.csv', 'amlnet'),
+    'AMLworld': parse_csv('results/rq4/amlworld_main_sweep.csv', 'aml'),
+    'AMLNet':   parse_csv('results/rq4/amlnet_main_sweep.csv', 'amlnet'),
 }
 
 # ============ Plot ============

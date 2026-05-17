@@ -3,9 +3,9 @@ Generate the case-study Figure 1 (sampled subgraph for topology repair) and
 the aggregate S-ratio shift histogram for the paper.
 
 Inputs (from analysis/case_study_topology_repair.py):
-  results/case_study/representative.json
-  results/case_study/distributions.csv
-  results/case_study/aggregate_stats.json
+  results/rq1/case_study/representative.json
+  results/rq1/case_study/distributions.csv
+  results/rq1/case_study/aggregate_stats.json
 
 Outputs:
   _paper/figures/fig_intro_topology_repair.pdf      (Figure 1, replaces fig_intro_homophily.pdf)
