@@ -248,6 +248,8 @@ On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:
 
 \section{Related Work}\label{sec:related_work}
 % Korean drafts below are kept inside \iffalse blocks for reference and are not compiled.
+We review three threads of prior work that intersect with \method: heterophily-aware GNNs, graph contrastive learning with auxiliary views, and fraud or anomaly detection under label scarcity.
+
 \subsection{Heterophily-aware GNNs}
 A line of work improves message passing when label homophily is low by separating ego and neighbor embeddings, modifying propagation, or decoupling structure from attributes (e.g., H2GCN~\cite{zhu2020beyond}, Geom-GCN~\cite{pei2020geom}, LINKX~\cite{zhu2021linkx}). These models still operate on the observed transaction topology; in AML, suspicious accounts intentionally mix with benign counterparties, which can make suspicious--suspicious edges structurally scarce. \method complements heterophily-aware propagation by repairing the topology itself: it builds a class-relevant neighborhood structure from a topology-independent behavioral homophily recovery graph.
 
@@ -259,6 +261,8 @@ In AML and fraud detection, supervised GNNs can improve detection under class im
 
 \section{Method: \method}
 \label{sec:method}
+
+\method comprises a recovered neighborhood graph built from behavioral similarity, a dual-view GNN encoder with subgraph pooling, and BYOL-style contrastive training.
 
 \subsection{Problem Formulation}
 We model the transaction network as a directed graph $\mathcal{G}_{\text{trans}} = (\mathcal{V}, \mathcal{E}, \mathbf{X})$, where $\mathcal{V}$ is the set of accounts (nodes, $|\mathcal{V}|=N$), $\mathcal{E} \subseteq \mathcal{V} \times \mathcal{V}$ is the set of transfer transactions (edges), and $\mathbf{X} \in \mathbb{R}^{N \times F}$ is the node feature matrix. Each node $v_i$ has a suspicion label $y_i \in \{0, 1\}$, but we use a self-supervised setting that ignores labels during training. Our goal is to learn node representations $\mathbf{Z} \in \mathbb{R}^{N \times D}$ that identify suspicious accounts based purely on the graph structure and node features.
