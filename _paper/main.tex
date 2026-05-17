@@ -133,7 +133,7 @@ On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:
 % \noindent\textbf{One-sentence framing.} The core contribution is topology repair via a behavioral homophily recovery graph, applied before contrastive learning.
 \begin{figure*}[h]
 \centering
-\scalebox{0.75}{
+\scalebox{0.79}{
 \begin{tikzpicture}[
   scale=1.0, transform shape, >=Stealth,
   node distance=0.4cm and 0.6cm,
@@ -280,7 +280,7 @@ We group the node features available in a transaction network into behavioral, n
 
 The behavioral features capture transaction patterns via amount statistics, time-window frequencies, and transaction-type entropies (Table~\ref{tab:features}). Network-derived features (transaction counts and degrees) are input to the encoder but are excluded from the recovered-neighborhood construction, while structural features (centrality, hub/authority, topology) are used only for analysis and auxiliary comparison. We denote by $\mathbf{X}^{\text{enc}}$ the behavioral and network-derived features given to the GNN encoder, and by $\mathbf{X}^{\text{bhv}}$ the 20 behavioral features used to construct a behavioral homophily recovery graph. When suspicious accounts transact with benign ones to evade detection, the suspicious class exhibits low neighborhood homophily in the observed transaction topology. We counter this by recovering topology-independent behavioral homophily, linking accounts with similar behavior even if they are not directly connected by transactions.
 
-\begin{table}[t]
+\begin{table}[h]
 \centering
 \caption{Node feature taxonomy. Behavioral and network-derived features are used as GNN input, while recovered-neighborhood construction uses only 20 behavioral variables.}
 \label{tab:features}
@@ -292,9 +292,9 @@ The behavioral features capture transaction patterns via amount statistics, time
 \multicolumn{2}{l}{\textit{\textbf{Behavioral}}} & \textit{Total} - 20 & & \\
 \midrule
 \textbf{Amount stats}     & \makecell[l]{\text{in\_mean, in\_max, in\_std}\\\text{out\_mean, out\_max, out\_std}} & 6 & \checkmark & \checkmark \\
-\textbf{Temporal (3-month)}  & \makecell[l]{\text{in\_3m\_mean, in\_3m\_count}\\\text{out\_3m\_mean, out\_3m\_count}} & 4 & \checkmark & \checkmark \\
-\textbf{Temporal (6-month)}  & \makecell[l]{\text{in\_6m\_mean, in\_6m\_count}\\\text{out\_6m\_mean, out\_6m\_count}} & 4 & \checkmark & \checkmark \\
-\textbf{Temporal (12-month)} & \makecell[l]{\text{in\_12m\_mean, in\_12m\_count}\\\text{out\_12m\_mean, out\_12m\_count}} & 4 & \checkmark & \checkmark \\
+\textbf{Temporal (3min)}    & \makecell[l]{\text{in\_3m\_mean, in\_3m\_count}\\\text{out\_3m\_mean, out\_3m\_count}} & 4 & \checkmark & \checkmark \\
+\textbf{Temporal (6min)}    & \makecell[l]{\text{in\_6m\_mean, in\_6m\_count}\\\text{out\_6m\_mean, out\_6m\_count}} & 4 & \checkmark & \checkmark \\
+\textbf{Temporal (12min)}   & \makecell[l]{\text{in\_12m\_mean, in\_12m\_count}\\\text{out\_12m\_mean, out\_12m\_count}} & 4 & \checkmark & \checkmark \\
 \textbf{Entropy}          & \makecell[l]{\text{md\_type\_entropy, fnd\_type\_entropy}} & 2 & \checkmark & \checkmark \\
 \midrule
 \multicolumn{2}{l}{\textit{Network-derived}} & \textit{Total} - 4 & & \\
@@ -391,10 +391,11 @@ We assess \method in four phases, moving from mechanism to practical deployment.
 \end{itemize}
 
 \subsection{Experimental Setting}
+\textbf{Datasets.} We use three AML datasets (Table~\ref{tab:datasets}). \hofinet includes about 4.7M synthetic transactions derived from real activity on a national interbank settlement network, modeling 40 months of household and corporate transfers. AMLworld~\cite{amlpatterns2024realistic}, the NeurIPS 2023 open synthetic benchmark, models eight transaction patterns (e.g., fan-out, scatter-gather, cycle); we use the HI-Small variant (high illicit ratio, small size). AMLNet~\cite{huda2025amlnet}, a small synthetic benchmark for the high-prevalence regime, shares AMLworld’s feature schema.
 
-All experiments run on Python 3.12, PyTorch 2.10, CUDA 12.8, and NVIDIA H100 80GB GPUs.
+\textbf{Account-level labels.} All three datasets provide transaction-level suspicious labels. Following standard graph-based AML and fraud detection practices~\cite{dou2020enhancing,liu2021pick}, we max-aggregate to the account level: an account is suspicious (label$=1$) if it appears on either side of any suspicious transaction, and normal (label$=0$) otherwise. The resulting suspicious-account ratios are 2.13\% (\hofinet), 1.23\% (AMLworld), and 13.52\% (AMLNet) (Table~\ref{tab:datasets}).
 
-\begin{table}[t]
+\begin{table}[ht]
 \centering
 \caption{Dataset statistics. $\rho$ = suspicious account ratio.}
 \label{tab:datasets}
@@ -411,20 +412,23 @@ AMLNet            &  11{,}000 & 1{,}090{,}172 & 13.52\% & Synthetic (simulator) 
 \end{tabular}
 \end{table}
 
-\subsubsection{Datasets} We use three AML datasets (Table~\ref{tab:datasets}). \hofinet includes about 4.7M synthetic transactions derived from real activity on a national interbank settlement network, modeling 40 months of household and corporate transfers. AMLworld~\cite{amlpatterns2024realistic}, the NeurIPS 2023 open synthetic benchmark, models eight transaction patterns; we use the HI-Small variant. AMLNet~\cite{huda2025amlnet}, a small synthetic benchmark for the high-prevalence regime, shares AMLworld's feature schema. All three datasets provide transaction-level suspicious labels. Following standard practice~\cite{dou2020enhancing,liu2021pick}, we max-aggregate to the account level: an account is suspicious if it appears on either side of any suspicious transaction.
+\textbf{Ablation settings and encoders.} We evaluate four settings that cross topology branch and contrastive level: (a) transaction graph + node contrast, (b) recovered neighborhood graph + node contrast, (c) transaction graph + subgraph pooling, and (d) repaired topology + subgraph pooling. These settings are tested with nine encoders spanning per-layer BN (GBT, DGI+BN, MVGRL+BN, GRACE+BN, GIN), final-only BN (BGRL), and BN-less variants (DGI, MVGRL, GRACE). All encoders use the same BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) and hyperparameters (lr=5e-4, hidden=256, $L$=2, dropout=0.2, 200 epochs); Appendix~\ref{app:loss_table} verifies that this substitution does not penalize the baselines.
 
-\subsubsection{Models} \method is evaluated under four ablation settings that cross topology branch and contrastive level: (a) transaction graph + node contrast, (b) recovered neighborhood graph + node contrast, (c) transaction graph + subgraph pooling, and (d) repaired topology + subgraph pooling. We test nine encoders covering per-layer BN (GBT, DGI+BN, MVGRL+BN, GRACE+BN, GIN), final-only BN (BGRL), and BN-less variants (DGI, MVGRL, GRACE). All encoders share the same BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) and hyperparameters (lr=5e-4, hidden=256, $L$=2, dropout=0.2, 200 epochs); Appendix~\ref{app:loss_table} verifies that this substitution does not penalize the baselines. For the label-efficiency comparison (Section~\ref{subsec:rq3}), we add six supervised baselines from three families: tabular (MLP, XGBoost~\cite{xgboost2016}, LightGBM~\cite{lightgbm2017}), generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}), and fraud-specific GNN (CARE-GNN~\cite{dou2020enhancing}). MLP follows the standard fraud-GNN convention (stacked Linear$+$ReLU, no BatchNorm). All supervised baselines use class-weight correction and share the same 22 behavioral features as \method's encoder input.
+% --- Deprecated baseline list (11 models for Table 6 single-snapshot comparison) ---
+% \textbf{Supervised baselines.} We apply class-weight correction to 11 supervised models: generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}, GraphSAGE~\cite{hamilton2017inductive}), tabular methods (MLP, LightGBM~\cite{lightgbm2017}, XGBoost~\cite{xgboost2016}), and fraud- and anomaly-specific GNNs (CARE-GNN~\cite{dou2020enhancing}, PC-GNN~\cite{liu2021pick}, BWGNN~\cite{tang2022rethinking}, GAGA~\cite{wang2023label}, ConsisGAD~\cite{chen2024consisgad}). Since our datasets are homogeneous single-relation graphs of account-to-account transfers, we evaluate the single-relation versions of the fraud-specific GNN baselines (see Section~\ref{subsec:rq3}).
+% --- End deprecated ---
+\textbf{Supervised baselines.} For the label-efficiency comparison (Section~\ref{subsec:rq3}), we evaluate six supervised baselines spanning three families: tabular (MLP, XGBoost~\cite{xgboost2016}, LightGBM~\cite{lightgbm2017}), generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}), and fraud-specific GNN (CARE-GNN~\cite{dou2020enhancing}). MLP follows the standard convention common in fraud-GNN literature (stacked Linear$+$ReLU; no BatchNorm). All baselines use class-weight correction and share the same 22 behavioral features as \method's encoder input.
 
-\subsubsection{Evaluation metrics} We evaluate self-supervised models by freezing the encoder and training Logistic Regression~\cite{pedregosa2011scikit} on embeddings $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$. The primary metric is suspicious-class F1 ($F1_{\text{susp}}$); AUROC and AUPRC are secondary. We use a 10\%, 10\%, 80\% split for train, validation, and test, fixed per seed for paired comparisons. We report mean$\pm$std over four seeds; statistical significance uses a 4-seed paired $t$-test with Holm--Bonferroni correction. Seed-level raw results and reproduction scripts are available at an anonymized link.
+\textbf{Evaluation protocol.} The primary metric is suspicious-class F1 ($F1_{\text{susp}}$); AUROC and AUPRC are secondary. We use a 10\%/10\%/80\% train/val/test split (encoders are trained self-supervised; labels only train the Logistic Regression head; therefore, 10\% of labeled data suffices). For paired comparisons, the split is fixed per seed. We report mean$\pm$std over four seeds (2024--2027). Statistical significance uses a 4-seed paired $t$-test with Holm--Bonferroni correction; seed-level raw results and reproduction scripts are also available at this anonymized link.
 
-
+\textbf{Evaluation environment.} We evaluate self-supervised models by freezing the encoder and training Logistic Regression~\cite{pedregosa2011scikit} on embeddings $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$. All experiments use Python 3.12, PyTorch 2.10, CUDA 12.8, and NVIDIA H100 80GB GPUs.
 
 \subsection{Homophily Recovery (RQ1)}\label{subsec:rq1}
 RQ1 tests whether the topology-independent recovered neighborhood graph repairs the suspicious-class topology relative to the transaction graph.
 
 \textbf{Quantitative gains across all 9 encoders.} Replacing the transaction topology with the recovered neighborhood graph consistently outperforms the baseline across all nine encoders (Table~\ref{tab:rq1}), with gains of +84\% to +205\% for the six encoders with BN and +23\% to +28\% for the three without BN. For the six BN-equipped encoders, a four-seed paired $t$-test remains significant after Holm--Bonferroni correction (adjusted $p < 4 \times 10^{-5}$).
 
-\begin{table}[t]
+\begin{table}[h]
 \centering
 \caption{$F1_{\text{susp}}$ on \hofinet for nine encoders across the four topology-by-level ablation settings (4-seed mean$\pm$std). \textit{Paired BN}: three GCN encoder families (DGI, MVGRL, GRACE) with and without per-layer BN. \textit{Native BN}: reference encoders (GBT, BGRL, GIN). The \textbf{Native loss} column lists each encoder's loss in its original paper; every encoder here is trained with the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to isolate the topology-repair effect. Appendix~\ref{app:loss_table} verifies the substitution does not penalize the baselines. Best per row in \textbf{bold}, second-best \underline{underlined}.}
 \label{tab:rq1}
@@ -451,7 +455,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 \end{tabular}}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[h]
 \centering
 \caption{S-S:S-B edge ratio and homophily by graph type across the three AML datasets. Best per dataset in bold, second-best underlined (higher homophily and a smaller S-B multiplier in 1:$x$ are better). The behavioral homophily recovery graph repairs the suspicious-class topology, while the structural-feature recovery ablation (\hofinet only) does not.}
 \label{tab:ss_sb}
@@ -481,9 +485,9 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \textbf{From the case study to Table~\ref{tab:rq1}.} For the Figure~\ref{fig:intro_topology_repair} account, the encoder's aggregation neighborhood is $3.8\%$ suspicious in (a), $7.4\%$ in (c), $90.0\%$ in (b), and $90.9\%$ in (d). The $\le 7.4\%$ signals in (a)/(c) push the account into the benign region (false negative, contributing to the GBT scores $0.266$ and $0.197$), while the $\ge 90\%$ signals in (b)/(d) classify it correctly ($0.671$ and $0.673$); pooling (c$\to$d) sharpens this gap because the suspicious ego reinforces a suspicious-peer cluster but not a benign-dominated star. The single-account flip generalizes: across all $9{,}644$ suspicious accounts (Figure~\ref{fig:rq1_shift_hist}), $47.7\%\to 71.6\%$ have a majority-suspicious 1-hop ego after repair, and $66.1\%$ of the $5{,}044$ majority-benign-ego accounts flip to majority-S. Four further checks rule out a \hofinet-specific cause: (i) feature-specific: structural-feature k-NN worsens the ratio to 1:9.7 (Table~\ref{tab:ss_sb}); (ii) encoder-agnostic: all 10 encoders show the same direction of (a)$\to$(b) gain; (iii) cross-dataset: AMLworld and AMLNet replicate the gain (Tables~\ref{tab:ss_sb},~\ref{tab:rq4}); (iv) theoretically aligned: the measured homophily gap lies within $0.019$ of the Theorem~\ref{thm:combined} bound.
 
-\begin{figure}[t]
+\begin{figure}[h]
     \centering
-    \includegraphics[width=0.85\columnwidth]{figures/fig_rq1_shift_hist.pdf}
+    \includegraphics[width=0.7\columnwidth]{figures/fig_rq1_shift_hist.pdf}
 \caption{Population-level S-ratio shift across all 9{,}644 suspicious \hofinet accounts. Topology repair shifts the bimodal transaction-graph distribution (gray) past the majority-suspicious threshold (dashed): $47.7\%\to 71.6\%$ majority-S 1-hop egos.}
 \label{fig:rq1_shift_hist}
 \end{figure}
@@ -496,7 +500,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 \label{subsec:rq2}
 RQ1 verified topology repair in the recovered neighborhood graph; RQ2 asks when aggregation (subgraph pooling) helps versus hurts, and how the repaired topology changes this trade-off. Pooling is not uniformly beneficial on the raw transaction graph; however, on the repaired topology, it can amplify suspicious evidence, with the clearest gains under suspicious-class-oriented downstream scoring.
 
-\begin{figure}[t]
+\begin{figure}[h]
     \centering
     \includegraphics[width=0.7\columnwidth]{figures/fig_rq2_ablation.pdf}
 \caption{$F1_{\text{susp}}$ over four ablation settings of the two design axes (topology branch $\times$ contrastive level) on \hofinet, averaged over 4 per-layer BN encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN). Settings: (a) transaction topology+node, (b) recovered neighborhood+node, (c) transaction topology+pool, (d) repaired topology+pool (proposed).}
@@ -696,54 +700,54 @@ CARE-GNN & 0.117{\scriptsize±.012} & 0.110{\scriptsize±.007} & 0.108{\scriptsi
 \end{table*}
 
 
-% \section{Loss Substitution: Native vs.\ Unified BYOL Bootstrap}
-% \label{app:loss_table}
+\section{Loss Substitution: Native vs.\ Unified BYOL Bootstrap}
+\label{app:loss_table}
 
-% Every encoder in Tables~\ref{tab:rq1} and \ref{tab:rq4} uses the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to isolate the topology-by-level factor from the loss formulation. Table~\ref{tab:loss_table} verifies the substitution on \hofinet, setting (d), 4 seeds. BN-equipped baselines under their paper-native losses match the BYOL bootstrap result within $\pm 0.001$. Bare DGI, MVGRL, and GRACE collapse under both their native JSD/InfoNCE and BYOL bootstrap, indicating that the collapse pathology of Theorem~\ref{thm:bn_collapse} is BN-conditional rather than loss-specific.
+Every encoder in Tables~\ref{tab:rq1} and \ref{tab:rq4} uses the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to isolate the topology-by-level factor from the loss formulation. Table~\ref{tab:loss_table} verifies the substitution on \hofinet, setting (d), 4 seeds. BN-equipped baselines under their paper-native losses match the BYOL bootstrap result within $\pm 0.001$. Bare DGI, MVGRL, and GRACE collapse under both their native JSD/InfoNCE and BYOL bootstrap, indicating that the collapse pathology of Theorem~\ref{thm:bn_collapse} is BN-conditional rather than loss-specific.
 
-% \begin{table*}[h]
-% \centering
-% \caption{Loss substitution check on \hofinet, setting (d), 4-seed mean$\pm$std. \textbf{BYOL}: unified BYOL bootstrap loss; values are independent re-runs under the current code, paired with the Native column to remove run-to-run drift. \textbf{Native}: each encoder trained with its paper-native loss on the same (d) framework. $\Delta = \text{Native} - \text{BYOL}$. GIN's original paper uses supervised cross-entropy and has no contrastive native loss, so the Native column is omitted.}
-% \label{tab:loss_table}
-% \resizebox{\columnwidth}{!}{%
-% \begin{tabular}{llcccc}
-% \toprule
-% \textbf{Encoder} & \textbf{Native loss} & \textbf{BN} & \textbf{BYOL} $F1_{\text{susp}}$ & \textbf{Native} $F1_{\text{susp}}$ & $\Delta$ \\
-% \midrule
-% DGI~\cite{velivckovic2018deep}         & JSD BCE                & \xmark & 0.066{\scriptsize±.008} & 0.074{\scriptsize±.010} & $+0.008$ \\
-% DGI+BN~\cite{velivckovic2018deep}      & JSD BCE                & \cmark & 0.667{\scriptsize±.002} & 0.668{\scriptsize±.002} & $+0.001$ \\
-% MVGRL~\cite{hassani2020contrastive}    & JSD multi-view         & \xmark & 0.065{\scriptsize±.005} & 0.074{\scriptsize±.004} & $+0.009$ \\
-% MVGRL+BN~\cite{hassani2020contrastive} & JSD multi-view         & \cmark & 0.667{\scriptsize±.001} & 0.668{\scriptsize±.001} & $+0.001$ \\
-% GRACE~\cite{zhu2020deep}               & InfoNCE NT-Xent        & \xmark & 0.066{\scriptsize±.008} & 0.071{\scriptsize±.010} & $+0.005$ \\
-% GRACE+BN~\cite{zhu2020deep}            & InfoNCE NT-Xent        & \cmark & 0.670{\scriptsize±.003} & 0.670{\scriptsize±.002} & $\phantom{+}0.000$ \\
-% GBT~\cite{bielak2022graph}             & Barlow Twins           & \cmark & 0.667{\scriptsize±.002} & 0.667{\scriptsize±.003} & $\phantom{+}0.000$ \\
-% BGRL~\cite{thakoor2021large}           & BYOL bootstrap (same)  & \cmark & 0.628{\scriptsize±.001} & 0.627{\scriptsize±.003} & $-0.001$ \\
-% GIN~\cite{xu2018powerful}              & supervised CE          & \cmark & 0.585{\scriptsize±.027} & ---                     & ---      \\
-% \bottomrule
-% \end{tabular}}
-% \end{table*}
+\begin{table*}[h]
+\centering
+\caption{Loss substitution check on \hofinet, setting (d), 4-seed mean$\pm$std. \textbf{BYOL}: unified BYOL bootstrap loss; values are independent re-runs under the current code, paired with the Native column to remove run-to-run drift. \textbf{Native}: each encoder trained with its paper-native loss on the same (d) framework. $\Delta = \text{Native} - \text{BYOL}$. GIN's original paper uses supervised cross-entropy and has no contrastive native loss, so the Native column is omitted.}
+\label{tab:loss_table}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Encoder} & \textbf{Native loss} & \textbf{BN} & \textbf{BYOL} $F1_{\text{susp}}$ & \textbf{Native} $F1_{\text{susp}}$ & $\Delta$ \\
+\midrule
+DGI~\cite{velivckovic2018deep}         & JSD BCE                & \xmark & 0.066{\scriptsize±.008} & 0.074{\scriptsize±.010} & $+0.008$ \\
+DGI+BN~\cite{velivckovic2018deep}      & JSD BCE                & \cmark & 0.667{\scriptsize±.002} & 0.668{\scriptsize±.002} & $+0.001$ \\
+MVGRL~\cite{hassani2020contrastive}    & JSD multi-view         & \xmark & 0.065{\scriptsize±.005} & 0.074{\scriptsize±.004} & $+0.009$ \\
+MVGRL+BN~\cite{hassani2020contrastive} & JSD multi-view         & \cmark & 0.667{\scriptsize±.001} & 0.668{\scriptsize±.001} & $+0.001$ \\
+GRACE~\cite{zhu2020deep}               & InfoNCE NT-Xent        & \xmark & 0.066{\scriptsize±.008} & 0.071{\scriptsize±.010} & $+0.005$ \\
+GRACE+BN~\cite{zhu2020deep}            & InfoNCE NT-Xent        & \cmark & 0.670{\scriptsize±.003} & 0.670{\scriptsize±.002} & $\phantom{+}0.000$ \\
+GBT~\cite{bielak2022graph}             & Barlow Twins           & \cmark & 0.667{\scriptsize±.002} & 0.667{\scriptsize±.003} & $\phantom{+}0.000$ \\
+BGRL~\cite{thakoor2021large}           & BYOL bootstrap (same)  & \cmark & 0.628{\scriptsize±.001} & 0.627{\scriptsize±.003} & $-0.001$ \\
+GIN~\cite{xu2018powerful}              & supervised CE          & \cmark & 0.585{\scriptsize±.027} & ---                     & ---      \\
+\bottomrule
+\end{tabular}}
+\end{table*}
 
-% \textbf{BEHAViEW loss robustness.} On setting (d) with the GBT encoder, the four contrastive losses yield $F1_{\text{susp}}=0.667, 0.667, 0.668, 0.668$ (BootstrapLatent, BarlowTwins, InfoNCE, JSD; 4 seeds), confirming that the (d) framework, not the loss formulation, drives BEHAViEW's performance.
+\textbf{BEHAViEW loss robustness.} On setting (d) with the GBT encoder, the four contrastive losses yield $F1_{\text{susp}}=0.667, 0.667, 0.668, 0.668$ (BootstrapLatent, BarlowTwins, InfoNCE, JSD; 4 seeds), confirming that the (d) framework, not the loss formulation, drives BEHAViEW's performance.
 
-% \textbf{Low loss at setting (a) is structural, not BYOL-specific.} Setting (a)'s two branches are stochastic perturbations of the same transaction graph, so an encoder can drive the loss down by learning a near-identity mapping that aligns near-identical inputs. Theorem~\ref{thm:bn_collapse} rules out the strictly constant solution that BN-less encoders fall into, but it does not prevent low-information solutions when the two branches are too similar to require discriminative encoding. Table~\ref{tab:loss_ab_check} shows that this account is loss-agnostic: on DGI+BN, all four contrastive losses produce a substantially lower final loss at (a) than at (b), while $F1_{\text{susp}}$ stays low at (a) ($\approx 0.26$) and recovers at (b) ($\approx 0.66$). The gap between (a) and (b) is therefore not a matter of training convergence quality but of what the encoder is forced to encode to drive the loss down.
+\textbf{Low loss at setting (a) is structural, not BYOL-specific.} Setting (a)'s two branches are stochastic perturbations of the same transaction graph, so an encoder can drive the loss down by learning a near-identity mapping that aligns near-identical inputs. Theorem~\ref{thm:bn_collapse} rules out the strictly constant solution that BN-less encoders fall into, but it does not prevent low-information solutions when the two branches are too similar to require discriminative encoding. Table~\ref{tab:loss_ab_check} shows that this account is loss-agnostic: on DGI+BN, all four contrastive losses produce a substantially lower final loss at (a) than at (b), while $F1_{\text{susp}}$ stays low at (a) ($\approx 0.26$) and recovers at (b) ($\approx 0.66$). The gap between (a) and (b) is therefore not a matter of training convergence quality but of what the encoder is forced to encode to drive the loss down.
 
-% \begin{table}[h]
-% \centering
-% \caption{DGI+BN on \hofinet across four contrastive losses, 4-seed mean. Setting (a): two perturbations of the transaction graph. Setting (b): transaction branch vs.\ recovered-neighborhood branch. Lower final loss at (a) with low $F1_{\text{susp}}$ indicates near-identity alignment, not Theorem~\ref{thm:bn_collapse}'s constant-solution pathology.}
-% \label{tab:loss_ab_check}
-% \begin{tabular}{lcccc}
-% \toprule
-% \textbf{Loss} & \textbf{(a) $\mathcal{L}_{\text{final}}$} & \textbf{(a) $F1_{\text{susp}}$} & \textbf{(b) $\mathcal{L}_{\text{final}}$} & \textbf{(b) $F1_{\text{susp}}$} \\
-% \midrule
-% BootstrapLatent & $\phantom{-}0.05$  & 0.266 & $\phantom{-1}0.45$ & 0.664 \\
-% Barlow Twins    & $\phantom{-}2.86$  & 0.270 & $\phantom{-}11.89$ & 0.664 \\
-% InfoNCE         & $\phantom{-}6.74$  & 0.263 & $\phantom{-1}7.55$ & 0.664 \\
-% JSD             & $-0.43$            & 0.255 & $\phantom{-1}{-0.20}$ & 0.666 \\
-% \bottomrule
-% \end{tabular}
-% \end{table}
+\begin{table}[h]
+\centering
+\caption{DGI+BN on \hofinet across four contrastive losses, 4-seed mean. Setting (a): two perturbations of the transaction graph. Setting (b): transaction branch vs.\ recovered-neighborhood branch. Lower final loss at (a) with low $F1_{\text{susp}}$ indicates near-identity alignment, not Theorem~\ref{thm:bn_collapse}'s constant-solution pathology.}
+\label{tab:loss_ab_check}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Loss} & \textbf{(a) $\mathcal{L}_{\text{final}}$} & \textbf{(a) $F1_{\text{susp}}$} & \textbf{(b) $\mathcal{L}_{\text{final}}$} & \textbf{(b) $F1_{\text{susp}}$} \\
+\midrule
+BootstrapLatent & $\phantom{-}0.05$  & 0.266 & $\phantom{-1}0.45$ & 0.664 \\
+Barlow Twins    & $\phantom{-}2.86$  & 0.270 & $\phantom{-}11.89$ & 0.664 \\
+InfoNCE         & $\phantom{-}6.74$  & 0.263 & $\phantom{-1}7.55$ & 0.664 \\
+JSD             & $-0.43$            & 0.255 & $\phantom{-1}{-0.20}$ & 0.666 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-% \textbf{Cross-dataset consistency.} The substitution holds beyond \hofinet. On AMLworld ($\rho{=}1.23\%$), the three BN-equipped baselines under native losses reach $F1_{\text{susp}}=0.048$ (DGI+BN, JSD), $0.049$ (MVGRL+BN, JSD), and $0.054$ (GRACE+BN, InfoNCE); on AMLNet ($\rho{=}13.52\%$), they reach $0.678, 0.678, 0.674$ respectively. These match the BYOL bootstrap results in Table~\ref{tab:rq4} for the same encoders within $\pm 0.005$, confirming that the loss substitution does not penalize baselines on either the low- or high-prevalence regime.
+\textbf{Cross-dataset consistency.} The substitution holds beyond \hofinet. On AMLworld ($\rho{=}1.23\%$), the three BN-equipped baselines under native losses reach $F1_{\text{susp}}=0.048$ (DGI+BN, JSD), $0.049$ (MVGRL+BN, JSD), and $0.054$ (GRACE+BN, InfoNCE); on AMLNet ($\rho{=}13.52\%$), they reach $0.678, 0.678, 0.674$ respectively. These match the BYOL bootstrap results in Table~\ref{tab:rq4} for the same encoders within $\pm 0.005$, confirming that the loss substitution does not penalize baselines on either the low- or high-prevalence regime.
 
 
 \section{Theory: Proofs and Empirical Checks}
