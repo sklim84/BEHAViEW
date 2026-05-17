@@ -25,9 +25,13 @@ import numpy as np
 import pandas as pd
 
 
-BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CS_DIR = os.path.join(BASE, 'results', 'case_study')
-OUT_DIR = os.path.join(BASE, '_paper', 'figures')
+OUT_DIRS = [
+    os.path.join(BASE, '_paper', 'figures'),
+    os.path.join(BASE, 'results', 'rq1', 'figures'),
+]
+OUT_DIR = OUT_DIRS[0]  # primary (paper) output; loop savefig over OUT_DIRS to mirror
 
 # Colorblind-safe palette (matches existing intro variants).
 C_SUSP = '#D64045'   # muted red
@@ -143,11 +147,13 @@ def fig1_topology_repair(rep, dpi=300):
                frameon=False, bbox_to_anchor=(0.5, -0.005))
     fig.subplots_adjust(left=0.02, right=0.98, top=0.95, bottom=0.13, wspace=0.05)
 
-    pdf = os.path.join(OUT_DIR, 'fig_intro_topology_repair.pdf')
-    fig.savefig(pdf, bbox_inches='tight', dpi=dpi)
-    fig.savefig(pdf.replace('.pdf', '.png'), bbox_inches='tight', dpi=dpi)
+    for out_dir in OUT_DIRS:
+        os.makedirs(out_dir, exist_ok=True)
+        pdf = os.path.join(out_dir, 'fig_intro_topology_repair.pdf')
+        fig.savefig(pdf, bbox_inches='tight', dpi=dpi)
+        fig.savefig(pdf.replace('.pdf', '.png'), bbox_inches='tight', dpi=dpi)
+        print(f'  Saved {pdf}')
     plt.close(fig)
-    print(f'  Saved {pdf}')
 
 
 def fig_rq1_shift_hist(dist, stats, dpi=300):
@@ -174,11 +180,13 @@ def fig_rq1_shift_hist(dist, stats, dpi=300):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     fig.tight_layout()
-    pdf = os.path.join(OUT_DIR, 'fig_rq1_shift_hist.pdf')
-    fig.savefig(pdf, bbox_inches='tight', dpi=dpi)
-    fig.savefig(pdf.replace('.pdf', '.png'), bbox_inches='tight', dpi=dpi)
+    for out_dir in OUT_DIRS:
+        os.makedirs(out_dir, exist_ok=True)
+        pdf = os.path.join(out_dir, 'fig_rq1_shift_hist.pdf')
+        fig.savefig(pdf, bbox_inches='tight', dpi=dpi)
+        fig.savefig(pdf.replace('.pdf', '.png'), bbox_inches='tight', dpi=dpi)
+        print(f'  Saved {pdf}')
     plt.close(fig)
-    print(f'  Saved {pdf}')
 
 
 def main():

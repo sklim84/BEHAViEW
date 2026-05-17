@@ -17,9 +17,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RESULTS = os.path.join(ROOT, 'results')
-FIG_OUT = os.path.join(ROOT, '_paper', 'figures', 'fig_rq3_labeff.pdf')
+FIG_OUTS = [
+    os.path.join(ROOT, '_paper', 'figures', 'fig_rq3_labeff.pdf'),
+    os.path.join(ROOT, 'results', 'rq3', 'figures', 'fig_rq3_labeff.pdf'),
+]
 
 
 def load_behaview(ds):
@@ -107,13 +110,11 @@ def main():
                bbox_to_anchor=(0.5, -0.07), frameon=False, columnspacing=1.2)
 
     plt.subplots_adjust(left=0.06, right=0.99, top=0.88, bottom=0.20, wspace=0.22)
-    os.makedirs(os.path.dirname(FIG_OUT), exist_ok=True)
-    fig.savefig(FIG_OUT, bbox_inches='tight', dpi=300)
-    # Also write a 300-DPI PNG sibling for slides / quick preview
-    png_out = FIG_OUT.replace('.pdf', '.png')
-    fig.savefig(png_out, bbox_inches='tight', dpi=300)
-    print(f'Saved: {FIG_OUT}')
-    print(f'Saved: {png_out}')
+    for path in FIG_OUTS:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        fig.savefig(path, bbox_inches='tight', dpi=300)
+        fig.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
+        print(f'Saved: {path}')
 
 
 if __name__ == '__main__':

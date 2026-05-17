@@ -9,8 +9,23 @@ import matplotlib.patches as mpatches
 import numpy as np
 import os
 
-OUT_DIR = '_paper/figures'
-os.makedirs(OUT_DIR, exist_ok=True)
+OUT_DIRS = ['_paper/figures', 'results/rq2/figures']
+for _d in OUT_DIRS:
+    os.makedirs(_d, exist_ok=True)
+OUT_DIR = OUT_DIRS[0]   # primary path (paper); loop OUT_DIRS to mirror on save
+
+def _save_all(path, **kw):
+    """Save the current figure to OUT_DIRS mirroring `path`'s basename."""
+    import shutil
+    plt.savefig(path, **kw)
+    base = os.path.basename(path)
+    for d in OUT_DIRS[1:]:
+        os.makedirs(d, exist_ok=True)
+        mirror = os.path.join(d, base)
+        shutil.copy(path, mirror)
+        png = path.replace('.pdf', '.png')
+        if os.path.exists(png) and path != png:
+            shutil.copy(png, mirror.replace('.pdf', '.png'))
 
 plt.rcParams.update({
     'font.size': 12,
@@ -85,6 +100,7 @@ def fig2_ablation_matrix():
     path = os.path.join(OUT_DIR, 'fig_rq2_ablation.pdf')
     plt.savefig(path, bbox_inches='tight', dpi=300)
     plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
+    import shutil; shutil.copy(path, os.path.join('results/rq2/figures', os.path.basename(path))); shutil.copy(path.replace('.pdf', '.png'), os.path.join('results/rq2/figures', os.path.basename(path).replace('.pdf', '.png')))
     plt.close()
     print(f'Saved: {path}')
 
@@ -210,6 +226,7 @@ def fig4_bn_effect():
     path_a = os.path.join(OUT_DIR, 'fig_rq3_bn_a.pdf')
     plt.savefig(path_a, bbox_inches='tight', dpi=300)
     plt.savefig(path_a.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
+    import shutil; shutil.copy(path_a, os.path.join('results/rq2/figures', os.path.basename(path_a))); shutil.copy(path_a.replace('.pdf', '.png'), os.path.join('results/rq2/figures', os.path.basename(path_a).replace('.pdf', '.png')))
     plt.close()
     print(f'Saved: {path_a}')
 
@@ -221,6 +238,7 @@ def fig4_bn_effect():
     path_b = os.path.join(OUT_DIR, 'fig_rq3_bn_b.pdf')
     plt.savefig(path_b, bbox_inches='tight', dpi=300)
     plt.savefig(path_b.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
+    import shutil; shutil.copy(path_b, os.path.join('results/rq2/figures', os.path.basename(path_b))); shutil.copy(path_b.replace('.pdf', '.png'), os.path.join('results/rq2/figures', os.path.basename(path_b).replace('.pdf', '.png')))
     plt.close()
     print(f'Saved: {path_b}')
 
@@ -689,6 +707,7 @@ def fig_rq3_baseline():
     path = os.path.join(OUT_DIR, 'fig_rq3_baseline.pdf')
     plt.savefig(path, bbox_inches='tight', dpi=300)
     plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
+    import shutil; shutil.copy(path, os.path.join('results/rq2/figures', os.path.basename(path))); shutil.copy(path.replace('.pdf', '.png'), os.path.join('results/rq2/figures', os.path.basename(path).replace('.pdf', '.png')))
     plt.close()
     print(f'Saved: {path}')
 
