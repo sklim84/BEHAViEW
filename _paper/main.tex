@@ -347,7 +347,7 @@ Dual-view contrastive learning aligns a transaction view, which captures transfe
     \left(\mathbf{h}_i^{(t)} + \sum_{v_j \in \mathcal{N}^{(t)}(v_i)} \mathbf{h}_j^{(t)}\right)
 \end{equation}
 
-Here $\mathcal{N}^{(1)}(v_i)$ is the neighborhood of $v_i$ in the transaction view, and $\mathcal{N}^{(2)}(v_i)$ is its neighborhood in the behavioral view. For both views, we perform message passing and pooling on a bidirected graph; hence, $\mathcal{N}^{(t)}(v_i)$ can be interpreted as the union of in- and out-neighbors. The operation is implemented efficiently with \texttt{scatter\_add}. The mean pooling in Eq.~\eqref{eq:subgraph_pool} is the default in \method.
+Here $\mathcal{N}^{(1)}(v_i)$ is the neighborhood of $v_i$ in the transaction view, and $\mathcal{N}^{(2)}(v_i)$ is its neighborhood in the behavioral view. For both views, we perform message passing and pooling on a bidirected graph; hence, $\mathcal{N}^{(t)}(v_i)$ can be interpreted as the union of in- and out-neighbors. The mean pooling in Eq.~\eqref{eq:subgraph_pool} is the default in \method.
 
 \textbf{View-wise pooling effect.} Subgraph pooling is conducted independently for each view’s neighborhood: transaction-graph neighbors are pooled for the transaction view, while behaviorally similar neighbors are pooled for the behavioral view. Because pooling aggregates neighbor information, the choice of view shapes the outcome. The behavioral view graph is designed to place behaviorally similar suspicious accounts closer together; therefore, pooling on this view can preserve or strengthen suspicious signals. In the transaction graph, suspicious accounts are often linked to benign ones (high S-B ratio); consequently, pooling can dilute suspicious signals with benign information.
 
