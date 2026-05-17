@@ -476,7 +476,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \textbf{Topology repair via behavioral similarity.} The transaction graph's S-S:S-B ratio of 1:5.7 (Table~\ref{tab:ss_sb}) improves to 1:1.4 under the recovered neighborhood graph (Figure~\ref{fig:intro_topology_repair}), and edge homophily $h$ (the fraction of edges whose endpoints share the same label) increases from 0.690 to 0.981. Because money-laundering accounts share transaction patterns such as split transfers and multi-hop routing, behavioral similarity tends to reconnect them in the recovered graph. The structural-feature recovery ablation, in contrast, worsens the ratio to 1:9.7, which supports our design choice to exclude structural features from the construction and to use them only for analysis.
 
-\textbf{From the case study to Table~\ref{tab:rq1}.} For the Figure~\ref{fig:intro_topology_repair} account, the encoder's aggregation neighborhood is $3.8\%$ suspicious in (a), $7.4\%$ in (c), $90.0\%$ in (b), and $90.9\%$ in (d). The $\le 7.4\%$ signals in (a)/(c) push the account into the benign region (false negative, contributing to the GBT scores $0.266$ and $0.197$), while the $\ge 90\%$ signals in (b)/(d) classify it correctly ($0.671$ and $0.673$); pooling (c$\to$d) sharpens this gap because the suspicious ego reinforces a suspicious-peer cluster but not a benign-dominated star. The single-account flip generalizes: across all $9{,}644$ suspicious accounts (Figure~\ref{fig:rq1_shift_hist}), $47.7\%\to 71.6\%$ have a majority-suspicious 1-hop ego after repair, and $66.1\%$ of the $5{,}044$ majority-benign-ego accounts flip to majority-S. Four further checks rule out a \hofinet-specific cause: (i) feature-specific: structural-feature k-NN worsens the ratio to 1:9.7 (Table~\ref{tab:ss_sb}); (ii) encoder-agnostic: all 10 encoders show the same direction of (a)$\to$(b) gain; (iii) cross-dataset: AMLworld and AMLNet replicate the gain (Tables~\ref{tab:ss_sb},~\ref{tab:rq4}); (iv) theoretically aligned: the measured homophily gap lies within $0.019$ of the Theorem~\ref{thm:combined} bound.
+\textbf{From the case study to Table~\ref{tab:rq1}.} For the Figure~\ref{fig:intro_topology_repair} account, the encoder's aggregation neighborhood is $3.8\%$ suspicious in (a), $7.4\%$ in (c), $90.0\%$ in (b), and $90.9\%$ in (d). The $\le 7.4\%$ signals in (a)/(c) push the account into the benign region (false negative, contributing to the GBT scores $0.266$ and $0.197$), while the $\ge 90\%$ signals in (b)/(d) classify it correctly ($0.671$ and $0.673$); pooling (c$\to$d) sharpens this gap because the suspicious ego reinforces a suspicious-peer cluster but not a benign-dominated star. The single-account flip generalizes: across all $9{,}644$ suspicious accounts (Figure~\ref{fig:rq1_shift_hist}), $47.7\%\to 71.6\%$ have a majority-suspicious 1-hop ego after repair, and $66.1\%$ of the $5{,}044$ majority-benign-ego accounts flip to majority-S. Four further checks rule out a \hofinet-specific cause: (i) feature-specific: structural-feature k-NN worsens the ratio to 1:9.7 (Table~\ref{tab:ss_sb}); (ii) encoder-agnostic: all 9 encoders show the same direction of (a)$\to$(b) gain; (iii) cross-dataset: AMLworld and AMLNet replicate the gain (Tables~\ref{tab:ss_sb},~\ref{tab:rq4}); (iv) theoretically aligned: the measured homophily gap lies within $0.019$ of the Theorem~\ref{thm:combined} bound.
 
 \begin{figure}[h]
     \centering
@@ -552,7 +552,7 @@ The practical severity depends on prevalence: at low prevalence ($\rho \leq 2\%$
 \subsection{Label-Efficiency (RQ3)}
 \label{subsec:rq3}
 
-RQ3 asks whether \method's self-supervised representation remains competitive with supervised baselines as labels become scarce. We vary the train label fraction in $\{1\%, 5\%, 10\%\}$ and compare \method against six supervised baselines spanning three families: tabular (MLP, XGBoost~\cite{xgboost2016}, LightGBM~\cite{lightgbm2017}), generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}), and fraud-specific GNN (CARE-GNN~\cite{dou2020enhancing}). MLP follows the standard convention (stacked Linear$+$ReLU; no BatchNorm) common in fraud-GNN literature. All models share the same 22 behavioral features; \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet and AMLNet, BGRL on AMLworld).
+RQ3 asks whether \method's self-supervised representation remains competitive with supervised baselines as labels become scarce. We vary the train label fraction in $\{1\%, 5\%, 10\%\}$ and compare \method against six supervised baselines spanning three families: tabular (MLP, XGBoost~\cite{xgboost2016}, LightGBM~\cite{lightgbm2017}), generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}), and fraud-specific GNN (CARE-GNN~\cite{dou2020enhancing}). MLP follows the standard convention (stacked Linear$+$ReLU; no BatchNorm) common in fraud-GNN literature. All models use the same encoder-input features $\mathbf{X}^{\text{enc}}$ (20 behavioral $+$ 4 network-derived; Table~\ref{tab:features}); \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet and AMLNet, BGRL on AMLworld).
 
 \begin{figure*}[t]
 \centering
@@ -641,12 +641,12 @@ AMLworld~\cite{amlpatterns2024realistic} is a public synthetic AML benchmark fro
 
 \subsection{AMLNet}
 \label{app:dataset_amlnet}
-AMLNet~\cite{huda2025amlnet} is a smaller synthetic AML benchmark with 11,000 accounts and 1,090,172 directed multi-edges. The fraction of suspicious accounts is 13.52\% (1,487 accounts), which is much higher than in \hofinet and AMLworld; therefore, it is useful for high-prevalence evaluation. AMLNet uses the same 22 behavioral features as AMLworld, which enables cross-dataset transfer analysis in Appendix~\ref{app:transfer}.
+AMLNet~\cite{huda2025amlnet} is a smaller synthetic AML benchmark with 11,000 accounts and 1,090,172 directed multi-edges. The fraction of suspicious accounts is 13.52\% (1,487 accounts), which is much higher than in \hofinet and AMLworld; therefore, it is useful for high-prevalence evaluation. AMLNet uses the same 20 behavioral features as AMLworld, which enables cross-dataset transfer analysis in Appendix~\ref{app:transfer}.
 
 
 \subsection{Cross-Dataset Transfer}\label{app:transfer}
 
-To test whether the self-supervised representations of \method transfer across domains, we use an encoder pre-trained on AMLworld and evaluate it on AMLNet (Table~\ref{tab:transfer}). The datasets use the same 22 behavioral features, but they differ in prevalence (1.23\% vs. 13.52\%) and graph size (515K vs. 11K nodes). Linear probing performs poorly, likely due to this distribution shift, while fine-tuning recovers and slightly exceeds from-scratch training.
+To test whether the self-supervised representations of \method transfer across domains, we use an encoder pre-trained on AMLworld and evaluate it on AMLNet (Table~\ref{tab:transfer}). The datasets use the same 20 behavioral features, but they differ in prevalence (1.23\% vs. 13.52\%) and graph size (515K vs. 11K nodes). Linear probing performs poorly, likely due to this distribution shift, while fine-tuning recovers and slightly exceeds from-scratch training.
 
 \begin{table}[H]
 \centering
@@ -668,7 +668,7 @@ Linear probe (frozen)              & 0.218{\scriptsize±.011} & 0.510{\scriptsiz
 \section{Label-Efficiency: Full Numerical Results}
 \label{app:label_eff_full}
 
-Table~\ref{tab:label_eff_full} reports the per-cell numbers underlying Figure~\ref{fig:rq3_labeff} ($F1_{\text{susp}}$ at train label fractions $\{1\%, 5\%, 10\%\}$ on three datasets, 4-seed mean$\pm$std). All baselines share the 22 behavioral features used by \method's encoder input; the boosting baselines (XGBoost, LightGBM) drop the structural feature group for the same fair comparison.
+Table~\ref{tab:label_eff_full} reports the per-cell numbers underlying Figure~\ref{fig:rq3_labeff} ($F1_{\text{susp}}$ at train label fractions $\{1\%, 5\%, 10\%\}$ on three datasets, 4-seed mean$\pm$std). All baselines share the 20 behavioral features (Table~\ref{tab:features}); the boosting baselines (XGBoost, LightGBM) drop the structural feature group for the same fair comparison.
 
 \begin{table*}[t]
 \centering
