@@ -41,9 +41,19 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 echo "[$(date)] === BehaView label-efficiency $DATASET ($ENCODER + d) ==="
 echo "  GPU=$GPU  Ratios=$RATIOS  Seeds=$SEEDS"
 
+is_done() {
+    local NAME="$1"
+    [ -f "$RESULT" ] && grep -q ",${NAME}," "$RESULT" 2>/dev/null && return 0
+    return 1
+}
+
 for RATIO in $RATIOS; do
     for SEED in $SEEDS; do
         NAME="labeff_${ENCODER}_d_${DATASET}_r${RATIO}_s${SEED}"
+        if is_done "$NAME"; then
+            echo "[$(date)] [skip] $NAME (already in CSV)"
+            continue
+        fi
         echo "[$(date)] $NAME"
         python3 -u models/subgraph_cl.py \
             --model_name "$NAME" \

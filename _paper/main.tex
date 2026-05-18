@@ -101,7 +101,7 @@
 
 
 \begin{abstract}
-In anti-money laundering (AML) transaction graphs, suspicious accounts have predominantly benign neighbors, so graph neural network (GNN) aggregation dilutes an already rare suspicious signal. We trace this to a topology-behavior mismatch: the evasion-shaped transaction network fails to reflect homophily within the suspicious class. To address this mismatch, we present \method, a graph contrastive learning framework that performs topology repair through behavioral homophily recovery. \method builds a topology-independent recovered neighborhood graph from behavioral similarity, such as amount distributions. Contrastive learning then aligns the repaired topology with the transaction graph. On \hofinet, a retail inter-bank transfer network, the repair raises the suspicious ego-neighborhood ratio from 1:5.7 to 1:1.4. At 1\% labels, \method outperforms supervised GNN and tabular baselines across all three AML datasets. With the proposed repaired-topology pooling, \method achieves the highest suspicious-class F1 on all three datasets in this label-scarce regime, with a 0.010-0.021 gap over the strongest supervised baseline. These findings position \method as a label-light building block for money laundering detection under realistic label-delay constraints.
+In anti-money laundering (AML) transaction graphs, suspicious accounts have predominantly benign neighbors, so graph neural network (GNN) aggregation dilutes an already rare suspicious signal. We trace this to a topology-behavior mismatch: the evasion-shaped transaction network fails to reflect homophily within the suspicious class. To address this mismatch, we present \method, a graph contrastive learning framework that performs topology repair through behavioral homophily recovery. \method builds a topology-independent recovered neighborhood graph from behavioral similarity, such as amount distributions. Contrastive learning then aligns the repaired topology with the transaction graph. On \hofinet, a retail inter-bank transfer network, the repair raises the suspicious ego-neighborhood ratio from 1:5.7 to 1:1.4. At 1\% labels, \method outperforms supervised GNN and tabular baselines across all three AML datasets. With the proposed repaired-topology pooling, \method achieves the highest suspicious-class F1 on all three datasets in this label-scarce regime, with a 0.010-0.016 gap over the strongest supervised baseline. These findings position \method as a label-light building block for money laundering detection under realistic label-delay constraints.
 \end{abstract}
 
 \keywords{topology repair, behavioral homophily recovery, anti-money laundering, transaction networks, heterophily, self-supervised learning, graph contrastive learning}
@@ -638,7 +638,7 @@ GRACE+BN  & \checkmark & 0.430{\scriptsize±.014} & \underline{0.672}{\scriptsiz
 \textbf{AMLNet: high prevalence reduces instability in BN-free encoders.} On AMLNet ($\rho{=}13.52\%$), the baseline (a) already reaches $F1_{\text{susp}}=0.40$--$0.45$, far above \hofinet (0.04--0.27) and AMLworld (0.038--0.042). The high suspicious-account ratio keeps even BN-free DGI outside the unstable regime of Proposition~\ref{thm:bn_collapse}. Collapse prevention matters most at low prevalence and weakens as the random-classifier ceiling rises. Topology-repair and contrastive-level effects match \hofinet; for example, GBT improves from 0.426 in (a) to 0.678 in (d), a gain of over 50\%. All three datasets show the same topology-repair pattern as in Table~\ref{tab:ss_sb}.
 
 \section{Conclusion and Future Work}
-We propose \method, a topology-repair method for AML detection on transaction networks with weak homophily. \method contrasts the observed transaction graph with a behavioral homophily recovery graph, preserving transaction-topology information while adding repaired suspicious-class neighborhoods (Eq.~\ref{eq:concat}). The repair raises \hofinet edge homophily from 0.690 to 0.981. With only 1\% labeled nodes, \method achieves the best $F1_{\text{susp}}$ on all three datasets, surpassing the strongest supervised baseline by 0.010--0.021; with 10\% labels, tabular boosting matches \method on AMLworld and AMLNet, but \method remains ahead on \hofinet and beats all supervised graph models.
+We propose \method, a topology-repair method for AML detection on transaction networks with weak homophily. \method contrasts the observed transaction graph with a behavioral homophily recovery graph, preserving transaction-topology information while adding repaired suspicious-class neighborhoods (Eq.~\ref{eq:concat}). The repair raises \hofinet edge homophily from 0.690 to 0.981. With only 1\% labeled nodes, \method achieves the best $F1_{\text{susp}}$ on all three datasets, surpassing the strongest supervised baseline by 0.010--0.016; with 10\% labels, tabular boosting catches up to \method on all three datasets, while \method still outperforms every supervised graph baseline across the board.
 
 The results isolate the mechanism. Topology repair creates class-informative neighborhoods; sign-flip analysis explains when aggregation on the original graph erodes this structure; repaired-topology pooling refines the recovered signal conditionally; and normalization mainly stabilizes the bootstrap objective. The supporting BN-stability, homophily-recovery, and aggregation-signal results are stated in Appendix~\ref{app:theory}.
 
@@ -680,7 +680,7 @@ Table~\ref{tab:label_eff_full} reports the per-cell values for Figure~\ref{fig:r
 \section{Loss Substitution: Native vs.\ Unified BYOL Bootstrap}
 \label{app:loss_table}
 
-All encoders in Tables~\ref{tab:rq1} and~\ref{tab:rq4} use the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to factor out loss-formulation effects from the topology-by-level comparison. Table~\ref{tab:loss_table} verifies this substitution on \hofinet, setting (d), 4 seeds: BN-equipped baselines under their native losses agree with the unified BYOL within $\pm 0.002$. Bare DGI, MVGRL, and GRACE collapse under both their native JSD/InfoNCE and BYOL, showing that the stability pattern in Proposition~\ref{thm:bn_collapse} depends on BN rather than the choice of loss.
+All encoders in Tables~\ref{tab:rq1} and~\ref{tab:rq4} use the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to factor out loss-formulation effects from the topology-by-level comparison. Table~\ref{tab:loss_table} verifies this substitution on \hofinet, setting (d), 4 seeds: BN-equipped baselines under their native losses agree with the unified BYOL within $\pm 0.001$. Bare DGI, MVGRL, and GRACE collapse under both their native JSD/InfoNCE and BYOL, showing that the stability pattern in Proposition~\ref{thm:bn_collapse} depends on BN rather than the choice of loss.
 
 \begin{table}[h]
 \centering
@@ -691,14 +691,14 @@ All encoders in Tables~\ref{tab:rq1} and~\ref{tab:rq4} use the unified BYOL-styl
 \toprule
 \textbf{Encoder} & \textbf{Native loss} & \textbf{BN} & \textbf{BYOL} $F1_{\text{susp}}$ & \textbf{Native} $F1_{\text{susp}}$ & $\Delta$ \\
 \midrule
-DGI~\cite{velivckovic2018deep}         & JSD BCE                & \xmark & 0.068{\scriptsize±.007} & 0.074{\scriptsize±.010} & $+0.006$ \\
+DGI~\cite{velivckovic2018deep}         & JSD BCE                & \xmark & 0.068{\scriptsize±.007} & 0.076{\scriptsize±.003} & $+0.008$ \\
 DGI+BN~\cite{velivckovic2018deep}      & JSD BCE                & \cmark & 0.667{\scriptsize±.001} & 0.668{\scriptsize±.002} & $+0.001$ \\
-MVGRL~\cite{hassani2020contrastive}    & JSD multi-view         & \xmark & 0.063{\scriptsize±.007} & 0.074{\scriptsize±.004} & $+0.011$ \\
+MVGRL~\cite{hassani2020contrastive}    & JSD multi-view         & \xmark & 0.063{\scriptsize±.007} & 0.072{\scriptsize±.005} & $+0.009$ \\
 MVGRL+BN~\cite{hassani2020contrastive} & JSD multi-view         & \cmark & 0.667{\scriptsize±.002} & 0.668{\scriptsize±.001} & $+0.001$ \\
-GRACE~\cite{zhu2020deep}               & InfoNCE NT-Xent        & \xmark & 0.064{\scriptsize±.008} & 0.071{\scriptsize±.010} & $+0.007$ \\
+GRACE~\cite{zhu2020deep}               & InfoNCE NT-Xent        & \xmark & 0.064{\scriptsize±.008} & 0.067{\scriptsize±.010} & $+0.003$ \\
 GRACE+BN~\cite{zhu2020deep}            & InfoNCE NT-Xent        & \cmark & 0.670{\scriptsize±.002} & 0.670{\scriptsize±.002} & $\phantom{+}0.000$ \\
-GBT~\cite{bielak2022graph}             & Barlow Twins           & \cmark & 0.667{\scriptsize±.002} & 0.667{\scriptsize±.003} & $\phantom{+}0.000$ \\
-BGRL~\cite{thakoor2021large}           & BYOL bootstrap (same)  & \cmark & 0.629{\scriptsize±.005} & 0.627{\scriptsize±.003} & $-0.002$ \\
+GBT~\cite{bielak2022graph}             & Barlow Twins           & \cmark & 0.667{\scriptsize±.002} & 0.667{\scriptsize±.002} & $\phantom{+}0.000$ \\
+BGRL~\cite{thakoor2021large}           & BYOL bootstrap (same)  & \cmark & 0.629{\scriptsize±.005} & 0.629{\scriptsize±.005} & $\phantom{+}0.000$ \\
 GIN~\cite{xu2018powerful}              & supervised CE          & \cmark & 0.590{\scriptsize±.012} & ---                     & ---      \\
 \bottomrule
 \end{tabular}}
@@ -719,8 +719,8 @@ GIN~\cite{xu2018powerful}              & supervised CE          & \cmark & 0.590
 \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10}
 \textbf{Model} & \textbf{1\%} & \textbf{5\%} & \textbf{10\%} & \textbf{1\%} & \textbf{5\%} & \textbf{10\%} & \textbf{1\%} & \textbf{5\%} & \textbf{10\%} \\
 \midrule
-XGBoost & \underline{0.633}{\scriptsize±.015} & \underline{0.661}{\scriptsize±.004} & \underline{0.672}{\scriptsize±.002} & 0.022{\scriptsize±.003} & \textbf{0.070}{\scriptsize±.002} & \textbf{0.073}{\scriptsize±.002} & 0.503{\scriptsize±.099} & \underline{0.677}{\scriptsize±.021} & \textbf{0.699}{\scriptsize±.007} \\
-LightGBM & 0.616{\scriptsize±.010} & 0.657{\scriptsize±.006} & 0.669{\scriptsize±.002} & 0.022{\scriptsize±.008} & \underline{0.068}{\scriptsize±.002} & \underline{0.070}{\scriptsize±.002} & 0.425{\scriptsize±.103} & 0.652{\scriptsize±.035} & \underline{0.687}{\scriptsize±.011} \\
+XGBoost & \underline{0.633}{\scriptsize±.015} & \underline{0.661}{\scriptsize±.004} & \textbf{0.672}{\scriptsize±.002} & 0.022{\scriptsize±.003} & \textbf{0.070}{\scriptsize±.002} & \textbf{0.073}{\scriptsize±.002} & 0.503{\scriptsize±.099} & \underline{0.677}{\scriptsize±.021} & \textbf{0.699}{\scriptsize±.007} \\
+LightGBM & 0.616{\scriptsize±.010} & 0.657{\scriptsize±.006} & \underline{0.669}{\scriptsize±.002} & 0.022{\scriptsize±.008} & \underline{0.068}{\scriptsize±.002} & \underline{0.070}{\scriptsize±.002} & 0.425{\scriptsize±.103} & 0.652{\scriptsize±.035} & \underline{0.687}{\scriptsize±.011} \\
 \midrule
 MLP & 0.052{\scriptsize±.011} & 0.059{\scriptsize±.004} & 0.059{\scriptsize±.016} & 0.045{\scriptsize±.002} & 0.040{\scriptsize±.010} & 0.046{\scriptsize±.002} & \underline{0.622}{\scriptsize±.085} & \textbf{0.685}{\scriptsize±.010} & 0.683{\scriptsize±.005} \\
 \midrule
@@ -728,7 +728,7 @@ GCN & 0.282{\scriptsize±.017} & 0.260{\scriptsize±.009} & 0.251{\scriptsize±.
 GAT & 0.408{\scriptsize±.071} & 0.498{\scriptsize±.089} & 0.543{\scriptsize±.052} & \underline{0.046}{\scriptsize±.002} & 0.047{\scriptsize±.001} & 0.047{\scriptsize±.002} & 0.369{\scriptsize±.045} & 0.488{\scriptsize±.025} & 0.518{\scriptsize±.024} \\
 CARE-GNN & 0.117{\scriptsize±.012} & 0.110{\scriptsize±.007} & 0.108{\scriptsize±.007} & 0.045{\scriptsize±.001} & 0.042{\scriptsize±.000} & 0.041{\scriptsize±.000} & 0.327{\scriptsize±.075} & 0.417{\scriptsize±.021} & 0.440{\scriptsize±.012} \\
 \midrule
-\method & \textbf{0.654}{\scriptsize±.009} & \textbf{0.671}{\scriptsize±.001} & \textbf{0.673}{\scriptsize±.003} & \textbf{0.062}{\scriptsize±.014} & 0.064{\scriptsize±.012} & 0.066{\scriptsize±.009} & \textbf{0.632}{\scriptsize±.080} & 0.673{\scriptsize±.012} & 0.679{\scriptsize±.001} \\
+\method & \textbf{0.647}{\scriptsize±.007} & \textbf{0.664}{\scriptsize±.002} & 0.667{\scriptsize±.002} & \textbf{0.062}{\scriptsize±.014} & 0.064{\scriptsize±.013} & 0.066{\scriptsize±.009} & \textbf{0.632}{\scriptsize±.081} & 0.673{\scriptsize±.013} & 0.680{\scriptsize±.002} \\
 \bottomrule
 \end{tabular}}
 \end{table*}
