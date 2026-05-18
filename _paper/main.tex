@@ -537,7 +537,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 RQ1 validated topology repair in the recovered neighborhood graph. RQ2 examines when aggregation (subgraph pooling) helps or hurts, and how repair alters this trade-off. Pooling is unreliable on the raw transaction graph but, on the repaired topology, it can amplify suspicious evidence, with the largest gains under suspicious-class-oriented scoring.
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.7\columnwidth]{figures/fig_rq2_ablation.pdf}
+    \includegraphics[width=0.8\columnwidth]{figures/fig_rq2_ablation.pdf}
 \caption{$F1_{\text{susp}}$ for four ablation settings of the two design axes (topology branch $\times$ contrastive level) on \hofinet, averaged over four BN-based encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN). Values are computed from Table~\ref{tab:rq1}: (a) transaction topology+node, (b) recovered neighborhood+node, (c) transaction topology+pool, and (d) repaired topology+pool (proposed).}
     \label{fig:rq2_ablation}
 \end{figure}
