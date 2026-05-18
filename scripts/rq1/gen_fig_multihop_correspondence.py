@@ -41,9 +41,11 @@ C_TX_EDGE = "#7A8A99"
 C_BHV_EDGE = "#9E6B45"
 C_MAP = "#6B7280"
 C_TRACE = "#334155"
-C_TEXT = "#202124"
-C_MUTED = "#4B5563"
+C_TEXT = "#000000"
+C_MUTED = "#000000"
 C_UNREACH = "#F3F4F6"
+X_STEP = 1.02
+Y_SPREAD = 1.30
 
 
 def load_representative() -> dict:
@@ -172,7 +174,7 @@ def path_layout(
         target: y
         for target, y in zip(
             ordered_targets,
-            np.linspace(1.22, -1.22, max(len(ordered_targets), 1)),
+            np.linspace(Y_SPREAD, -Y_SPREAD, max(len(ordered_targets), 1)),
         )
     }
 
@@ -180,7 +182,7 @@ def path_layout(
     child_y: dict[int, list[float]] = defaultdict(list)
 
     for target, path in paths.items():
-        positions[target] = (0.95 * (len(path) - 1), float(target_y[target]))
+        positions[target] = (X_STEP * (len(path) - 1), float(target_y[target]))
         for parent, child in zip(path[:-1], path[1:]):
             child_y[parent].append(positions[child][1] if child in positions else target_y[target])
 
@@ -192,12 +194,12 @@ def path_layout(
             for target, path in paths.items():
                 if node in path:
                     ys.append(target_y[target])
-            positions[node] = (0.95 * depth, float(np.mean(ys)) if ys else 0.0)
+            positions[node] = (X_STEP * depth, float(np.mean(ys)) if ys else 0.0)
 
     # Light relaxation so shared intermediate branches do not overlap exactly.
     by_depth: dict[int, list[int]] = defaultdict(list)
     for node, (x, _) in positions.items():
-        by_depth[int(round(x / 0.95))].append(node)
+        by_depth[int(round(x / X_STEP))].append(node)
     for nodes in by_depth.values():
         grouped = sorted(nodes, key=lambda n: positions[n][1], reverse=True)
         for i, node in enumerate(grouped):
@@ -207,7 +209,7 @@ def path_layout(
             positions[node] = (positions[node][0], y + (i - (len(grouped) - 1) / 2) * 0.03)
 
     separate_positions: dict[int, tuple[float, float]] = {}
-    separate_x = 0.95 * max_depth + 0.78
+    separate_x = X_STEP * max_depth + 0.82
     for path_idx, path in enumerate(separate_paths):
         endpoint_ys = [target_y[node] for node in path if node in target_y]
         if len(endpoint_ys) >= 2:
@@ -244,11 +246,11 @@ def recovered_layout(
 ) -> dict[int, tuple[float, float]]:
     positions: dict[int, tuple[float, float]] = {ego: (0.0, 0.0)}
     ordered_targets = sorted((int(nb["idx"]) for nb in targets), key=lambda n: target_ids[n])
-    ys = np.linspace(1.22, -1.22, max(len(ordered_targets), 1))
+    ys = np.linspace(Y_SPREAD, -Y_SPREAD, max(len(ordered_targets), 1))
 
     for rank, (node, y) in enumerate(zip(ordered_targets, ys)):
         side = -1 if rank % 2 == 0 else 1
-        x = side * (0.72 + 0.06 * np.cos(rank * np.pi / 2))
+        x = side * (0.88 + 0.08 * np.cos(rank * np.pi / 2))
         positions[node] = (float(x), float(y))
 
     return positions
@@ -264,7 +266,7 @@ def draw_node(
     is_target: bool = False,
     faded: bool = False,
 ) -> None:
-    size = 240 if is_ego else (215 if is_target else 120)
+    size = 280 if is_ego else (252 if is_target else 148)
     face = C_UNREACH if faded else node_color(label, is_ego)
     edge = "#111111" if is_ego or is_target else "white"
     ax.scatter(
@@ -282,7 +284,7 @@ def draw_node(
         text,
         ha="center",
         va="center",
-        fontsize=8.8 if not is_ego else 9.5,
+        fontsize=9.8 if not is_ego else 10.8,
         color="#111111" if is_ego or faded else "white",
         fontweight="bold",
         zorder=5,
@@ -312,7 +314,7 @@ def draw_node_id_callout(ax, xy: tuple[float, float], node_idx: int, *, side: st
         textcoords="data",
         ha=ha,
         va=va,
-        fontsize=6.5,
+        fontsize=7.7,
         color=C_MUTED,
         zorder=7,
         bbox={"facecolor": "white", "edgecolor": "#CBD5E1", "linewidth": 0.35, "alpha": 0.9, "pad": 0.65},
@@ -379,11 +381,11 @@ def draw_transaction_paths(
     positions, separate_positions = path_layout(ego, target_ids, paths, unreachable, separate_paths)
 
     max_depth = max((len(path) - 1 for path in paths.values()), default=1)
-    separate_x = 0.95 * max_depth + 0.78
-    title_x = (0.95 * max_depth + (separate_x if separate_positions else 0.95 * max_depth)) / 2
+    separate_x = X_STEP * max_depth + 0.82
+    title_x = (X_STEP * max_depth + (separate_x if separate_positions else X_STEP * max_depth)) / 2
 
-    ax.text(title_x, 1.86, "Original transaction topology", ha="center", fontsize=12.5, fontweight="bold", color=C_TEXT)
-    ax.text(title_x, 1.68, "ego paths plus separate recovered-node component", ha="center", fontsize=9.5, color=C_MUTED)
+    ax.text(title_x, 1.90, "Original transaction topology", ha="center", fontsize=13.8, fontweight="bold", color=C_TEXT)
+    ax.text(title_x, 1.69, "ego paths plus separate recovered-node component", ha="center", fontsize=10.4, color=C_MUTED)
 
     edges = set()
     for path in [*paths.values(), *separate_paths]:
@@ -394,15 +396,15 @@ def draw_transaction_paths(
             [positions[u][0], positions[v][0]],
             [positions[u][1], positions[v][1]],
             color=C_TX_EDGE,
-            linewidth=0.85,
-            alpha=0.58,
+            linewidth=0.95,
+            alpha=0.62,
             zorder=1,
         )
 
     for depth in range(max_depth + 1):
-        ax.text(0.95 * depth, 1.48, f"{depth}-hop" if depth else "ego", ha="center", fontsize=8.5, color=C_MUTED)
+        ax.text(X_STEP * depth, 1.48, f"{depth}-hop" if depth else "ego", ha="center", fontsize=9.5, color=C_MUTED)
     if separate_positions:
-        ax.text(separate_x, 1.48, "other component", ha="center", fontsize=8.5, color=C_MUTED)
+        ax.text(separate_x, 1.48, "other component", ha="center", fontsize=9.5, color=C_MUTED)
 
     trace_path = recovered_b_path(paths, labels)
     draw_trace_path(ax, positions, trace_path)
@@ -456,8 +458,8 @@ def draw_recovered_graph(
     targets = rep["bhv_neighbors"]
     positions = recovered_layout(ego, targets, target_ids)
 
-    ax.text(0, 1.86, "Recovered neighborhood", ha="center", fontsize=12.5, fontweight="bold", color=C_TEXT)
-    ax.text(0, 1.68, "behavioral-homophily k-NN graph", ha="center", fontsize=9.5, color=C_MUTED)
+    ax.text(0, 1.90, "Recovered neighborhood", ha="center", fontsize=13.8, fontweight="bold", color=C_TEXT)
+    ax.text(0, 1.69, "behavioral-homophily k-NN graph", ha="center", fontsize=10.4, color=C_MUTED)
 
     for u, v in rep["bhv_induced_edges"]:
         u = int(u)
@@ -468,7 +470,7 @@ def draw_recovered_graph(
             [positions[u][0], positions[v][0]],
             [positions[u][1], positions[v][1]],
             color=C_BHV_EDGE,
-            linewidth=0.85,
+            linewidth=0.95,
             linestyle="--",
             alpha=0.52,
             zorder=1,
@@ -543,43 +545,44 @@ def build_figure(
         ax.axis("off")
         ax.set_facecolor("white")
 
-    ax_left.set_xlim(-0.35, 5.25)
-    ax_left.set_ylim(-1.85, 2.05)
-    ax_right.set_xlim(-1.08, 1.08)
-    ax_right.set_ylim(-1.85, 2.05)
+    ax_left.set_xlim(-0.42, 5.65)
+    ax_left.set_ylim(-1.82, 2.08)
+    ax_right.set_xlim(-1.28, 1.28)
+    ax_right.set_ylim(-1.82, 2.08)
 
     reachable_depths = [len(path) - 1 for path in paths.values()]
     ax_left.text(
         2.35,
-        -1.78,
+        -1.73,
         f"{len(paths)}/10 recovered nodes reachable in the ego transaction component "
         f"({reachable_depths.count(2)} at 2-hop, {reachable_depths.count(4)} at 4-hop); "
         f"{len(unreachable)} shown in a separate transaction component",
         ha="center",
         va="bottom",
-        fontsize=9.0,
+        fontsize=10.2,
         color=C_MUTED,
     )
 
     handles = [
-        mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_EGO, markeredgecolor="#111111", markersize=9, label="ego"),
-        mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_SUSP, markeredgecolor="#111111", markersize=8.5, label="suspicious recovered node"),
-        mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_BENIGN, markeredgecolor="#111111", markersize=8.5, label="benign recovered node"),
+        mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_EGO, markeredgecolor="#111111", markersize=9.5, label="ego"),
+        mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_SUSP, markeredgecolor="#111111", markersize=9.0, label="suspicious recovered"),
+        mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_BENIGN, markeredgecolor="#111111", markersize=9.0, label="benign recovered"),
         mlines.Line2D([], [], color=C_TX_EDGE, linewidth=1.2, label="transaction path"),
-        mlines.Line2D([], [], color=C_BHV_EDGE, linewidth=1.2, linestyle="--", label="behavioral-homophily k-NN"),
+        mlines.Line2D([], [], color=C_BHV_EDGE, linewidth=1.2, linestyle="--", label="behavioral k-NN"),
         mlines.Line2D([], [], color=C_MAP, linewidth=1.0, linestyle=(0, (1.0, 2.4)), label="1:1 correspondence"),
     ]
     fig.legend(
         handles=handles,
         loc="lower center",
         bbox_to_anchor=(0.5, 0.0),
-        ncol=3,
+        ncol=6,
         frameon=False,
-        fontsize=9.0,
-        handlelength=1.9,
-        columnspacing=1.2,
+        fontsize=8.8,
+        handlelength=1.45,
+        handletextpad=0.45,
+        columnspacing=0.95,
     )
-    fig.subplots_adjust(left=0.02, right=0.98, top=0.94, bottom=0.16, wspace=0.05)
+    fig.subplots_adjust(left=0.02, right=0.98, top=0.955, bottom=0.095, wspace=0.05)
     return fig
 
 

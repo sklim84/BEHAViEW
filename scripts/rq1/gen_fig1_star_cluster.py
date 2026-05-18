@@ -46,15 +46,15 @@ C_BENIGN = "#467599"
 C_EGO = "#F0A000"
 C_TX_EDGE = "#7A8A99"
 C_BHV_EDGE = "#9E6B45"
-C_TEXT = "#202124"
-C_MUTED = "#4B5563"
+C_TEXT = "#000000"
+C_MUTED = "#000000"
 C_PANEL = "#F8FAFC"
 C_PANEL_EDGE = "#D4D8DF"
 C_FLAG = "#D62728"
 BEHAV_EXCLUDE = {"in_dc", "out_dc", "in_count", "out_count"}
 K_BHV = 10
-STAR_SCALE = 1.12
-CLUSTER_SCALE = 1.14
+STAR_SCALE = 1.18
+CLUSTER_SCALE = 1.28
 
 
 class HandlerDashedCircle(HandlerBase):
@@ -170,7 +170,7 @@ def draw_node(
         label_text,
         ha="center",
         va="center",
-        fontsize=8.6 if len(label_text) > 1 and not is_ego else (9.2 if not is_ego else 10.8),
+        fontsize=9.3 if len(label_text) > 1 and not is_ego else (10.2 if not is_ego else 11.8),
         color="white" if not is_ego else "#111111",
         fontweight="bold",
         zorder=5,
@@ -209,7 +209,7 @@ def draw_node_id_callout(
         text if text is not None else f"idx {node_idx}",
         ha=ha,
         va=va,
-        fontsize=6.1,
+        fontsize=7.4,
         color=C_MUTED,
         linespacing=0.9,
         zorder=7,
@@ -238,7 +238,7 @@ def draw_external_node_id_callout(
         text,
         ha="left",
         va="center",
-        fontsize=6.1,
+        fontsize=7.4,
         color=C_MUTED,
         linespacing=0.9,
         zorder=7,
@@ -270,12 +270,12 @@ def draw_panel_box(
         title,
         ha="center",
         va="center",
-        fontsize=12.5,
+        fontsize=13.7,
         color=C_TEXT,
         fontweight="bold",
         linespacing=0.92,
     )
-    ax.text(0, 1.47, subtitle, ha="center", va="center", fontsize=9.5, color=C_MUTED)
+    ax.text(0, 1.47, subtitle, ha="center", va="center", fontsize=10.2, color=C_MUTED)
 
 
 def circular_star_layout(neighbors: list[dict]) -> dict[int, tuple[float, float]]:
@@ -312,10 +312,10 @@ def cluster_layout(ego_idx: int, neighbors: list[dict]) -> dict[int, tuple[float
     susp = [nb for nb in neighbors if int(nb["label"]) == 1]
     benign = [nb for nb in neighbors if int(nb["label"]) == 0]
 
-    # Two tight rings around the ego for the suspicious recovered neighbors.
+    # Wider rings make the recovered cluster visually comparable to the star graph.
     susp_angles = np.linspace(np.pi / 10, 2 * np.pi + np.pi / 10, max(len(susp), 1), endpoint=False)
     for i, nb in enumerate(susp):
-        radius = 0.44 if i < 5 else 0.68
+        radius = 0.62 if i < 5 else 0.88
         angle = float(susp_angles[i])
         positions[int(nb["idx"])] = (radius * math.cos(angle), radius * math.sin(angle))
 
@@ -323,7 +323,7 @@ def cluster_layout(ego_idx: int, neighbors: list[dict]) -> dict[int, tuple[float
     benign_angles = np.linspace(-np.pi / 4, np.pi / 4, max(len(benign), 1), endpoint=True)
     for i, nb in enumerate(benign):
         angle = float(benign_angles[i])
-        positions[int(nb["idx"])] = (1.13 * math.cos(angle), 1.13 * math.sin(angle) - 0.15)
+        positions[int(nb["idx"])] = (1.18 * math.cos(angle), 1.18 * math.sin(angle) - 0.12)
 
     return positions
 
@@ -370,8 +370,8 @@ def draw_transaction_star(ax, rep: dict) -> None:
     )
     draw_edges(ax, rep["tx_induced_edges"], positions, C_TX_EDGE, dashed=False)
     for nb in neighbors:
-        draw_node(ax, positions[int(nb["idx"])], int(nb["label"]), size=150)
-    draw_node(ax, positions[ego_idx], 1, is_ego=True, size=190)
+        draw_node(ax, positions[int(nb["idx"])], int(nb["label"]), size=172)
+    draw_node(ax, positions[ego_idx], 1, is_ego=True, size=214)
     for nb in neighbors:
         if int(nb["idx"]) in flagged_neighbors:
             node_idx = int(nb["idx"])
@@ -390,11 +390,11 @@ def draw_transaction_star(ax, rep: dict) -> None:
         f"{int(rep['tx_S'])}/{total} suspicious neighbors",
         ha="center",
         va="center",
-        fontsize=10.2,
+        fontsize=11.4,
         color=C_TEXT,
         fontweight="bold",
     )
-    ax.text(0, -1.80, "S-S : S-B = 1 : 25", ha="center", va="center", fontsize=9.4, color=C_MUTED)
+    ax.text(0, -1.80, "S-S : S-B = 1 : 25", ha="center", va="center", fontsize=10.6, color=C_MUTED)
 
 
 def draw_behavioral_cluster(ax, rep: dict) -> None:
@@ -415,7 +415,7 @@ def draw_behavioral_cluster(ax, rep: dict) -> None:
         node_idx = int(nb["idx"])
         node_label = int(nb["label"])
         node_text = "B" if node_label == 0 else None
-        draw_node(ax, positions[node_idx], node_label, size=192, text=node_text)
+        draw_node(ax, positions[node_idx], node_label, size=218, text=node_text)
         if node_label == 0:
             draw_node_id_callout(
                 ax,
@@ -427,7 +427,7 @@ def draw_behavioral_cluster(ax, rep: dict) -> None:
                 ha="left",
                 va="center",
             )
-    draw_node(ax, positions[ego_idx], 1, is_ego=True, size=215)
+    draw_node(ax, positions[ego_idx], 1, is_ego=True, size=238)
 
     total = int(rep["bhv_S"]) + int(rep["bhv_B"])
     ax.text(
@@ -436,11 +436,11 @@ def draw_behavioral_cluster(ax, rep: dict) -> None:
         f"{int(rep['bhv_S'])}/{total} suspicious neighbors",
         ha="center",
         va="center",
-        fontsize=10.2,
+        fontsize=11.4,
         color=C_TEXT,
         fontweight="bold",
     )
-    ax.text(0, -1.80, "S-S : S-B = 9 : 1", ha="center", va="center", fontsize=9.4, color=C_MUTED)
+    ax.text(0, -1.80, "S-S : S-B = 9 : 1", ha="center", va="center", fontsize=10.6, color=C_MUTED)
 
 
 def build_figure(rep: dict) -> plt.Figure:
@@ -458,7 +458,7 @@ def build_figure(rep: dict) -> plt.Figure:
 
     for ax in axes:
         ax.set_xlim(-1.52, 1.52)
-        ax.set_ylim(-2.15, 2.08)
+        ax.set_ylim(-2.08, 2.08)
         ax.set_aspect("equal")
         ax.axis("off")
 
@@ -476,7 +476,7 @@ def build_figure(rep: dict) -> plt.Figure:
         zorder=20,
     )
     fig.patches.append(arrow)
-    fig.text(0.5, 0.505, "topology\nrepair", ha="center", va="center", fontsize=8.6, color=C_MUTED)
+    fig.text(0.5, 0.505, "topology\nrepair", ha="center", va="center", fontsize=9.4, color=C_MUTED)
 
     node_handles = [
         mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_EGO, markeredgecolor="#111111", markersize=10.0, label="suspicious ego"),
@@ -514,7 +514,7 @@ def build_figure(rep: dict) -> plt.Figure:
         columnspacing=1.05,
         handler_map={DashedCircleLegend: HandlerDashedCircle()},
     )
-    fig.subplots_adjust(left=0.02, right=0.98, top=0.94, bottom=0.25, wspace=-0.04)
+    fig.subplots_adjust(left=0.02, right=0.98, top=0.965, bottom=0.205, wspace=-0.04)
     return fig
 
 
