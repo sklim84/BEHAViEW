@@ -455,27 +455,27 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \begin{table}[t]
 \centering
-\caption{$F1_{\text{susp}}$ on \hofinet for nine encoders under four topology-by-level ablations (4-seed mean$\pm$std). \textit{Paired BN}: three GCN encoder families (DGI, MVGRL, GRACE) with vs.\ without per-layer BN. \textit{Native BN}: reference encoders (GBT, BGRL, GIN). \textbf{Native loss} uses each encoder's original training loss. All encoders here use the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to isolate topology-repair effects. Best per row in \textbf{bold}, second-best \underline{underlined}.}
+\caption{$F1_{\text{susp}}$ on \hofinet for nine encoders under four topology-by-level ablations (4-seed mean$\pm$std). \textit{Paired BN}: three GCN encoder families (DGI, MVGRL, GRACE) with vs.\ without per-layer BN. \textit{Native BN}: reference encoders (GBT, BGRL, GIN). All encoders here use the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to isolate topology-repair effects; Appendix~\ref{app:loss_table} verifies this substitution does not penalize baselines. Best per row in \textbf{bold}, second-best \underline{underlined}.}
 \label{tab:rq1}
 \resizebox{\columnwidth}{!}{%
-\begin{tabular}{lllcccccc}
+\begin{tabular}{lllcccc}
 \toprule
-\textbf{Category} & \textbf{Encoder} & \textbf{BN} & \BLUE{\makecell{\textbf{Native loss}\\\textbf{($\mathcal{L}^{\star}=0$)}}} & \makecell{\textbf{Tx graph}\\\textbf{node}} & \makecell{\textbf{Recovered}\\\textbf{node}} & \makecell{\textbf{Tx graph}\\\textbf{pool}} & \makecell{\textbf{Repaired}\\\textbf{pool}} \\
+\textbf{Category} & \textbf{Encoder} & \textbf{BN} & \makecell{\textbf{Tx graph}\\\textbf{node}} & \makecell{\textbf{Recovered}\\\textbf{node}} & \makecell{\textbf{Tx graph}\\\textbf{pool}} & \makecell{\textbf{Repaired}\\\textbf{pool}} \\
 \midrule
 \multirow{6}{*}{\makecell[l]{Paired\\BN}}
-  & DGI       & \xmark & \BLUE{JSD BCE}        & 0.044{\scriptsize±.002} & \underline{0.054}{\scriptsize±.007} & 0.048{\scriptsize±.004} & \textbf{0.068}{\scriptsize±.007} \\
-  & DGI+BN    & \cmark & \BLUE{JSD BCE}        & 0.266{\scriptsize±.010} & \underline{0.664}{\scriptsize±.002} & 0.198{\scriptsize±.002} & \textbf{0.667}{\scriptsize±.001} \\
-\cmidrule(l){2-8}
-  & MVGRL     & \xmark & \BLUE{JSD multi-view} & 0.044{\scriptsize±.002} & \underline{0.054}{\scriptsize±.003} & 0.048{\scriptsize±.003} & \textbf{0.063}{\scriptsize±.007} \\
-  & MVGRL+BN  & \cmark & \BLUE{JSD multi-view} & 0.265{\scriptsize±.010} & \underline{0.664}{\scriptsize±.002} & 0.198{\scriptsize±.002} & \textbf{0.667}{\scriptsize±.002} \\
-\cmidrule(l){2-8}
-  & GRACE     & \xmark & \BLUE{InfoNCE NT-Xent} & 0.043{\scriptsize±.001} & \underline{0.051}{\scriptsize±.006} & 0.044{\scriptsize±.002} & \textbf{0.064}{\scriptsize±.008} \\
-  & GRACE+BN  & \cmark & \BLUE{InfoNCE NT-Xent} & 0.286{\scriptsize±.003} & \underline{0.665}{\scriptsize±.004} & 0.216{\scriptsize±.002} & \textbf{0.670}{\scriptsize±.002} \\
+  & DGI       & \xmark & 0.044{\scriptsize±.002} & \underline{0.054}{\scriptsize±.007} & 0.048{\scriptsize±.004} & \textbf{0.068}{\scriptsize±.007} \\
+  & DGI+BN    & \cmark & 0.266{\scriptsize±.010} & \underline{0.664}{\scriptsize±.002} & 0.198{\scriptsize±.002} & \textbf{0.667}{\scriptsize±.001} \\
+\cmidrule(l){2-7}
+  & MVGRL     & \xmark & 0.044{\scriptsize±.002} & \underline{0.054}{\scriptsize±.003} & 0.048{\scriptsize±.003} & \textbf{0.063}{\scriptsize±.007} \\
+  & MVGRL+BN  & \cmark & 0.265{\scriptsize±.010} & \underline{0.664}{\scriptsize±.002} & 0.198{\scriptsize±.002} & \textbf{0.667}{\scriptsize±.002} \\
+\cmidrule(l){2-7}
+  & GRACE     & \xmark & 0.043{\scriptsize±.001} & \underline{0.051}{\scriptsize±.006} & 0.044{\scriptsize±.002} & \textbf{0.064}{\scriptsize±.008} \\
+  & GRACE+BN  & \cmark & 0.286{\scriptsize±.003} & \underline{0.665}{\scriptsize±.004} & 0.216{\scriptsize±.002} & \textbf{0.670}{\scriptsize±.002} \\
 \midrule
 \multirow{3}{*}{\makecell[l]{Native\\BN}}
-  & GBT  & \cmark & \BLUE{Barlow Twins}   & 0.265{\scriptsize±.011} & \underline{0.664}{\scriptsize±.002} & 0.197{\scriptsize±.002} & \textbf{0.667}{\scriptsize±.002} \\
-  & BGRL & \cmark & \BLUE{BYOL bootstrap} & 0.306{\scriptsize±.013} & \underline{0.542}{\scriptsize±.012} & 0.252{\scriptsize±.015} & \textbf{0.629}{\scriptsize±.005} \\
-  & GIN  & \cmark & \BLUE{supervised CE}  & 0.181{\scriptsize±.022} & \textbf{0.591}{\scriptsize±.017} & 0.127{\scriptsize±.001} & \underline{0.590}{\scriptsize±.012} \\
+  & GBT  & \cmark & 0.265{\scriptsize±.011} & \underline{0.664}{\scriptsize±.002} & 0.197{\scriptsize±.002} & \textbf{0.667}{\scriptsize±.002} \\
+  & BGRL & \cmark & 0.306{\scriptsize±.013} & \underline{0.542}{\scriptsize±.012} & 0.252{\scriptsize±.015} & \textbf{0.629}{\scriptsize±.005} \\
+  & GIN  & \cmark & 0.181{\scriptsize±.022} & \textbf{0.591}{\scriptsize±.017} & 0.127{\scriptsize±.001} & \underline{0.590}{\scriptsize±.012} \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -553,7 +553,7 @@ Thus, subgraph pooling efficacy is governed by (i) recovered homophily and (ii) 
 \end{tabular}
 \end{table*}
 
-\textbf{Normalization as a stability factor.} Using Theorem~\ref{thm:bn_collapse} with the homophily-recovery and signal-preservation analyses in Appendix~\ref{app:theory}, we study normalization as a unified factor in training stability. Under the BYOL-style bootstrap loss, normalization controls stability (Figure~\ref{fig:rq2_bn}, settings (a) vs. (d) across nine encoders). Table~\ref{tab:bn_summary} shows 4-seed paired $t$-tests with Holm correction for setting (d): (i) adding BN yields the largest performance change ($\Delta F1_{\text{susp}} \approx 0.60$) when all else is fixed, while (ii) BN position (per-layer $>$ final-only) and (iii) convolution type (GCNConv $>$ GINConv) have smaller but still significant effects. Across paradigms, per-layer BN encoders converge to 0.673--0.674 under the bootstrap loss and stay within 0.006 of this under their native losses, suggesting that once training is stable, the repaired topology is the main driver of performance.
+\textbf{Normalization as a stability factor.} Using Theorem~\ref{thm:bn_collapse} with the homophily-recovery and signal-preservation analyses in Appendix~\ref{app:theory}, we study normalization as a unified factor in training stability. Under the BYOL-style bootstrap loss, normalization controls stability (Figure~\ref{fig:rq2_bn}, settings (a) vs. (d) across nine encoders). Table~\ref{tab:bn_summary} shows 4-seed paired $t$-tests with Holm correction for setting (d): (i) adding BN yields the largest performance change ($\Delta F1_{\text{susp}} \approx 0.60$) when all else is fixed, while (ii) BN position (per-layer $>$ final-only) and (iii) convolution type (GCNConv $>$ GINConv) have smaller but still significant effects. Across paradigms, per-layer BN encoders converge to 0.667--0.670 under the bootstrap loss and stay within 0.001 of this under their native losses (Appendix~\ref{app:loss_table}), suggesting that once training is stable, the repaired topology is the main driver of performance.
 \begin{figure}[h]
     \centering
     \begin{subfigure}{0.49\columnwidth}
@@ -690,33 +690,32 @@ Linear probe (frozen)              & 0.218{\scriptsize±.011} & 0.510{\scriptsiz
 \label{app:label_eff_full}
 Table~\ref{tab:label_eff_full} reports the per-cell values for Figure~\ref{fig:rq3_labeff} ($F1_{\text{susp}}$ at $1\%,5\%,10\%$ labels; 4-seed mean$\pm$std). All baselines use the same behavioral features; however, boosting omits structural variables for fairness.
 
-% 인코더별 기본 로스 함수 적용 할 것이므로 주석처리 
-% \section{Loss Substitution: Native vs.\ Unified BYOL Bootstrap}
-% \label{app:loss_table}
+\section{Loss Substitution: Native vs.\ Unified BYOL Bootstrap}
+\label{app:loss_table}
 
-% All encoders in Tables~\ref{tab:rq1} and \ref{tab:rq4} use the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to factor out topology-by-level effects from the loss. Table~\ref{tab:loss_table} confirms this substitution on \hofinet, setting (d), 4 seeds: BN-equipped baselines with their original losses agree with BYOL within $\pm 0.001$. Bare DGI, MVGRL, and GRACE collapse under both their native JSD/InfoNCE and BYOL, showing that the collapse in Theorem~\ref{thm:bn_collapse} depends on BN rather than the choice of loss.
+All encoders in Tables~\ref{tab:rq1} and~\ref{tab:rq4} use the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to factor out loss-formulation effects from the topology-by-level comparison. Table~\ref{tab:loss_table} verifies this substitution on \hofinet, setting (d), 4 seeds: BN-equipped baselines under their native losses agree with the unified BYOL within $\pm 0.002$. Bare DGI, MVGRL, and GRACE collapse under both their native JSD/InfoNCE and BYOL, showing that the collapse in Theorem~\ref{thm:bn_collapse} depends on BN rather than the choice of loss.
 
-% \begin{table}[h]
-% \centering
-% \caption{Loss substitution on \hofinet, setting (d), 4-seed mean$\pm$std. \textbf{BYOL}: unified BYOL bootstrap loss; values are independent reruns under the current code, paired with Native to remove run-to-run drift. \textbf{Native}: original-paper loss for each encoder within framework (d). $\Delta = \text{Native} - \text{BYOL}$. GIN uses supervised cross-entropy and no contrastive native loss, so Native is omitted.}
-% \label{tab:loss_table}
-% \resizebox{\columnwidth}{!}{%
-% \begin{tabular}{llcccc}
-% \toprule
-% \textbf{Encoder} & \textbf{Native loss} & \textbf{BN} & \textbf{BYOL} $F1_{\text{susp}}$ & \textbf{Native} $F1_{\text{susp}}$ & $\Delta$ \\
-% \midrule
-% DGI~\cite{velivckovic2018deep}         & JSD BCE                & \xmark & 0.066{\scriptsize±.008} & 0.074{\scriptsize±.010} & $+0.008$ \\
-% DGI+BN~\cite{velivckovic2018deep}      & JSD BCE                & \cmark & 0.667{\scriptsize±.002} & 0.668{\scriptsize±.002} & $+0.001$ \\
-% MVGRL~\cite{hassani2020contrastive}    & JSD multi-view         & \xmark & 0.065{\scriptsize±.005} & 0.074{\scriptsize±.004} & $+0.009$ \\
-% MVGRL+BN~\cite{hassani2020contrastive} & JSD multi-view         & \cmark & 0.667{\scriptsize±.001} & 0.668{\scriptsize±.001} & $+0.001$ \\
-% GRACE~\cite{zhu2020deep}               & InfoNCE NT-Xent        & \xmark & 0.066{\scriptsize±.008} & 0.071{\scriptsize±.010} & $+0.005$ \\
-% GRACE+BN~\cite{zhu2020deep}            & InfoNCE NT-Xent        & \cmark & 0.670{\scriptsize±.003} & 0.670{\scriptsize±.002} & $\phantom{+}0.000$ \\
-% GBT~\cite{bielak2022graph}             & Barlow Twins           & \cmark & 0.667{\scriptsize±.002} & 0.667{\scriptsize±.003} & $\phantom{+}0.000$ \\
-% BGRL~\cite{thakoor2021large}           & BYOL bootstrap (same)  & \cmark & 0.628{\scriptsize±.001} & 0.627{\scriptsize±.003} & $-0.001$ \\
-% GIN~\cite{xu2018powerful}              & supervised CE          & \cmark & 0.585{\scriptsize±.027} & ---                     & ---      \\
-% \bottomrule
-% \end{tabular}}
-% \end{table}
+\begin{table}[h]
+\centering
+\caption{Loss substitution on \hofinet, setting (d), 4-seed mean$\pm$std. \textbf{BYOL}: unified BYOL bootstrap loss matching the main sweep (Tables~\ref{tab:rq1},~\ref{tab:rq4}). \textbf{Native}: each encoder trained with its original-paper loss in the same (d) framework, paired with the BYOL reruns to remove run-to-run drift. $\Delta = \text{Native} - \text{BYOL}$. GIN uses supervised cross-entropy and has no contrastive native loss, so Native is omitted.}
+\label{tab:loss_table}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Encoder} & \textbf{Native loss} & \textbf{BN} & \textbf{BYOL} $F1_{\text{susp}}$ & \textbf{Native} $F1_{\text{susp}}$ & $\Delta$ \\
+\midrule
+DGI~\cite{velivckovic2018deep}         & JSD BCE                & \xmark & 0.068{\scriptsize±.007} & 0.074{\scriptsize±.010} & $+0.006$ \\
+DGI+BN~\cite{velivckovic2018deep}      & JSD BCE                & \cmark & 0.667{\scriptsize±.001} & 0.668{\scriptsize±.002} & $+0.001$ \\
+MVGRL~\cite{hassani2020contrastive}    & JSD multi-view         & \xmark & 0.063{\scriptsize±.007} & 0.074{\scriptsize±.004} & $+0.011$ \\
+MVGRL+BN~\cite{hassani2020contrastive} & JSD multi-view         & \cmark & 0.667{\scriptsize±.002} & 0.668{\scriptsize±.001} & $+0.001$ \\
+GRACE~\cite{zhu2020deep}               & InfoNCE NT-Xent        & \xmark & 0.064{\scriptsize±.008} & 0.071{\scriptsize±.010} & $+0.007$ \\
+GRACE+BN~\cite{zhu2020deep}            & InfoNCE NT-Xent        & \cmark & 0.670{\scriptsize±.002} & 0.670{\scriptsize±.002} & $\phantom{+}0.000$ \\
+GBT~\cite{bielak2022graph}             & Barlow Twins           & \cmark & 0.667{\scriptsize±.002} & 0.667{\scriptsize±.003} & $\phantom{+}0.000$ \\
+BGRL~\cite{thakoor2021large}           & BYOL bootstrap (same)  & \cmark & 0.629{\scriptsize±.005} & 0.627{\scriptsize±.003} & $-0.002$ \\
+GIN~\cite{xu2018powerful}              & supervised CE          & \cmark & 0.590{\scriptsize±.012} & ---                     & ---      \\
+\bottomrule
+\end{tabular}}
+\end{table}
 
 \textbf{Loss robustness.} On setting (d) with GBT, four contrastive losses give essentially identical performance ($F1_{\text{susp}}=0.667$--$0.668$; 4 seeds), suggesting that the gains mainly come from the topology/level design rather than a particular loss.
 
