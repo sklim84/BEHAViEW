@@ -112,7 +112,7 @@ In anti-money laundering (AML) transaction graphs, suspicious accounts have pred
 
 \begin{figure*}[t]
     \centering
-    \includegraphics[width=0.75\textwidth]{figures/fig_multihop_correspondence.pdf}
+    \includegraphics[width=0.9\textwidth]{figures/fig_multihop_correspondence.pdf}
     \Description{One-to-one correspondence between the recovered behavioral-homophily neighborhood and the original multi-hop transaction topology for the same suspicious account. Numbered nodes identify the same accounts across the two panels.}
 \caption{One-to-one correspondence between topology repair and the multi-hop transaction topology for the same \hofinet account. Left: shortest transaction paths from the ego account to recovered accounts, plus a separate component with recovered nodes 1 and 4. Right: the recovered behavioral-homophily k-NN graph. Matching labels appear in both panels; the retained benign recovered neighbor is labeled B (dataset node id 320739), and dotted gray lines show the 1:1 mapping. The path to B begins through the one-hop transaction bridge node 26860. Eight of ten recovered nodes lie in the ego transaction component (one at 2 hops, seven at 4 hops); nodes 1 and 4 are linked by a 4-hop path in another component.}
 \label{fig:multihop_correspondence}
@@ -554,7 +554,7 @@ Thus, subgraph pooling efficacy is governed by (i) recovered homophily and (ii) 
 \end{table*}
 
 \textbf{Normalization as a stability factor.} Using Theorem~\ref{thm:bn_collapse} with the homophily-recovery and signal-preservation analyses in Appendix~\ref{app:theory}, we study normalization as a unified factor in training stability. Under the BYOL-style bootstrap loss, normalization controls stability (Figure~\ref{fig:rq2_bn}, settings (a) vs. (d) across nine encoders). Table~\ref{tab:bn_summary} shows 4-seed paired $t$-tests with Holm correction for setting (d): (i) adding BN yields the largest performance change ($\Delta F1_{\text{susp}} \approx 0.60$) when all else is fixed, while (ii) BN position (per-layer $>$ final-only) and (iii) convolution type (GCNConv $>$ GINConv) have smaller but still significant effects. Across paradigms, per-layer BN encoders converge to 0.667--0.670 under the bootstrap loss and stay within 0.001 of this under their native losses (Appendix~\ref{app:loss_table}), suggesting that once training is stable, the repaired topology is the main driver of performance.
-\begin{figure}[h]
+\begin{figure}[t]
     \centering
     \begin{subfigure}{0.49\columnwidth}
         \centering
