@@ -110,11 +110,11 @@ In anti-money laundering (AML) transaction graphs, suspicious accounts have pred
 
 \section{Introduction}
 
-\begin{figure}[h]
+\begin{figure}[t]
     \centering
-    \includegraphics[width=0.9\columnwidth]{figures/fig1_star_vs_recovered_cluster.pdf}
-    \Description{Topology repair example from the actual HOFINET experiment data. A suspicious account has a benign-dominated transaction-star neighborhood, while the one-shot recovered behavioral-homophily graph recovers a suspicious peer cluster before contrastive training.}
-\caption{Topology repair for a suspicious \hofinet account (real-world example). \textbf{Left:} the observed transaction star has 26 one-hop counterparties but only 1 suspicious neighbor. The red dashed ring marks a benign bridge (id 26860) whose behavioral $k$-NN neighborhood is 8/10 suspicious. \textbf{Right:} the one-shot recovered graph ($k{=}10$) contains 9 suspicious peers and one benign node B (id 320739). Figure~\ref{fig:multihop_correspondence} maps these recovered nodes to transaction paths. Solid gray: transactions; dashed brown: behavioral $k$-NN.}
+    \includegraphics[width=\columnwidth]{figures/fig1_layered_distillation.pdf}
+    \Description{Topology repair visualization from the actual HOFINET experiment data. The observed multi-hop transaction topology shows suspicious peers as distant and mixed with benign accounts. The recovered behavioral-homophily topology shows behavior-only kNN lifting similar accounts into a compact suspicious peer cluster.}
+\caption{Distillation-style view of topology repair for a suspicious \hofinet account (real example). In the observed multi-hop transaction topology, the suspicious ego has only 1 suspicious one-hop neighbor among 26 counterparties, and other suspicious peers are several transaction hops away. Behavior-only $k$-NN then lifts behaviorally similar accounts from the transaction floor into a compact recovered homophily cluster with 9 suspicious accounts among 10 behavioral neighbors. Nodes 1 and 4 are not ego-reachable transaction-path nodes in this view; they are shown as recovered-topology neighbors from another topology, and their lift arrows indicate cross-topology correspondence. Labels are used only for visualization and evaluation, not for recovered-graph construction.}
 \label{fig:intro_topology_repair}
 \end{figure}
 
