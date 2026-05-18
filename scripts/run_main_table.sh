@@ -77,10 +77,18 @@ echo "  SEEDS=$SEEDS"
 echo "  OUTPUT (hofinet)=$OUTPUT_DIR_HOFINET / (amlworld)=$OUTPUT_DIR_AMLWORLD / (amlnet)=$OUTPUT_DIR_AMLNET"
 
 # is_done $NAME $TMP $FINAL: 0 (done, skip) | 1 (not done, run)
+# Also scans sibling tmp files (other tags) so parallel dispatchers can
+# split overlapping work safely.
 is_done() {
     local NAME="$1" TMP="$2" FINAL="$3"
     [ -f "$TMP"   ] && grep -q ",${NAME}," "$TMP"   2>/dev/null && return 0
     [ -f "$FINAL" ] && grep -q ",${NAME}," "$FINAL" 2>/dev/null && return 0
+    local TMP_DIR=$(dirname "$TMP")
+    local TMP_PREFIX=$(basename "$TMP" | sed 's/_[^_]*\.csv$//')
+    local sib
+    for sib in "$TMP_DIR/${TMP_PREFIX}"_*.csv; do
+        [ -f "$sib" ] && [ "$sib" != "$TMP" ] && grep -q ",${NAME}," "$sib" 2>/dev/null && return 0
+    done
     return 1
 }
 
