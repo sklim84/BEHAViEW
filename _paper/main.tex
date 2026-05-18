@@ -204,6 +204,9 @@ On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:
   {Target Encoder\\$f_\xi$ (EMA copy)};
 \draw[myarrow] (v1.east) -- (enc1.west);
 \draw[myarrow] (v2.east) -- (enc2.west);
+% Symmetric BYOL: each encoder processes both views (dashed = cross-pairing)
+\draw[myarrow, dashed] (v1.east) -- (enc2.west);
+\draw[myarrow, dashed] (v2.east) -- (enc1.west);
 \draw[emaarrow] (enc1.south) -- node[pos=0.5, right=2pt, text=purple!80]{EMA} (enc2.north -| enc1.south);
 \node[above=0.2cm of enc1, font=\bfseries, text=teal!70] {GNN Encoder};
 % --- COLUMN 4: Subgraph Pool ---
