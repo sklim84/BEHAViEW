@@ -104,9 +104,9 @@ In anti-money laundering (AML) transaction graphs, suspicious accounts have pred
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=\columnwidth]{figures/fig1_star_vs_recovered_cluster.pdf}
+    \includegraphics[width=0.80\columnwidth]{figures/fig1_star_vs_recovered_cluster.pdf}
     \Description{Topology repair example from the actual HOFINET experiment data. A suspicious account has a benign-dominated transaction-star neighborhood, while the recovered behavioral-homophily graph recovers a suspicious peer cluster.}
-\caption{A suspicious \hofinet account (real example). Left: the observed transaction graph is a near-star with 26 one-hop counterparties, 1 suspicious. The red dashed ring marks a benign one-hop bridge (node id 26860) whose behavioral k-NN neighborhood is 8/10 suspicious under the repaired topology. Right: the recovered neighborhood graph from the same ego and node features ($k{=}10$) forms a compact 10-node cluster, 9 suspicious. The remaining benign neighbor is a different account, labeled B (node id 320739). In Figure~\ref{fig:multihop_correspondence}, node 26860 is the first hop on the path from the ego to recovered B. S = suspicious, B = benign; solid gray edges are transactions, dashed brown edges are behavioral k-NN links.}
+\caption{A suspicious \hofinet account (real example). Left: the observed transaction graph is a near-star with 26 one-hop counterparties, 1 suspicious. The red dashed ring marks a benign one-hop bridge (id 26860) whose behavioral k-NN neighborhood is 8/10 suspicious under the repaired topology. Right: with the same ego and node features and $k{=}10$, the recovered neighborhood is a compact cluster of 10 nodes, 9 suspicious. The single benign neighbor is a different account, labeled B (id 320739). In Figure~\ref{fig:multihop_correspondence}, node 26860 is the first hop on the path from the ego to recovered B. S = suspicious, B = benign; solid gray edges are transactions, dashed brown edges are behavioral k-NN links.}
 \label{fig:intro_topology_repair}
 \end{figure}
 
@@ -114,7 +114,7 @@ In anti-money laundering (AML) transaction graphs, suspicious accounts have pred
     \centering
     \includegraphics[width=0.75\textwidth]{figures/fig_multihop_correspondence.pdf}
     \Description{One-to-one correspondence between the recovered behavioral-homophily neighborhood and the original multi-hop transaction topology for the same suspicious account. Numbered nodes identify the same accounts across the two panels.}
-\caption{One-to-one correspondence between topology repair and multi-hop transaction topology for the same \hofinet account. Left: shortest transaction paths from the ego account to recovered accounts, plus a separate component with recovered nodes 1 and 4. Right: the recovered behavioral-homophily k-NN graph. Matching labels appear in both panels; the retained benign recovered neighbor is labeled B and annotated with dataset node id 320739, and dotted gray lines show the 1:1 mapping. For traceability, every non-ego node on the transaction path from the ego to B is annotated with its dataset node id. Eight of ten recovered nodes lie in the ego transaction component (one at 2 hops, seven at 4 hops); nodes 1 and 4 are linked by a 4-hop path in another component.}
+\caption{One-to-one correspondence between topology repair and the multi-hop transaction topology for the same \hofinet account. Left: shortest transaction paths from the ego account to recovered accounts, plus a separate component with recovered nodes 1 and 4. Right: the recovered behavioral-homophily k-NN graph. Matching labels appear in both panels; the retained benign recovered neighbor is labeled B (dataset node id 320739), and dotted gray lines show the 1:1 mapping. The path to B begins through the one-hop transaction bridge node 26860. Eight of ten recovered nodes lie in the ego transaction component (one at 2 hops, seven at 4 hops); nodes 1 and 4 are linked by a 4-hop path in another component.}
 \label{fig:multihop_correspondence}
 \end{figure*}
 
@@ -518,7 +518,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 % \label{fig:rq1_shift_hist}
 % \end{figure}
 
-\textbf{Robustness to $k$.} On GBT, $k{=}10$ performs best over $k \in \{5,10,20,50\}$, with $k{=}5$ close behind (d) $F1_{\text{susp}}{=}0.676$. For $k>10$, benign mixing reduces S-S density and (d) decreases monotonically (0.661 at $k{=}50$). The total (d) $F1_{\text{susp}}$ range is only 0.021, indicating robustness to $k$.
+\textbf{Robustness to $k$.} On GBT, $k{=}10$ performs best over $k \in $ \{5, 10, 20, 50\}, with $k{=}5$ close behind (d) $F1_{\text{susp}}{=}0.676$. For $k>10$, benign mixing reduces S-S density and (d) decreases monotonically (0.661 at $k{=}50$). The total (d) $F1_{\text{susp}}$ range is only 0.021, indicating robustness to $k$.
 
 \textbf{Additional checks.} Seed-level analyses show that building the recovered neighborhood graph from behavioral features alone improves over the all-feature baseline (MLGCL-/GCPAL-style affinity graph) by $+0.040$ $F1_{\text{susp}}$ on \hofinet. The repair is a one-time preprocessing step (608.9\,s on \hofinet). We report another pooling variant (HAP) in Appendix~\ref{app:theory}.
 
@@ -584,6 +584,7 @@ Under the BYOL-style bootstrap loss~\eqref{eq:loss}, the trivial constant soluti
 RQ3 asks whether \method's self-supervised representation remains competitive with supervised baselines under label scarcity. We vary the training label fraction in $\{1\%, 5\%, 10\%\}$ and compare \method to six supervised baselines from three families: tabular (MLP, XGBoost~\cite{xgboost2016}, LightGBM~\cite{lightgbm2017}), generic GNN (GCN~\cite{kipf2016semi}, GAT~\cite{velivckovic2017graph}), and fraud-specific GNN (CARE-GNN~\cite{dou2020enhancing}). The MLP uses a standard stacked Linear+ReLU architecture without BatchNorm, as in prior fraud-GNN work. All models share the same encoder inputs $\mathbf{X}^{\text{enc}}$ (20 behavioral + 4 network-derived features; Table~\ref{tab:features}). \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet and AMLNet, BGRL on AMLworld).
 
 \begin{figure*}[h]
+\label{fig:rq3_labeff}
 \centering
 \includegraphics[width=0.75\textwidth]{figures/fig_rq3_labeff.pdf}
 \caption{Label-efficiency on three AML datasets at train label fractions $\{1\%, 5\%, 10\%\}$ (4-seed mean$\pm$std, shaded).}
