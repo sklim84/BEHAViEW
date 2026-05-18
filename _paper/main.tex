@@ -126,15 +126,15 @@ Money laundering, accounting for an estimated 2--5\% of global GDP~\cite{unodc_m
 
 \textbf{Challenge 3: delayed and sparse labels create a cold start.} Labels are often only available after retrospective investigations and reporting processes that can take months~\cite{fatf2013guidance,kofia2024aml}. Combined with weak neighborhood signals for the suspicious class, these constraints cause cold-start problems for supervised fraud models in production.
 
-We propose \method, a graph contrastive learning framework that repairs evasion-shaped detection topologies by restoring behavioral homophily. We study two separable steps: first, whether the recovered graph actually creates class-relevant suspicious neighborhoods (Theorems~\ref{thm:knn_homophily}--\ref{thm:combined}); and second, whether pooling on those neighborhoods preserves or dilutes the recovered signal (Theorem~\ref{thm:meanpool}). Normalization determines whether this mechanism is realized reliably under the BYOL-style objective (Proposition~\ref{thm:bn_collapse}).
+We propose \method, a graph contrastive learning framework that repairs evasion-shaped detection topologies by restoring behavioral homophily. We study two separable steps. First, we ask whether the recovered graph creates class-relevant suspicious neighborhoods (Theorems~\ref{thm:knn_homophily}--\ref{thm:combined}). Second, we ask whether pooling on those neighborhoods preserves or dilutes the recovered signal (Theorem~\ref{thm:meanpool}). Normalization determines whether this mechanism is realized reliably under the BYOL-style objective (Proposition~\ref{thm:bn_collapse}).
 
 The central contribution is the AML-specific role assigned to the behavior-only k-NN graph: it serves as topology repair for suspicious-class neighborhoods. Prior methods construct feature-derived k-NN or affinity graphs and contrast them with the original topology~\cite{shang2023mlgcl,fan2021featuretopology,chen2023asp,lu2024graph}. In AML, the observed transaction topology can be detection-corrupted: suspicious accounts deliberately connect to benign counterparties, so transaction neighborhoods are poor carriers of suspicious-class evidence. The repaired branch supplies the missing aggregation neighborhood for suspicious-class evidence, while the final representation still retains both transaction-topology and repaired-topology signals. This leads to two testable consequences. Behavioral features should repair the topology better than connectivity-derived or all-feature affinities, because the latter inherit topology bias. Aggregation should also operate on the repaired topology, not only on the original transaction graph. We validate these consequences in Section~\ref{sec:experiments} and support them theoretically in Appendix~\ref{app:theory}.
 
 On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:5.7 to 1:1.4, with similar gains on AMLworld~\cite{amlpatterns2024realistic} and AMLNet. Our contributions are:
 
 \begin{itemize}[leftmargin=*, topsep=2pt, itemsep=1pt, parsep=0pt, partopsep=0pt]
-    \item \textbf{Topology repair via behavioral homophily recovery.} We build a topology-independent recovered neighborhood graph and evaluate the repair empirically (homophily; S-S:S-B ratio). We also provide a probabilistic guarantee that behavioral $k$-NN recovers high homophily under mild feature-separation and derive a DCSBM-based lower bound on the homophily gap between the recovered and transaction graphs (formal statements and proofs in Appendix~\ref{app:theory}).
-    \item \textbf{Self-supervised representations under label scarcity.} Frozen representations of \method remain competitive with supervised tabular and GNN baselines in cold-start settings, addressing the multi-month label delays typical in AML.
+    \item \textbf{Topology repair via behavioral homophily recovery.} We build a topology-independent recovered neighborhood graph and evaluate the repair empirically (homophily; S-S:S-B ratio). We also provide a probabilistic guarantee that behavioral $k$-NN recovers high homophily under mild feature-separation. A DCSBM-based lower bound further characterizes the homophily gap between the recovered and transaction graphs (formal statements and proofs in Appendix~\ref{app:theory}).
+    \item \textbf{Self-supervised representations under label scarcity.} Frozen representations of \method outperform supervised tabular and GNN baselines in cold-start settings (1\% labels) and remain competitive at 10\% labels, addressing the multi-month label delays typical in AML.
     \item \textbf{Signal preservation under aggregation.} A sign-flip threshold determines when pooling on the repaired topology preserves rather than dilutes suspicious signals; we empirically validate this regime.
 \end{itemize}
 
@@ -302,9 +302,9 @@ We group node features into behavioral, network-derived, and structural categori
 \multicolumn{2}{l}{\textit{\textbf{Behavioral}}} & \textit{Total} - 20 & & \\
 \midrule
 \textbf{Amount stats}     & \makecell[l]{\text{in\_mean, in\_max, in\_std}\\\text{out\_mean, out\_max, out\_std}} & 6 & \checkmark & \checkmark \\
-\textbf{Temporal (3-month)}  & \makecell[l]{\text{in\_3m\_mean, in\_3m\_count}\\\text{out\_3m\_mean, out\_3m\_count}} & 4 & \checkmark & \checkmark \\
-\textbf{Temporal (6-month)}  & \makecell[l]{\text{in\_6m\_mean, in\_6m\_count}\\\text{out\_6m\_mean, out\_6m\_count}} & 4 & \checkmark & \checkmark \\
-\textbf{Temporal (12-month)} & \makecell[l]{\text{in\_12m\_mean, in\_12m\_count}\\\text{out\_12m\_mean, out\_12m\_count}} & 4 & \checkmark & \checkmark \\
+\makecell{\textbf{Temporal}\\\textbf{(3-month)}}  & \makecell[l]{\text{in\_3m\_mean, in\_3m\_count}\\\text{out\_3m\_mean, out\_3m\_count}} & 4 & \checkmark & \checkmark \\
+\makecell{\textbf{Temporal}\\\textbf{(6-month)}}  & \makecell[l]{\text{in\_6m\_mean, in\_6m\_count}\\\text{out\_6m\_mean, out\_6m\_count}} & 4 & \checkmark & \checkmark \\
+\makecell{\textbf{Temporal}\\\textbf{(12-month)}} & \makecell[l]{\text{in\_12m\_mean, in\_12m\_count}\\\text{out\_12m\_mean, out\_12m\_count}} & 4 & \checkmark & \checkmark \\
 \textbf{Entropy}          & \makecell[l]{\text{md\_type\_entropy, fnd\_type\_entropy}} & 2 & \checkmark & \checkmark \\
 \midrule
 \multicolumn{2}{l}{\textit{Network-derived}} & \textit{Total} - 4 & & \\
