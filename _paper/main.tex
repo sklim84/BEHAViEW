@@ -118,14 +118,6 @@ In anti-money laundering (AML) transaction graphs, suspicious accounts have pred
 \label{fig:intro_topology_repair}
 \end{figure}
 
-\begin{figure*}[h]
-    \centering
-    \includegraphics[width=1\textwidth]{figures/fig_multihop_correspondence.pdf}
-    \Description{One-to-one correspondence between the recovered behavioral-homophily neighborhood and the original multi-hop transaction topology for the same suspicious account. Numbered nodes identify the same accounts across the two panels.}
-\caption{Multi-hop correspondence for the same \hofinet account. \textbf{Left:} transaction shortest-path expansion from the ego to recovered nodes, including a second component containing recovered nodes 1 and 4. \textbf{Right:} recovered behavioral-homophily $k$-NN graph. Matching indices and dotted lines show 1:1 correspondence; benign recovered node B (id 320739) is reached through bridge node 26860. Among 10 recovered nodes, 8 lie in the ego transaction component (1 at 2 hops; 7 at 4 hops). Solid gray: transactions; dashed brown: behavioral $k$-NN.}
-\label{fig:multihop_correspondence}
-\end{figure*}
-
 Money laundering, accounting for an estimated 2--5\% of global GDP~\cite{unodc_ml}, has become more sophisticated through tactics such as structuring, layering, and mule networks~\cite{fatf2018pml,li2020flowscope}. GNN-based methods have thus been explored to learn structural patterns in transaction networks beyond rule-based detection~\cite{cheng2025graph,cardoso2022laundrograph}. Earlier AML studies also used network analysis and typology-driven perspectives to characterize laundering behaviors and transaction structures~\cite{drezewski2015application,teichmann2020recent}. In AML, however, neighborhood aggregation is only useful when a node's neighbors carry class-relevant evidence. For the suspicious class, this evidence is often weak because suspicious accounts intentionally mix with benign counterparties. We focus on three challenges in AML transaction networks: suspicious-class neighborhood heterophily~\cite{zhu2020beyond}, severe class imbalance, and delayed or limited labels~\cite{fatf2013guidance}. To address these jointly, we adopt a topology-repair perspective on the topology--behavior mismatch.
 
 \textbf{Challenge 1: evasion-shaped neighborhoods dilute suspicious signals.} Money-laundering accounts deliberately mix with benign accounts, forming mule networks. In \hofinet's transaction graph, about 85\% of suspicious-incident edges connect to benign accounts (S-S:S-B $=$ 1:5.7). Many suspicious accounts lie even deeper in benign neighborhoods (Figure~\ref{fig:intro_topology_repair}). Message passing thus struggles to accumulate suspicious evidence. Standard graph contrastive learning (GCL) augmentations~\cite{you2020graph,velivckovic2018deep,zhu2021graph} preserve observed account linkages; therefore, they do not directly address the topology–behavior mismatch around suspicious accounts.
