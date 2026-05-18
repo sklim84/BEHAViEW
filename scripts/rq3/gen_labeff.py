@@ -1,6 +1,6 @@
 """Generate RQ3 label-efficiency line plot for BehaView paper.
 
-Single figure with 3 panels (HOFINET, AMLworld, AMLNet).
+Single figure with 3 panels (ATNet, AMLworld, AMLNet).
 X-axis: train_ratio (log scale 1%, 5%, 10%).
 Y-axis: F1_susp with shaded ±std band.
 Lines: BehaView, MLP, XGBoost, LightGBM, GAT, GCN, CARE-GNN.
@@ -60,7 +60,7 @@ STYLE = {
 MODEL_ORDER = ['BehaView', 'XGBoost', 'LightGBM', 'MLP', 'GAT', 'GCN', 'CARE-GNN']
 
 DATASETS = [
-    ('hofinet',  'HOFINET ($\\rho{=}2.13\\%$)'),
+    ('hofinet',  'ATNet ($\\rho{=}2.13\\%$)'),
     ('amlworld', 'AMLworld ($\\rho{=}1.23\\%$)'),
     ('amlnet',   'AMLNet ($\\rho{=}13.52\\%$)'),
 ]

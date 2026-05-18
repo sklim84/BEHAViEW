@@ -40,6 +40,7 @@ C_EGO = "#F0A000"
 C_TX_EDGE = "#7A8A99"
 C_BHV_EDGE = "#9E6B45"
 C_MAP = "#6B7280"
+C_TRACE = "#334155"
 C_TEXT = "#202124"
 C_MUTED = "#4B5563"
 C_UNREACH = "#F3F4F6"
@@ -65,6 +66,11 @@ def node_color(label: int, is_ego: bool = False) -> str:
     if is_ego:
         return C_EGO
     return C_SUSP if int(label) == 1 else C_BENIGN
+
+
+def recovered_node_text(node: int, labels: np.ndarray, target_ids: dict[int, int]) -> str:
+    target_id = target_ids[node]
+    return "B" if int(labels[node]) == 0 else str(target_id)
 
 
 def load_labels_and_graph() -> tuple[np.ndarray, dict[int, list[int]]]:
@@ -283,6 +289,83 @@ def draw_node(
     )
 
 
+def draw_node_id_callout(ax, xy: tuple[float, float], node_idx: int, *, side: str = "right") -> None:
+    x, y = xy
+    if side == "right":
+        dx, dy, ha, va = 0.24, 0.06, "left", "bottom"
+    elif side == "left":
+        dx, dy, ha, va = -0.24, 0.06, "right", "bottom"
+    elif side == "above":
+        dx, dy, ha, va = 0.0, 0.25, "center", "bottom"
+    elif side == "above_left":
+        dx, dy, ha, va = -0.22, 0.25, "right", "bottom"
+    elif side == "below":
+        dx, dy, ha, va = 0.0, -0.27, "center", "top"
+    elif side == "below_left":
+        dx, dy, ha, va = -0.22, -0.25, "right", "top"
+    else:
+        dx, dy, ha, va = 0.0, -0.20, "center", "top"
+    ax.annotate(
+        f"idx {node_idx}",
+        xy=(x, y),
+        xytext=(x + dx, y + dy),
+        textcoords="data",
+        ha=ha,
+        va=va,
+        fontsize=6.5,
+        color=C_MUTED,
+        zorder=7,
+        bbox={"facecolor": "white", "edgecolor": "#CBD5E1", "linewidth": 0.35, "alpha": 0.9, "pad": 0.65},
+        arrowprops={
+            "arrowstyle": "-",
+            "color": C_TRACE,
+            "linewidth": 0.55,
+            "alpha": 0.72,
+            "shrinkA": 1,
+            "shrinkB": 7,
+        },
+    )
+
+
+def recovered_b_path(paths: dict[int, list[int]], labels: np.ndarray) -> list[int]:
+    benign_targets = [target for target in paths if int(labels[target]) == 0]
+    if not benign_targets:
+        return []
+    return paths[min(benign_targets, key=lambda node: len(paths[node]))]
+
+
+def draw_path_idx_callouts(
+    ax,
+    positions: dict[int, tuple[float, float]],
+    path: list[int],
+) -> None:
+    sides = ["below", "below_left", "above_left", "below_left", "right"]
+    for depth, node in enumerate(path[1:], start=1):
+        if node not in positions:
+            continue
+        side = sides[depth] if depth < len(sides) else "right"
+        draw_node_id_callout(ax, positions[node], node, side=side)
+
+
+def draw_trace_path(
+    ax,
+    positions: dict[int, tuple[float, float]],
+    path: list[int],
+) -> None:
+    for u, v in zip(path[:-1], path[1:]):
+        if u not in positions or v not in positions:
+            continue
+        ax.plot(
+            [positions[u][0], positions[v][0]],
+            [positions[u][1], positions[v][1]],
+            color=C_TRACE,
+            linewidth=1.45,
+            alpha=0.72,
+            solid_capstyle="round",
+            zorder=2,
+        )
+
+
 def draw_transaction_paths(
     ax,
     rep: dict,
@@ -321,14 +404,19 @@ def draw_transaction_paths(
     if separate_positions:
         ax.text(separate_x, 1.48, "other component", ha="center", fontsize=8.5, color=C_MUTED)
 
+    trace_path = recovered_b_path(paths, labels)
+    draw_trace_path(ax, positions, trace_path)
+
     target_set = set(target_ids)
     for node, xy in sorted(positions.items(), key=lambda item: (item[1][0], -item[1][1])):
         if node == ego:
             draw_node(ax, xy, int(labels[node]), "E", is_ego=True)
         elif node in target_set:
-            draw_node(ax, xy, int(labels[node]), str(target_ids[node]), is_target=True)
+            draw_node(ax, xy, int(labels[node]), recovered_node_text(node, labels, target_ids), is_target=True)
         else:
             draw_node(ax, xy, int(labels[node]), "S" if labels[node] else "B")
+
+    draw_path_idx_callouts(ax, positions, trace_path)
 
     if separate_positions:
         separate_nodes = {
@@ -388,7 +476,9 @@ def draw_recovered_graph(
 
     for nb in targets:
         node = int(nb["idx"])
-        draw_node(ax, positions[node], int(labels[node]), str(target_ids[node]), is_target=True)
+        draw_node(ax, positions[node], int(labels[node]), recovered_node_text(node, labels, target_ids), is_target=True)
+        if int(labels[node]) == 0:
+            draw_node_id_callout(ax, positions[node], node, side="left")
     draw_node(ax, positions[ego], int(labels[ego]), "E", is_ego=True)
 
     return positions

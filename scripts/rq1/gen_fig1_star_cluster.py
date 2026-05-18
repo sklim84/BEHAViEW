@@ -144,8 +144,17 @@ def select_flagged_benign_neighbors(rep: dict, max_flags: int = 1) -> set[int]:
     return {node_idx for suspicious_count, _, node_idx in ranked[:max_flags] if suspicious_count >= K_BHV // 2}
 
 
-def draw_node(ax, xy, label: int, *, is_ego: bool = False, size: float = 170.0) -> None:
+def draw_node(
+    ax,
+    xy,
+    label: int,
+    *,
+    is_ego: bool = False,
+    size: float = 170.0,
+    text: str | None = None,
+) -> None:
     x, y = xy
+    label_text = text if text is not None else ("S" if int(label) == 1 else "B")
     ax.scatter(
         [x],
         [y],
@@ -158,10 +167,10 @@ def draw_node(ax, xy, label: int, *, is_ego: bool = False, size: float = 170.0) 
     ax.text(
         x,
         y,
-        "S" if int(label) == 1 else "B",
+        label_text,
         ha="center",
         va="center",
-        fontsize=9.2 if not is_ego else 10.8,
+        fontsize=8.6 if len(label_text) > 1 and not is_ego else (9.2 if not is_ego else 10.8),
         color="white" if not is_ego else "#111111",
         fontweight="bold",
         zorder=5,
@@ -180,6 +189,61 @@ def draw_potential_suspicious_ring(ax, xy, radius: float = 0.165) -> None:
         zorder=6,
     )
     ax.add_patch(ring)
+
+
+def draw_node_id_callout(
+    ax,
+    xy,
+    node_idx: int,
+    *,
+    text: str | None = None,
+    x_offset: float = 0.0,
+    y_offset: float = -0.235,
+    ha: str = "center",
+    va: str = "top",
+) -> None:
+    x, y = xy
+    ax.text(
+        x + x_offset,
+        y + y_offset,
+        text if text is not None else f"idx {node_idx}",
+        ha=ha,
+        va=va,
+        fontsize=6.1,
+        color=C_MUTED,
+        linespacing=0.9,
+        zorder=7,
+        bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.82, "pad": 0.6},
+    )
+
+
+def draw_external_node_id_callout(
+    ax,
+    node_xy: tuple[float, float],
+    label_xy: tuple[float, float],
+    text: str,
+) -> None:
+    ax.plot(
+        [node_xy[0], label_xy[0] - 0.04],
+        [node_xy[1], label_xy[1]],
+        color=C_MUTED,
+        linewidth=0.55,
+        alpha=0.55,
+        linestyle=(0, (1.2, 2.0)),
+        zorder=3,
+    )
+    ax.text(
+        label_xy[0],
+        label_xy[1],
+        text,
+        ha="left",
+        va="center",
+        fontsize=6.1,
+        color=C_MUTED,
+        linespacing=0.9,
+        zorder=7,
+        bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.86, "pad": 0.7},
+    )
 
 
 def draw_panel_box(
@@ -310,7 +374,14 @@ def draw_transaction_star(ax, rep: dict) -> None:
     draw_node(ax, positions[ego_idx], 1, is_ego=True, size=190)
     for nb in neighbors:
         if int(nb["idx"]) in flagged_neighbors:
-            draw_potential_suspicious_ring(ax, positions[int(nb["idx"])])
+            node_idx = int(nb["idx"])
+            draw_potential_suspicious_ring(ax, positions[node_idx])
+            draw_external_node_id_callout(
+                ax,
+                positions[node_idx],
+                (1.30, -1.08),
+                f"bridge\nidx {node_idx}",
+            )
 
     total = int(rep["tx_S"]) + int(rep["tx_B"])
     ax.text(
@@ -341,7 +412,21 @@ def draw_behavioral_cluster(ax, rep: dict) -> None:
     )
     draw_edges(ax, rep["bhv_induced_edges"], positions, C_BHV_EDGE, dashed=True)
     for nb in neighbors:
-        draw_node(ax, positions[int(nb["idx"])], int(nb["label"]), size=192)
+        node_idx = int(nb["idx"])
+        node_label = int(nb["label"])
+        node_text = "B" if node_label == 0 else None
+        draw_node(ax, positions[node_idx], node_label, size=192, text=node_text)
+        if node_label == 0:
+            draw_node_id_callout(
+                ax,
+                positions[node_idx],
+                node_idx,
+                text=f"recovered B\nidx {node_idx}",
+                x_offset=0.21,
+                y_offset=-0.03,
+                ha="left",
+                va="center",
+            )
     draw_node(ax, positions[ego_idx], 1, is_ego=True, size=215)
 
     total = int(rep["bhv_S"]) + int(rep["bhv_B"])
