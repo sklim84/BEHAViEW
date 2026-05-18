@@ -9,6 +9,43 @@
   year={2013},
 }
 
+@techreport{fatf2018pml,
+  title={Professional Money Laundering},
+  author={Financial Action Task Force (FATF)},
+  institution={FATF/OECD},
+  year={2018},
+  url={https://www.fatf-gafi.org/en/publications/Methodsandtrends/Professional-money-laundering.html}
+}
+
+
+@article{drezewski2015application,
+  title={The application of social network analysis algorithms in a system supporting money laundering detection},
+  author={Dre{\.z}ewski, Rafa{\l} and Sepielak, Jan and Filipkowski, Wojciech},
+  journal={Information Sciences},
+  volume={295},
+  pages={18--32},
+  year={2015},
+  publisher={Elsevier}
+}
+
+@article{teichmann2020recent,
+  title={Recent trends in money laundering},
+  author={Teichmann, Fabian},
+  journal={Crime, Law and Social Change},
+  volume={73},
+  pages={237--247},
+  year={2020},
+  publisher={Springer}
+}
+
+@misc{unodc_ml,
+  author={{United Nations Office on Drugs and Crime}},
+  title={Money Laundering},
+  howpublished={\url{https://www.unodc.org/unodc/en/money-laundering/overview.html}},
+  note={Accessed: 2026-05-11},
+  year={2024}
+}
+
 @report{kofia2024aml,
   title={Current Status of Anti-Money Laundering System Operations},
   author={Korea Financial Intelligence Unit (KoFIU)},
@@ -20,18 +57,20 @@
 % GNN Foundations
 % =============================================
 
-@article{kipf2016semi,
-  title={Semi-supervised classification with graph convolutional networks},
-  author={Kipf, Thomas N and Welling, Max},
-  journal={arXiv preprint arXiv:1609.02907},
-  year={2016}
+@inproceedings{kipf2016semi,
+  title={Semi-Supervised Classification with Graph Convolutional Networks},
+  author={Kipf, Thomas N. and Welling, Max},
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2017},
+  url={https://openreview.net/forum?id=SJU4ayYgl}
 }
 
-@article{velivckovic2017graph,
-  title={Graph attention networks},
-  author={Veli{\v{c}}kovi{\'c}, Petar and Cucurull, Guillem and Casanova, Arantxa and Romero, Adriana and Lio, Pietro and Bengio, Yoshua},
-  journal={arXiv preprint arXiv:1710.10903},
-  year={2017}
+@inproceedings{velivckovic2017graph,
+  title={Graph Attention Networks},
+  author={Veli{\v{c}}kovi{\'c}, Petar and Cucurull, Guillem and Casanova, Arantxa and Romero, Adriana and Li{\`o}, Pietro and Bengio, Yoshua},
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2018},
+  url={https://openreview.net/forum?id=rJXMpikCZ}
 }
 
 @article{hamilton2017inductive,
@@ -42,16 +81,25 @@
   year={2017}
 }
 
-@article{xu2018powerful,
-  title={How powerful are graph neural networks?},
+@inproceedings{xu2018powerful,
+  title={How Powerful Are Graph Neural Networks?},
   author={Xu, Keyulu and Hu, Weihua and Leskovec, Jure and Jegelka, Stefanie},
-  journal={arXiv preprint arXiv:1810.00826},
-  year={2018}
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2019},
+  url={https://openreview.net/forum?id=ryGs6iA5Km}
 }
 
 % =============================================
 % Contrastive Learning Foundations
 % =============================================
+
+@inproceedings{velivckovic2018deep,
+  title={Deep Graph Infomax},
+  author={Veli{\v{c}}kovi{\'c}, Petar and Fedus, William and Hamilton, William L. and Li{\`o}, Pietro and Bengio, Yoshua and Hjelm, R. Devon},
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2019},
+  url={https://openreview.net/forum?id=rklz9iAcKQ}
+}
 
 @article{grill2020bootstrap,
   title={Bootstrap your own latent-a new approach to self-supervised learning},
@@ -60,13 +108,6 @@
   volume={33},
   pages={21271--21284},
   year={2020}
-}
-
-@article{velivckovic2018deep,
-  title={Deep graph infomax},
-  author={Veli{\v{c}}kovi{\'c}, Petar and Fedus, William and Hamilton, William L and Li{\`o}, Pietro and Bengio, Yoshua and Hjelm, R Devon},
-  journal={arXiv preprint arXiv:1809.10341},
-  year={2018}
 }
 
 @inproceedings{hassani2020contrastive,
@@ -78,7 +119,6 @@
   organization={PMLR}
 }
 
-
 @article{you2020graph,
   title={Graph contrastive learning with augmentations},
   author={You, Yuning and Chen, Tianlong and Sui, Yongduo and Chen, Ting and Wang, Zhangyang and Shen, Yang},
@@ -88,18 +128,20 @@
   year={2020}
 }
 
-@article{zhu2020deep,
-  title={Deep graph contrastive representation learning},
+@inproceedings{zhu2020deep,
+  title={Deep Graph Contrastive Representation Learning},
   author={Zhu, Yanqiao and Xu, Yichen and Yu, Feng and Liu, Qiang and Wu, Shu and Wang, Liang},
-  journal={arXiv preprint arXiv:2006.04131},
-  year={2020}
+  booktitle={International Conference on Machine Learning (ICML)},
+  year={2020},
+  url={https://icml.cc/virtual/2020/poster/5989}
 }
 
-@article{thakoor2021large,
-  title={Large-scale representation learning on graphs via bootstrapping},
-  author={Thakoor, Shantanu and Tallec, Corentin and Azar, Mohammad Gheshlaghi and Azabou, Mehdi and Dyer, Eva L and Munos, Remi and Veli{\v{c}}kovi{\'c}, Petar and Valko, Michal},
-  journal={arXiv preprint arXiv:2102.06514},
-  year={2021}
+@inproceedings{thakoor2021large,
+  title={Bootstrapped Representation Learning on Graphs},
+  author={Thakoor, Shantanu and Tallec, Corentin and Azar, Mohammad Gheshlaghi and Azabou, Mehdi and Dyer, Eva L. and Munos, R{\'e}mi and Veli{\v{c}}kovi{\'c}, Petar and Valko, Michal},
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2022},
+  url={https://openreview.net/forum?id=1pOeY1eKqg}
 }
 
 @article{bielak2022graph,
@@ -115,6 +157,17 @@
 % =============================================
 % GNN-based Fraud Detection
 % =============================================
+
+@inproceedings{li2020flowscope,
+  title={FlowScope: Spotting Money Laundering Based on Graphs},
+  author={Li, Xiangfeng and Liu, Shenghua and Li, Zifeng and Han, Xiaotian and Shi, Chuan and Hooi, Bryan and Huang, He and Cheng, Xueqi},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={34},
+  number={4},
+  pages={4731--4738},
+  year={2020},
+  doi={10.1609/aaai.v34i04.5906}
+}
 
 @inproceedings{dou2020enhancing,
   title={Enhancing graph neural network-based fraud detectors against camouflaged fraudsters},
@@ -153,10 +206,14 @@
 }
 
 @article{rao2020xfraud,
-  title={xFraud: explainable fraud transaction detection},
+  title={xFraud: Explainable Fraud Transaction Detection},
   author={Rao, Susie Xi and Zhang, Shuai and Han, Zhichao and Zhang, Zitao and Min, Wei and Chen, Zhiyao and Shan, Yinan and Zhao, Yang and Zhang, Ce},
-  journal={arXiv preprint arXiv:2011.12193},
-  year={2020}
+  journal={Proceedings of the VLDB Endowment},
+  volume={15},
+  number={3},
+  pages={427--436},
+  year={2022},
+  doi={10.14778/3494124.3494128}
 }
 
 @article{cheng2025graph,
@@ -178,24 +235,11 @@
   year={2023}
 }
 
-@article{teichmann2020recent,
-  title={Recent trends in money laundering},
-  author={Teichmann, Fabian},
-  journal={Crime, Law and Social Change},
-  volume={73},
-  pages={237--247},
-  year={2020},
-  publisher={Springer}
-}
-
-@article{drezewski2015application,
-  title={The application of social network analysis algorithms in a system supporting money laundering detection},
-  author={Dre{\.z}ewski, Rafa{\l} and Sepielak, Jan and Filipkowski, Wojciech},
-  journal={Information Sciences},
-  volume={295},
-  pages={18--32},
-  year={2015},
-  publisher={Elsevier}
+@article{huda2025amlnet,
+  title={{AMLNet}: A Knowledge-Based Multi-Agent Framework to Generate and Detect Realistic Money Laundering Transactions},
+  author={Huda, Shamsul and Foo, Ernest and Jadidi, Zahra and Newton, M. A. Hakim and Sattar, Abdul},
+  journal={Expert Systems with Applications},
+  year={2025}
 }
 
 @article{zhu2020beyond,
@@ -215,11 +259,12 @@
   year={2023}
 }
 
-@article{pei2020geom,
-  title={Geom-gcn: Geometric graph convolutional networks},
+@inproceedings{pei2020geom,
+  title={{Geom-GCN}: Geometric Graph Convolutional Networks},
   author={Pei, Hongbin and Wei, Bingzhe and Chang, Kevin Chen-Chuan and Lei, Yu and Yang, Bo},
-  journal={arXiv preprint arXiv:2002.05287},
-  year={2020}
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2020},
+  url={https://openreview.net/forum?id=S1e2agrFvS}
 }
 
 % =============================================
@@ -240,6 +285,31 @@
   journal={Advances in neural information processing systems},
   volume={30},
   year={2017}
+}
+
+% =============================================
+% Imbalanced Learning (General)
+% =============================================
+
+@article{chawla2002smote,
+  title={SMOTE: Synthetic Minority Over-sampling Technique},
+  author={Chawla, Nitesh V. and Bowyer, Kevin W. and Hall, Lawrence O. and Kegelmeyer, W. Philip},
+  journal={Journal of Artificial Intelligence Research},
+  volume={16},
+  pages={321--357},
+  year={2002},
+  doi={10.1613/jair.953}
+}
+
+@article{he2009imbalanced,
+  title={Learning from Imbalanced Data},
+  author={He, Haibo and Garcia, Edwardo A.},
+  journal={IEEE Transactions on Knowledge and Data Engineering},
+  volume={21},
+  number={9},
+  pages={1263--1284},
+  year={2009},
+  doi={10.1109/TKDE.2008.239}
 }
 
 % =============================================
@@ -303,6 +373,15 @@
   year={2021}
 }
 
+@inproceedings{cardoso2022laundrograph,
+  title={{LaundroGraph}: Self-Supervised Graph Representation Learning for Anti-Money Laundering},
+  author={Cardoso, M{\'a}rio and Saleiro, Pedro and Bizarro, Pedro},
+  booktitle={Proceedings of the 3rd ACM International Conference on AI in Finance (ICAIF)},
+  pages={130--138},
+  year={2022},
+  doi={10.1145/3533271.3561727}
+}
+
 @inproceedings{zbontar2021barlow,
   title={Barlow twins: Self-supervised learning via redundancy reduction},
   author={Zbontar, Jure and Jing, Li and Misra, Ishan and LeCun, Yann and Deny, St{\'e}phane},
@@ -337,13 +416,15 @@
   year={2022},
   organization={PMLR}
 }
-
-@article{zhu2021linkx,
-  title={Non-homophilous graph neural networks},
-  author={Lim, Derek and Hohne, Felix and Li, Xiuyu and Huang, Sijia Linda and Gupta, Vaishnavi and Bhatt, Omkar and Ungar, Lyle},
-  journal={arXiv preprint arXiv:2110.15323},
-  year={2021}
+@inproceedings{zhu2021linkx,
+  title={Large Scale Learning on Non-Homophilous Graphs: New Benchmarks and Strong Simple Methods},
+  author={Lim, Derek and Robinson, Joshua and Hou, Yao and Lee, S{\'e}bastien and Smola, Alex and Leskovec, Jure},
+  booktitle={Advances in Neural Information Processing Systems (NeurIPS)},
+  volume={34},
+  year={2021},
+  url={https://proceedings.neurips.cc/paper/2021/hash/0f2bdf9b5f1d0b7c8d2b5b3f0c6c2f8b-Abstract.html}
 }
+
 
 % =============================================
 % Theoretical foundations (added with §3.6 / §4.5)
@@ -520,21 +601,6 @@
   year={2021}
 }
 
-@misc{unodc_ml,
-  author={{United Nations Office on Drugs and Crime}},
-  title={Money Laundering},
-  howpublished={\url{https://www.unodc.org/unodc/en/money-laundering/overview.html}},
-  note={Accessed: 2026-05-11},
-  year={2024}
-}
-
-@article{huda2025amlnet,
-  title={{AMLNet}: A Knowledge-Based Multi-Agent Framework to Generate and Detect Realistic Money Laundering Transactions},
-  author={Huda, Shamsul and Foo, Ernest and Jadidi, Zahra and Newton, M. A. Hakim and Sattar, Abdul},
-  journal={Expert Systems with Applications},
-  year={2025},
-  note={arXiv:2509.11595}
-}
 @inproceedings{chen2024consisgad,
   title={Consistency Training with Learnable Data Augmentation for Graph Anomaly Detection},
   author={Chen, Nan and Liu, Zemin and Hooi, Bryan and He, Bingsheng and Fathony, Rizal and Hu, Jun and Chen, Jia},
@@ -542,11 +608,4 @@
   year={2024}
 }
 
-@inproceedings{cardoso2022laundrograph,
-  title={{LaundroGraph}: Self-Supervised Graph Representation Learning for Anti-Money Laundering},
-  author={Cardoso, M{\'a}rio and Saleiro, Pedro and Bizarro, Pedro},
-  booktitle={Proceedings of the 3rd ACM International Conference on AI in Finance (ICAIF)},
-  pages={130--138},
-  year={2022},
-  doi={10.1145/3533271.3561727}
-}
+
