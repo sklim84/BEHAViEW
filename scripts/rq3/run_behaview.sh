@@ -53,7 +53,7 @@ for RATIO in $RATIOS; do
             --knn_graph "$KNN" --subgraph_pool \
             --train_ratio "$RATIO" \
             --skip_tsne \
-            $HP --loss BarlowTwins \
+            $HP --loss BootstrapLatent \
             --metric_save_path "$RESULT" 2>&1 | grep -E "^\(E\)" || true
     done
 done
