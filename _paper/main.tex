@@ -536,14 +536,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 \subsection{Signal Preservation (RQ2)}
 \label{subsec:rq2}
 RQ1 validated topology repair in the recovered neighborhood graph. RQ2 examines when aggregation (subgraph pooling) helps or hurts, and how repair alters this trade-off. Pooling is unreliable on the raw transaction graph but, on the repaired topology, it can amplify suspicious evidence, with the largest gains under suspicious-class-oriented scoring.
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.8\columnwidth]{figures/fig_rq2_ablation.pdf}
-\caption{$F1_{\text{susp}}$ for four ablation settings of the two design axes (topology branch $\times$ contrastive level) on \hofinet, averaged over four BN-based encoders (GBT, DGI+BN, MVGRL+BN, GRACE+BN). Values are computed from Table~\ref{tab:rq1}: (a) transaction topology+node, (b) recovered neighborhood+node, (c) transaction topology+pool, and (d) repaired topology+pool (proposed).}
-    \label{fig:rq2_ablation}
-\end{figure}
-
-\textbf{Pooling effects across the 4-setting ablation.} Figure~\ref{fig:rq2_ablation} shows that subgraph pooling effectiveness depends on topology homophily and encoder normalization depth. On \hofinet, the (d)-over-(b) improvement shrinks with deeper normalization: per-layer BN encoders gain only about +0.003--0.005, BGRL gains +0.087, and BN-less encoders gain about +0.012 on average. Pooling on the transaction graph (c) reduces performance by 17--30\% relative to (a) for BN-equipped encoders ($-17.6\%$ for BGRL to $-29.8\%$ for GIN; (c) bars in Figure~\ref{fig:rq2_ablation}), consistent with the sign-flip analysis in Appendix~\ref{app:theory} (Theorem~\ref{thm:meanpool}).
+\textbf{Pooling effects across the 4-setting ablation.} Subgraph pooling effectiveness depends on topology homophily and encoder normalization depth. On \hofinet, the (d)-over-(b) improvement shrinks with deeper normalization: per-layer BN encoders gain only about +0.003--0.005, BGRL gains +0.087, and BN-less encoders gain about +0.012 on average. Pooling on the transaction graph (c) reduces performance by 17--30\% relative to (a) for BN-equipped encoders ($-17.6\%$ for BGRL to $-29.8\%$ for GIN), consistent with the sign-flip analysis in Appendix~\ref{app:theory} (Theorem~\ref{thm:meanpool}).
 
 On \hofinet, topology repair is the main benefit ((b)$>$(a), (d)$>$(c)), while pooling yields a smaller, normalization-dependent gain: (d)$\approx$(b) with per-layer BN, but larger gains for BGRL and BN-less encoders. The (b)$\to$(d) gain is statistically significant for representative encoders (GBT $p=2.1{\times}10^{-2}$, BGRL Holm-adjusted $p=1.8{\times}10^{-3}$). On AMLworld, Table~\ref{tab:rq4} shows that the pooling effect varies by encoder: BGRL and GRACE+BN show (d)$>$(b), while per-layer BN encoders (GBT, DGI+BN) show (b)$\approx$(d) at the lower end of the absolute scale.
 
