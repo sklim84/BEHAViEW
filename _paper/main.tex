@@ -278,10 +278,19 @@ This auxiliary-view interpretation is natural when the observed graph already en
 
 \subsection{Money Laundering and Fraud Detection}
 In AML and fraud detection, supervised GNNs can mitigate class imbalance via neighborhood selection, reweighting, and imbalanced-learning strategies~\cite{dou2020enhancing,liu2021pick,zhao2021graphsmote,song2022tam}, but require timely, abundant labels that AML rarely provides. Recent AML-specific representation learning also explores self-supervised pretraining on transaction graphs~\cite{cardoso2022laundrograph,lu2024graph}. Unsupervised graph anomaly detection avoids labels~\cite{ding2019dominant,liu2021anomaly,jin2021anemone,tang2022rethinking,liu2022bond}, yet is primarily evaluated on generic graph benchmarks and does not address suspicious-class neighborhood mismatch in transaction networks. \method overcomes this by combining topology-independent behavioral homophily recovery with self-supervised learning and by analyzing aggregation-level signal preservation on the repaired topology.
+
 \section{Method: \method}
 \label{sec:method}
 
 \method comprises a behavioral homophily recovery graph, a topology-repair contrastive encoder with subgraph pooling, and BYOL-style training.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.98\textwidth]{figures/fig_topology_stages.pdf}
+    \Description{Six-stage topology evolution diagram. The observed transaction topology is projected into a behavioral view, rewired by graph recovery, encoded with a GNN, pooled into a suspicious subgraph representation, and aligned with the transaction branch through contrastive learning.}
+    \caption{Topology evolution through \method. The observed transaction topology is first viewed through behavioral features, then graph recovery forms a suspicious-dominated neighborhood. GNN encoding and subgraph pooling operate on this repaired topology, and contrastive learning aligns the transaction and recovered-topology branches into the final ranking representation.}
+    \label{fig:topology_stages}
+\end{figure*}
 
 \subsection{Problem Formulation}
 We model the transaction network as a directed graph $\mathcal{G}_{\text{trans}} = (\mathcal{V}, \mathcal{E}, \mathbf{X})$, where $\mathcal{V}$ is the set of accounts (nodes, $|\mathcal{V}|=N$), $\mathcal{E} \subseteq \mathcal{V} \times \mathcal{V}$ is the set of transfer transactions (edges), and $\mathbf{X} \in \mathbb{R}^{N \times F}$ is the node feature matrix. Each node $v_i$ has a suspicion label $y_i \in \{0, 1\}$, but we use a self-supervised setting that ignores labels during training. Our goal is to learn node representations $\mathbf{Z} \in \mathbb{R}^{N \times D}$ that identify suspicious accounts based purely on the graph structure and node features.
