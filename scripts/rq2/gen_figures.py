@@ -284,29 +284,31 @@ def fig4_bn_heatmap():
             matrix[i, j] = df[(df['encoder'] == enc) & (df['setting'] == s)]['f1_1'].mean()
 
     fig, ax = plt.subplots(figsize=(7.5, 3.2))
-    im = ax.imshow(matrix, cmap='YlGnBu', vmin=0.0, vmax=0.75, aspect='auto')
+    im = ax.imshow(matrix, cmap='viridis', vmin=0.0, vmax=0.75, aspect='auto')
 
     ax.set_xticks(np.arange(len(enc_order)))
-    ax.set_xticklabels([enc_labels[e] for e in enc_order], fontsize=11, rotation=30, ha='right')
+    ax.set_xticklabels([enc_labels[e] for e in enc_order], fontsize=13, rotation=30, ha='right')
     ax.set_yticks(np.arange(len(settings)))
-    ax.set_yticklabels(setting_labels, fontsize=11)
+    ax.set_yticklabels(setting_labels, fontsize=13)
 
     for i in range(len(settings)):
         for j in range(len(enc_order)):
             val = matrix[i, j]
-            color = 'white' if val > 0.45 else 'black'
+            # viridis: dark (low) -> light (high); flip threshold accordingly
+            color = 'black' if val > 0.40 else 'white'
             ax.text(j, i, f'{val:.2f}', ha='center', va='center',
-                    color=color, fontsize=10)
+                    color=color, fontsize=12)
 
     ax.axvline(x=5.5, color='red', linestyle='--', linewidth=1.5, alpha=0.85)
-    ax.text(2.5, -0.75, 'BN-equipped', fontsize=10,
+    ax.text(2.5, -0.75, 'BN-equipped', fontsize=12,
             ha='center', va='bottom', color='dimgray')
-    ax.text(7.0, -0.75, 'BN-free', fontsize=10,
+    ax.text(7.0, -0.75, 'BN-free', fontsize=12,
             ha='center', va='bottom', color='dimgray')
 
-    ax.set_ylabel('Ablation setting', fontsize=12)
+    ax.set_ylabel('Ablation setting', fontsize=14)
     cbar = fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02)
-    cbar.set_label('$F1_{susp}$', fontsize=12)
+    cbar.set_label('$F1_{susp}$', fontsize=14)
+    cbar.ax.tick_params(labelsize=12)
 
     plt.tight_layout()
     path = os.path.join(OUT_DIR, 'fig_rq3_bn_heatmap.pdf')
