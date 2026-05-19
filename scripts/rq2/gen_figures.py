@@ -244,12 +244,12 @@ def fig4_bn_effect():
 
 
 def fig4_bn_heatmap():
-    """Alternative Fig.4: 9 encoders x 4 settings heatmap of F1_susp.
+    """Alternative Fig.4: 4 settings x 9 encoders heatmap of F1_susp.
 
     Single-panel sequel to fig4_bn_effect. Same data, denser layout:
-    each row is an encoder (ordered per-layer BN -> final-only BGRL ->
-    BN-free), each column is an ablation setting (a/b/c/d), each cell is
-    the 4-seed mean F1_susp. A horizontal divider separates BN-equipped
+    each row is an ablation setting (a/b/c/d), each column is an encoder
+    (ordered per-layer BN -> final-only BGRL -> BN-free), each cell is
+    the 4-seed mean F1_susp. A vertical divider separates BN-equipped
     from BN-free encoders to make the BN dependence visible at a glance.
 
     Reads from results/rq1/main_sweep.csv.
@@ -277,34 +277,35 @@ def fig4_bn_heatmap():
     settings = ['a', 'b', 'c', 'd']
     setting_labels = ['(a)\nbaseline', '(b)\n+view', '(c)\n+level', '(d)\n+both']
 
-    matrix = np.zeros((len(enc_order), len(settings)))
-    for i, enc in enumerate(enc_order):
-        for j, s in enumerate(settings):
+    # rows = settings, cols = encoders
+    matrix = np.zeros((len(settings), len(enc_order)))
+    for i, s in enumerate(settings):
+        for j, enc in enumerate(enc_order):
             matrix[i, j] = df[(df['encoder'] == enc) & (df['setting'] == s)]['f1_1'].mean()
 
-    fig, ax = plt.subplots(figsize=(5.2, 4.5))
+    fig, ax = plt.subplots(figsize=(7.5, 3.2))
     im = ax.imshow(matrix, cmap='YlGnBu', vmin=0.0, vmax=0.75, aspect='auto')
 
-    ax.set_xticks(np.arange(len(settings)))
-    ax.set_xticklabels(setting_labels, fontsize=11)
-    ax.set_yticks(np.arange(len(enc_order)))
-    ax.set_yticklabels([enc_labels[e] for e in enc_order], fontsize=11)
+    ax.set_xticks(np.arange(len(enc_order)))
+    ax.set_xticklabels([enc_labels[e] for e in enc_order], fontsize=11, rotation=30, ha='right')
+    ax.set_yticks(np.arange(len(settings)))
+    ax.set_yticklabels(setting_labels, fontsize=11)
 
-    for i in range(len(enc_order)):
-        for j in range(len(settings)):
+    for i in range(len(settings)):
+        for j in range(len(enc_order)):
             val = matrix[i, j]
             color = 'white' if val > 0.45 else 'black'
             ax.text(j, i, f'{val:.2f}', ha='center', va='center',
                     color=color, fontsize=10)
 
-    ax.axhline(y=5.5, color='red', linestyle='--', linewidth=1.5, alpha=0.85)
-    ax.text(3.55, 2.5, 'BN-equipped', rotation=90, fontsize=10,
-            ha='left', va='center', color='dimgray')
-    ax.text(3.55, 7.0, 'BN-free', rotation=90, fontsize=10,
-            ha='left', va='center', color='dimgray')
+    ax.axvline(x=5.5, color='red', linestyle='--', linewidth=1.5, alpha=0.85)
+    ax.text(2.5, -0.75, 'BN-equipped', fontsize=10,
+            ha='center', va='bottom', color='dimgray')
+    ax.text(7.0, -0.75, 'BN-free', fontsize=10,
+            ha='center', va='bottom', color='dimgray')
 
-    ax.set_xlabel('Ablation setting', fontsize=12)
-    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.10)
+    ax.set_ylabel('Ablation setting', fontsize=12)
+    cbar = fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02)
     cbar.set_label('$F1_{susp}$', fontsize=12)
 
     plt.tight_layout()
