@@ -284,7 +284,7 @@ def fig4_bn_heatmap():
             matrix[i, j] = df[(df['encoder'] == enc) & (df['setting'] == s)]['f1_1'].mean()
 
     fig, ax = plt.subplots(figsize=(7.5, 3.2))
-    im = ax.imshow(matrix, cmap='viridis', vmin=0.0, vmax=0.75, aspect='auto')
+    im = ax.imshow(matrix, cmap='Blues', vmin=0.0, vmax=0.75, aspect='auto')
 
     ax.set_xticks(np.arange(len(enc_order)))
     ax.set_xticklabels([enc_labels[e] for e in enc_order], fontsize=13, rotation=30, ha='right')
@@ -294,8 +294,8 @@ def fig4_bn_heatmap():
     for i in range(len(settings)):
         for j in range(len(enc_order)):
             val = matrix[i, j]
-            # viridis: dark (low) -> light (high); flip threshold accordingly
-            color = 'black' if val > 0.40 else 'white'
+            # Blues: light (low) -> dark (high); white text on dark cells
+            color = 'white' if val > 0.45 else 'black'
             ax.text(j, i, f'{val:.2f}', ha='center', va='center',
                     color=color, fontsize=12)
 
