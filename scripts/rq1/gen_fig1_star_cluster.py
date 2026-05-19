@@ -51,6 +51,8 @@ C_MUTED = "#000000"
 C_PANEL = "#F8FAFC"
 C_PANEL_EDGE = "#D4D8DF"
 C_FLAG = "#D62728"
+C_REPAIR_BG = "#FDE8E8"
+C_REPAIR_EDGE = "#ECA0A5"
 BEHAV_EXCLUDE = {"in_dc", "out_dc", "in_count", "out_count"}
 K_BHV = 10
 STAR_SCALE = 1.18
@@ -152,6 +154,7 @@ def draw_node(
     is_ego: bool = False,
     size: float = 170.0,
     text: str | None = None,
+    alpha: float = 1.0,
 ) -> None:
     x, y = xy
     label_text = text if text is not None else ("S" if int(label) == 1 else "B")
@@ -162,6 +165,7 @@ def draw_node(
         color=node_color(label, is_ego),
         edgecolor="white" if not is_ego else "#111111",
         linewidth=0.75 if not is_ego else 1.1,
+        alpha=alpha,
         zorder=4,
     )
     ax.text(
@@ -270,12 +274,12 @@ def draw_panel_box(
         title,
         ha="center",
         va="center",
-        fontsize=13.7,
+        fontsize=12.4,
         color=C_TEXT,
         fontweight="bold",
         linespacing=0.92,
     )
-    ax.text(0, 1.47, subtitle, ha="center", va="center", fontsize=10.2, color=C_MUTED)
+    ax.text(0, 1.47, subtitle, ha="center", va="center", fontsize=9.2, color=C_MUTED)
 
 
 def circular_star_layout(neighbors: list[dict]) -> dict[int, tuple[float, float]]:
@@ -345,12 +349,33 @@ def draw_edges(ax, edges: list[list[int]], positions: dict[int, tuple[float, flo
             [x1, x2],
             [y1, y2],
             color=color,
-            linewidth=0.85 if not dashed else 0.95,
-            alpha=0.58 if not dashed else 0.68,
+            linewidth=0.76 if not dashed else 1.10,
+            alpha=0.38 if not dashed else 0.78,
             linestyle="--" if dashed else "-",
             solid_capstyle="round",
             zorder=1,
         )
+
+
+def draw_repair_hull(ax, positions: dict[int, tuple[float, float]], neighbors: list[dict]) -> None:
+    suspicious_points = np.array([positions[int(nb["idx"])] for nb in neighbors if int(nb["label"]) == 1])
+    if len(suspicious_points) < 3:
+        return
+    center = suspicious_points.mean(axis=0)
+    width = float(suspicious_points[:, 0].max() - suspicious_points[:, 0].min() + 0.58)
+    height = float(suspicious_points[:, 1].max() - suspicious_points[:, 1].min() + 0.58)
+    hull = mpatches.Ellipse(
+        center,
+        width,
+        height,
+        facecolor=C_REPAIR_BG,
+        edgecolor=C_REPAIR_EDGE,
+        linewidth=0.95,
+        linestyle=(0, (4.0, 2.4)),
+        alpha=0.30,
+        zorder=0,
+    )
+    ax.add_patch(hull)
 
 
 def draw_transaction_star(ax, rep: dict) -> None:
@@ -363,8 +388,8 @@ def draw_transaction_star(ax, rep: dict) -> None:
 
     draw_panel_box(
         ax,
-        "Transaction\nStar Graph",
-        "real fund-flow edges",
+        "Observed\nTransaction Topology",
+        "suspicious signal dilution",
         facecolor="white",
         edgecolor="white",
     )
@@ -390,11 +415,11 @@ def draw_transaction_star(ax, rep: dict) -> None:
         f"{int(rep['tx_S'])}/{total} suspicious neighbors",
         ha="center",
         va="center",
-        fontsize=11.4,
+        fontsize=10.8,
         color=C_TEXT,
         fontweight="bold",
     )
-    ax.text(0, -1.80, "S-S : S-B = 1 : 25", ha="center", va="center", fontsize=10.6, color=C_MUTED)
+    ax.text(0, -1.80, "S-S : S-B = 1 : 25", ha="center", va="center", fontsize=9.9, color=C_MUTED)
 
 
 def draw_behavioral_cluster(ax, rep: dict) -> None:
@@ -405,11 +430,12 @@ def draw_behavioral_cluster(ax, rep: dict) -> None:
 
     draw_panel_box(
         ax,
-        "Behavioral\nRecovered Cluster",
-        r"behavioral-homophily $k$-NN edges",
+        "Repaired\nBehavioral Topology",
+        r"behavior-only $k$-NN recovery",
         facecolor="white",
         edgecolor="white",
     )
+    draw_repair_hull(ax, positions, neighbors)
     draw_edges(ax, rep["bhv_induced_edges"], positions, C_BHV_EDGE, dashed=True)
     for nb in neighbors:
         node_idx = int(nb["idx"])
@@ -433,14 +459,14 @@ def draw_behavioral_cluster(ax, rep: dict) -> None:
     ax.text(
         0,
         -1.55,
-        f"{int(rep['bhv_S'])}/{total} suspicious neighbors",
+        f"{int(rep['bhv_S'])}/{total} suspicious peers recovered",
         ha="center",
         va="center",
-        fontsize=11.4,
+        fontsize=10.8,
         color=C_TEXT,
         fontweight="bold",
     )
-    ax.text(0, -1.80, "S-S : S-B = 9 : 1", ha="center", va="center", fontsize=10.6, color=C_MUTED)
+    ax.text(0, -1.80, "S-S : S-B = 9 : 1", ha="center", va="center", fontsize=9.9, color=C_MUTED)
 
 
 def build_figure(rep: dict) -> plt.Figure:
@@ -469,14 +495,24 @@ def build_figure(rep: dict) -> plt.Figure:
         (0.474, 0.545),
         (0.526, 0.545),
         transform=fig.transFigure,
-        arrowstyle="Simple,tail_width=0.45,head_width=5.8,head_length=7.2",
+        arrowstyle="Simple,tail_width=0.28,head_width=4.8,head_length=6.4",
         mutation_scale=1,
         color=C_MUTED,
         linewidth=0.0,
         zorder=20,
     )
     fig.patches.append(arrow)
-    fig.text(0.5, 0.505, "topology\nrepair", ha="center", va="center", fontsize=9.4, color=C_MUTED)
+    fig.text(
+        0.5,
+        0.497,
+        "label-free\nbehavior-only\nk-NN repair",
+        ha="center",
+        va="center",
+        fontsize=8.0,
+        color=C_MUTED,
+        linespacing=0.92,
+        bbox={"boxstyle": "round,pad=0.22", "facecolor": "white", "edgecolor": "#E5E7EB", "linewidth": 0.55},
+    )
 
     node_handles = [
         mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_EGO, markeredgecolor="#111111", markersize=10.0, label="suspicious ego"),

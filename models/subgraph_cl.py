@@ -29,7 +29,7 @@ from tqdm import tqdm
 
 from config import get_config
 from data_loader import load_graph_data, load_knn_graph
-from utils import set_seed, build_result_dict, save_results_to_csv, evaluate_with_metrics, visualize_tsne, make_split
+from utils import set_seed, build_result_dict, save_results_to_csv, evaluate_with_metrics, visualize_tsne, make_split, load_split
 
 
 class GNNEncoder_BGRL(nn.Module):
@@ -634,9 +634,14 @@ def main(args):
     ari_score, sil_score = visualize_tsne(
         args.seed, z_cpu.numpy(), data.y, save_path=vis_save_path, skip=args.skip_tsne)
 
-    train_ratio = getattr(args, 'train_ratio', 0.1)
-    val_ratio = train_ratio  # paper convention: train=val=10%, test=80%
-    split = make_split(z_cpu.size(0), train_ratio=train_ratio, val_ratio=val_ratio, seed=args.seed)
+    split_path = getattr(args, 'split_path', None)
+    if split_path:
+        split = load_split(split_path)
+        print(f'Loaded split: {split_path}')
+    else:
+        train_ratio = getattr(args, 'train_ratio', 0.1)
+        val_ratio = train_ratio  # paper convention: train=val=10%, test=80%
+        split = make_split(z_cpu.size(0), train_ratio=train_ratio, val_ratio=val_ratio, seed=args.seed)
     tune_threshold = getattr(args, 'tune_threshold', False)
     test_results = evaluate_with_metrics(z_cpu, data.y, split, tune_threshold=tune_threshold)
 

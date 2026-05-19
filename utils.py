@@ -51,6 +51,16 @@ def make_split(n, train_ratio, val_ratio, seed):
     }
 
 
+def load_split(path):
+    """Load a split saved as npz with train/valid/test arrays."""
+    split_np = np.load(path)
+    return {
+        'train': torch.from_numpy(split_np['train'].astype(np.int64)).long(),
+        'valid': torch.from_numpy(split_np['valid'].astype(np.int64)).long(),
+        'test': torch.from_numpy(split_np['test'].astype(np.int64)).long(),
+    }
+
+
 def create_loss(loss_name):
     """손실 함수 이름으로부터 GCL Loss 객체를 생성한다."""
     import GCL.losses as L
@@ -90,6 +100,10 @@ def build_result_dict(model_name, args, test_result, ari_score, sil_score, use_c
         'F1Ma': test_result['macro_f1'],
         'auroc': test_result['auroc'],
         'auprc': test_result['auprc'],
+        'p_at_pos': test_result.get('p_at_pos'),
+        'p_at_0_1pct': test_result.get('p_at_0_1pct'),
+        'p_at_0_5pct': test_result.get('p_at_0_5pct'),
+        'p_at_1pct': test_result.get('p_at_1pct'),
         'threshold': test_result.get('threshold', 0.5),
         'valid_f1_1': test_result.get('valid_f1_1'),
         'ari_score': ari_score,
@@ -146,6 +160,26 @@ def _metrics_at_threshold(y_test, y_score, threshold):
     }
 
 
+def _precision_at_k(y_true, y_score, k):
+    k = int(k)
+    if k <= 0:
+        return 0.0
+    k = min(k, len(y_true))
+    order = np.argpartition(-y_score, k - 1)[:k]
+    return float(np.mean(y_true[order] == 1))
+
+
+def _ranking_metrics(y_true, y_score):
+    n = len(y_true)
+    n_pos = int(np.sum(y_true == 1))
+    return {
+        'p_at_pos': _precision_at_k(y_true, y_score, max(1, n_pos)),
+        'p_at_0_1pct': _precision_at_k(y_true, y_score, max(1, int(np.ceil(n * 0.001)))),
+        'p_at_0_5pct': _precision_at_k(y_true, y_score, max(1, int(np.ceil(n * 0.005)))),
+        'p_at_1pct': _precision_at_k(y_true, y_score, max(1, int(np.ceil(n * 0.01)))),
+    }
+
+
 def evaluate_with_metrics(z, y, split, tune_threshold=False):
     """Returns list of result dicts: [default] or [default, tuned].
 
@@ -177,6 +211,7 @@ def evaluate_with_metrics(z, y, split, tune_threshold=False):
     clf.fit(z_train, y_train)
 
     y_score = clf.predict_proba(z_test)[:, 1]
+    ranking = _ranking_metrics(y_test, y_score)
 
     try:
         auc = roc_auc_score(y_test, y_score)
@@ -196,6 +231,7 @@ def evaluate_with_metrics(z, y, split, tune_threshold=False):
             **m,
             'auroc': auc,
             'auprc': ap,
+            **ranking,
             'threshold': threshold,
             'valid_f1_1': valid_f1,
         }

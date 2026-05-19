@@ -20,7 +20,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from torch.optim import Adam
-from torch_geometric.nn import GCNConv, GATConv, SAGEConv
+from torch_geometric.nn import FAConv, GCNConv, GATConv, MixHopConv, SAGEConv
 from torch_geometric.data import Data
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score, average_precision_score
 from sklearn.model_selection import train_test_split
@@ -29,7 +29,7 @@ warnings.filterwarnings('ignore')
 
 from config import get_config
 from data_loader import load_graph_data
-from utils import set_seed, make_split
+from utils import set_seed, make_split, load_split
 
 
 # ============================================================
@@ -99,6 +99,113 @@ class SupervisedSAGE(nn.Module):
             x = F.relu(x)
             x = F.dropout(x, p=self.dropout, training=self.training)
         return self.classifier(x)
+
+
+class SupervisedMixHop(nn.Module):
+    """MixHop baseline for heterophily-aware propagation.
+
+    MixHop mixes multiple adjacency powers in each layer, allowing the model to
+    combine ego, 1-hop, and 2-hop signals instead of relying on one smoothing
+    channel.
+    """
+    def __init__(self, input_dim, hidden_dim, num_layers=2, dropout=0.2, powers=(0, 1, 2)):
+        super().__init__()
+        self.layers = nn.ModuleList()
+        self.bns = nn.ModuleList()
+        self.proj = nn.ModuleList()
+        in_dim = input_dim
+        out_dim = hidden_dim * len(powers)
+        for _ in range(num_layers):
+            self.layers.append(MixHopConv(in_dim, hidden_dim, powers=list(powers)))
+            self.bns.append(nn.BatchNorm1d(out_dim))
+            self.proj.append(nn.Linear(out_dim, hidden_dim))
+            in_dim = hidden_dim
+        self.classifier = nn.Linear(hidden_dim, 2)
+        self.dropout = dropout
+
+    def forward(self, x, edge_index):
+        for conv, bn, proj in zip(self.layers, self.bns, self.proj):
+            x = conv(x, edge_index)
+            x = bn(x)
+            x = F.relu(proj(x))
+            x = F.dropout(x, p=self.dropout, training=self.training)
+        return self.classifier(x)
+
+
+class SupervisedFAGCN(nn.Module):
+    """FAGCN baseline with adaptive low/high-frequency aggregation."""
+    def __init__(self, input_dim, hidden_dim, num_layers=2, dropout=0.2):
+        super().__init__()
+        self.input_proj = nn.Linear(input_dim, hidden_dim)
+        self.layers = nn.ModuleList([FAConv(hidden_dim, eps=0.1, dropout=dropout) for _ in range(num_layers)])
+        self.bns = nn.ModuleList([nn.BatchNorm1d(hidden_dim) for _ in range(num_layers)])
+        self.classifier = nn.Linear(hidden_dim, 2)
+        self.dropout = dropout
+
+    def forward(self, x, edge_index):
+        x0 = F.dropout(F.relu(self.input_proj(x)), p=self.dropout, training=self.training)
+        h = x0
+        for conv, bn in zip(self.layers, self.bns):
+            h = conv(h, x0, edge_index)
+            h = F.relu(bn(h))
+            h = F.dropout(h, p=self.dropout, training=self.training)
+        return self.classifier(h)
+
+
+class SupervisedH2GCN(nn.Module):
+    """H2GCN-style baseline with separated ego, 1-hop, and 2-hop channels."""
+    def __init__(self, input_dim, hidden_dim, num_layers=2, dropout=0.2):
+        super().__init__()
+        self.input_proj = nn.Linear(input_dim, hidden_dim)
+        self.one_hop = nn.ModuleList([
+            GCNConv(hidden_dim, hidden_dim, add_self_loops=False) for _ in range(num_layers)
+        ])
+        self.two_hop = nn.ModuleList([
+            GCNConv(hidden_dim, hidden_dim, add_self_loops=False) for _ in range(num_layers)
+        ])
+        self.mix = nn.ModuleList([nn.Linear(hidden_dim * 3, hidden_dim) for _ in range(num_layers)])
+        self.bns = nn.ModuleList([nn.BatchNorm1d(hidden_dim) for _ in range(num_layers)])
+        self.classifier = nn.Linear(hidden_dim, 2)
+        self.dropout = dropout
+
+    def forward(self, x, edge_index):
+        h = F.relu(self.input_proj(x))
+        for conv1, conv2, mix, bn in zip(self.one_hop, self.two_hop, self.mix, self.bns):
+            h1 = conv1(h, edge_index)
+            h2 = conv2(h1, edge_index)
+            h = mix(torch.cat([h, h1, h2], dim=1))
+            h = F.relu(bn(h))
+            h = F.dropout(h, p=self.dropout, training=self.training)
+        return self.classifier(h)
+
+
+class SupervisedACMGCN(nn.Module):
+    """ACM-GCN-style baseline with adaptive low/high/MLP channel mixing."""
+    def __init__(self, input_dim, hidden_dim, num_layers=2, dropout=0.2):
+        super().__init__()
+        self.input_proj = nn.Linear(input_dim, hidden_dim)
+        self.low_convs = nn.ModuleList([GCNConv(hidden_dim, hidden_dim) for _ in range(num_layers)])
+        self.high_convs = nn.ModuleList([GCNConv(hidden_dim, hidden_dim) for _ in range(num_layers)])
+        self.self_lins = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(num_layers)])
+        self.mlp_lins = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(num_layers)])
+        self.gates = nn.ModuleList([nn.Linear(hidden_dim, 3) for _ in range(num_layers)])
+        self.bns = nn.ModuleList([nn.BatchNorm1d(hidden_dim) for _ in range(num_layers)])
+        self.classifier = nn.Linear(hidden_dim, 2)
+        self.dropout = dropout
+
+    def forward(self, x, edge_index):
+        h = F.relu(self.input_proj(x))
+        for low_conv, high_conv, self_lin, mlp_lin, gate, bn in zip(
+            self.low_convs, self.high_convs, self.self_lins, self.mlp_lins, self.gates, self.bns
+        ):
+            low = low_conv(h, edge_index)
+            high = self_lin(h) - high_conv(h, edge_index)
+            mlp = mlp_lin(h)
+            alpha = torch.softmax(gate(h), dim=1)
+            h = alpha[:, 0:1] * low + alpha[:, 1:2] * high + alpha[:, 2:3] * mlp
+            h = F.relu(bn(h))
+            h = F.dropout(h, p=self.dropout, training=self.training)
+        return self.classifier(h)
 
 
 class SupervisedMLP(nn.Module):
@@ -343,6 +450,10 @@ MODELS = {
     'gcn': SupervisedGCN,
     'gat': SupervisedGAT,
     'sage': SupervisedSAGE,
+    'h2gcn': SupervisedH2GCN,
+    'mixhop': SupervisedMixHop,
+    'fagcn': SupervisedFAGCN,
+    'acmgcn': SupervisedACMGCN,
     'mlp': SupervisedMLP,
     'caregnn': CAREGNN,
     'pcgnn': PCGNN,
@@ -381,13 +492,14 @@ def eval_supervised(model, data, test_mask):
     return f1_1, pre_1, rec_1, auroc, auprc
 
 
-def run_gnn_model(model_name, data, device, seed, hidden_dim=256, num_layers=2, lr=0.001, epochs=200, train_ratio=0.1):
+def run_gnn_model(model_name, data, device, seed, hidden_dim=256, num_layers=2, lr=0.001, epochs=200, train_ratio=0.1, split=None):
     set_seed(seed)
     N = data.num_nodes
     y = data.y.cpu().numpy()
 
-    # train/val/test split via make_split (paired with BehaView SSL evaluation)
-    split = make_split(N, train_ratio=train_ratio, val_ratio=0.1, seed=seed)
+    # train/val/test split via make_split, or externally supplied temporal split.
+    if split is None:
+        split = make_split(N, train_ratio=train_ratio, val_ratio=0.1, seed=seed)
     train_idx = split['train'].numpy()
     test_idx = split['test'].numpy()
     train_mask = torch.zeros(N, dtype=torch.bool)
@@ -425,9 +537,10 @@ def run_gnn_model(model_name, data, device, seed, hidden_dim=256, num_layers=2, 
 # ============================================================
 # Tabular Baselines (LightGBM, XGBoost)
 # ============================================================
-def run_tabular_model(model_name, X, y, seed, train_ratio=0.1):
-    # split via make_split — same accounts as GNN supervised and BehaView SSL
-    split = make_split(len(y), train_ratio=train_ratio, val_ratio=0.1, seed=seed)
+def run_tabular_model(model_name, X, y, seed, train_ratio=0.1, split=None):
+    # split via make_split, or externally supplied temporal split.
+    if split is None:
+        split = make_split(len(y), train_ratio=train_ratio, val_ratio=0.1, seed=seed)
     train_idx = split['train'].numpy()
     test_idx = split['test'].numpy()
     X_train, X_test = X[train_idx], X[test_idx]
@@ -472,13 +585,29 @@ def main():
     parser.add_argument('--result_file', type=str, default='./results/exp_results_supervised.csv')
     parser.add_argument('--train_ratio', type=float, default=0.1,
                         help='Train split ratio (val_ratio fixed at 0.1; test = 1 - train - val)')
+    parser.add_argument('--epochs', type=int, default=200)
+    parser.add_argument('--hidden_dim', type=int, default=256)
+    parser.add_argument('--device', type=str, default='auto', choices=['auto', 'cuda', 'mps', 'cpu'])
     parser.add_argument('--exclude_struct', action='store_true',
                         help='If set, tabular models (lgbm, xgb) use only behavioral features (data.x), matching BehaView encoder input')
     parser.add_argument('--models', nargs='+', type=str, default=None,
                         help='Specific models to run (default: all)')
+    parser.add_argument('--split_path', type=str, default=None,
+                        help='Optional .npz file with train/valid/test node indices, e.g. temporal split')
     args = parser.parse_args()
 
-    device = torch.device(f'cuda:{args.gpu}')
+    if args.device == 'auto':
+        if torch.cuda.is_available():
+            device = torch.device(f'cuda:{args.gpu}')
+        elif getattr(torch.backends, 'mps', None) is not None and torch.backends.mps.is_available():
+            device = torch.device('mps')
+        else:
+            device = torch.device('cpu')
+    elif args.device == 'cuda':
+        device = torch.device(f'cuda:{args.gpu}')
+    else:
+        device = torch.device(args.device)
+    print(f'Device: {device}')
 
     if args.dataset == 'hofinet':
         node_data = 'HOFINET_NODE_FEAT'
@@ -510,6 +639,9 @@ def main():
     else:
         X_all = torch.cat([data.x.cpu(), x_struct], dim=1).numpy()
     y_all = data.y.cpu().numpy()
+    external_split = load_split(args.split_path) if args.split_path else None
+    if external_split is not None:
+        print(f'Loaded split: {args.split_path}')
 
     results = []
     all_models = args.models if args.models else ['gcn', 'gat', 'sage', 'mlp', 'lgbm', 'xgb', 'caregnn', 'pcgnn']
@@ -520,10 +652,12 @@ def main():
             print(f'[{model_name}] seed={seed}...', end=' ')
 
             if model_name in ('lgbm', 'xgb'):
-                f1_1, pre_1, rec_1, auroc, auprc = run_tabular_model(model_name, X_all, y_all, seed, train_ratio=args.train_ratio)
+                f1_1, pre_1, rec_1, auroc, auprc = run_tabular_model(
+                    model_name, X_all, y_all, seed, train_ratio=args.train_ratio, split=external_split)
             else:
                 f1_1, pre_1, rec_1, auroc, auprc = run_gnn_model(
-                    model_name, data, device, seed, hidden_dim=256, num_layers=2, train_ratio=args.train_ratio)
+                    model_name, data, device, seed, hidden_dim=args.hidden_dim, num_layers=2,
+                    epochs=args.epochs, train_ratio=args.train_ratio, split=external_split)
 
             print(f'F1_susp={f1_1:.4f}, AUROC={auroc:.4f}')
             results.append({

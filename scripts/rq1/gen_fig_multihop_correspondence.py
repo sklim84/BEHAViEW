@@ -44,6 +44,8 @@ C_TRACE = "#334155"
 C_TEXT = "#000000"
 C_MUTED = "#000000"
 C_UNREACH = "#F3F4F6"
+C_REPAIR_BG = "#FDE8E8"
+C_REPAIR_EDGE = "#ECA0A5"
 X_STEP = 1.02
 Y_SPREAD = 1.30
 
@@ -246,12 +248,11 @@ def recovered_layout(
 ) -> dict[int, tuple[float, float]]:
     positions: dict[int, tuple[float, float]] = {ego: (0.0, 0.0)}
     ordered_targets = sorted((int(nb["idx"]) for nb in targets), key=lambda n: target_ids[n])
-    ys = np.linspace(Y_SPREAD, -Y_SPREAD, max(len(ordered_targets), 1))
 
-    for rank, (node, y) in enumerate(zip(ordered_targets, ys)):
-        side = -1 if rank % 2 == 0 else 1
-        x = side * (0.88 + 0.08 * np.cos(rank * np.pi / 2))
-        positions[node] = (float(x), float(y))
+    angles = np.linspace(np.pi / 2, np.pi / 2 + 2 * np.pi, max(len(ordered_targets), 1), endpoint=False)
+    for rank, (node, angle) in enumerate(zip(ordered_targets, angles)):
+        radius = 1.02 + 0.08 * (rank % 2)
+        positions[node] = (float(radius * np.cos(angle)), float(radius * np.sin(angle)))
 
     return positions
 
@@ -368,6 +369,29 @@ def draw_trace_path(
         )
 
 
+def draw_repair_hull(
+    ax,
+    positions: dict[int, tuple[float, float]],
+    targets: list[dict],
+) -> None:
+    suspicious_points = np.array([positions[int(nb["idx"])] for nb in targets if int(nb["label"]) == 1])
+    if len(suspicious_points) < 3:
+        return
+    center = suspicious_points.mean(axis=0)
+    hull = mpatches.Ellipse(
+        center,
+        width=float(suspicious_points[:, 0].max() - suspicious_points[:, 0].min() + 0.66),
+        height=float(suspicious_points[:, 1].max() - suspicious_points[:, 1].min() + 0.66),
+        facecolor=C_REPAIR_BG,
+        edgecolor=C_REPAIR_EDGE,
+        linewidth=0.95,
+        linestyle=(0, (4.0, 2.4)),
+        alpha=0.30,
+        zorder=0,
+    )
+    ax.add_patch(hull)
+
+
 def draw_transaction_paths(
     ax,
     rep: dict,
@@ -384,8 +408,8 @@ def draw_transaction_paths(
     separate_x = X_STEP * max_depth + 0.82
     title_x = (X_STEP * max_depth + (separate_x if separate_positions else X_STEP * max_depth)) / 2
 
-    ax.text(title_x, 1.90, "Original transaction topology", ha="center", fontsize=13.8, fontweight="bold", color=C_TEXT)
-    ax.text(title_x, 1.69, "ego paths plus separate recovered-node component", ha="center", fontsize=10.4, color=C_MUTED)
+    ax.text(title_x, 1.93, "Original\nTransaction Topology", ha="center", fontsize=12.3, fontweight="bold", color=C_TEXT, linespacing=0.92)
+    ax.text(title_x, 1.62, "recovered peers appear as\n2-4 hop transaction paths", ha="center", fontsize=9.2, color=C_MUTED, linespacing=1.0)
 
     edges = set()
     for path in [*paths.values(), *separate_paths]:
@@ -458,8 +482,10 @@ def draw_recovered_graph(
     targets = rep["bhv_neighbors"]
     positions = recovered_layout(ego, targets, target_ids)
 
-    ax.text(0, 1.90, "Recovered neighborhood", ha="center", fontsize=13.8, fontweight="bold", color=C_TEXT)
-    ax.text(0, 1.69, "behavioral-homophily k-NN graph", ha="center", fontsize=10.4, color=C_MUTED)
+    ax.text(0, 1.93, "Repaired\nBehavioral Topology", ha="center", fontsize=12.3, fontweight="bold", color=C_TEXT, linespacing=0.92)
+    ax.text(0, 1.62, "same accounts become\n1-hop behavioral neighbors", ha="center", fontsize=9.2, color=C_MUTED, linespacing=1.0)
+
+    draw_repair_hull(ax, positions, targets)
 
     for u, v in rep["bhv_induced_edges"]:
         u = int(u)
@@ -536,7 +562,7 @@ def build_figure(
             connectionstyle=f"arc3,rad={rad:.3f}",
             linewidth=0.65,
             color=C_MAP,
-            alpha=0.24,
+            alpha=0.36,
             zorder=0,
         )
         fig.add_artist(con)
@@ -554,9 +580,9 @@ def build_figure(
     ax_left.text(
         2.35,
         -1.73,
-        f"{len(paths)}/10 recovered nodes reachable in the ego transaction component "
-        f"({reachable_depths.count(2)} at 2-hop, {reachable_depths.count(4)} at 4-hop); "
-        f"{len(unreachable)} shown in a separate transaction component",
+        f"Same real accounts: {len(paths)}/10 recovered peers are reachable from the ego transaction component "
+        f"({reachable_depths.count(2)} at 2-hop, {reachable_depths.count(4)} at 4-hop)\n"
+        f"Topology repair rewires distant transaction nodes into a 1-hop behavioral neighborhood",
         ha="center",
         va="bottom",
         fontsize=10.2,

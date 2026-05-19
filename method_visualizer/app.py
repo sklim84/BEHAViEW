@@ -32,12 +32,12 @@ DATASETS = {
     "HOFINET": {
         "node_path": BASE_DIR / "datasets" / "HOFINET_NODE_FEAT.csv",
         "edge_path": BASE_DIR / "datasets" / "HOFINET_EDGES.csv",
-        "ablation_path": BASE_DIR / "results" / "exp_results_hofinet_ab.csv",
-        "supervised_path": BASE_DIR / "results" / "exp_results_supervised_hofinet.csv",
+        "ablation_path": BASE_DIR / "results" / "rq1" / "main_sweep.csv",
+        "supervised_path": BASE_DIR / "results" / "rq3" / "supervised_hofinet.csv",
         "extra_paths": [
-            BASE_DIR / "results" / "exp_results_consisgad_hofinet.csv",
-            BASE_DIR / "results" / "exp_results_caregnn_pcgnn_hofinet.csv",
-            BASE_DIR / "results" / "exp_results_bwgnn_gaga_hofinet.csv",
+            BASE_DIR / "results" / "rq3" / "consisgad_hofinet.csv",
+            BASE_DIR / "results" / "rq3" / "caregnn_pcgnn_hofinet.csv",
+            BASE_DIR / "results" / "rq3" / "bwgnn_gaga_hofinet.csv",
         ],
         "node_arg": "HOFINET_NODE_FEAT",
         "edge_arg": "HOFINET_EDGES",
@@ -47,12 +47,12 @@ DATASETS = {
     "AMLworld": {
         "node_path": BASE_DIR / "datasets" / "amlworld" / "AMLWORLD_NODE_FEAT.csv",
         "edge_path": BASE_DIR / "datasets" / "amlworld" / "AMLWORLD_EDGES.csv",
-        "ablation_path": BASE_DIR / "results" / "exp_results_amlworld.csv",
-        "supervised_path": BASE_DIR / "results" / "exp_results_supervised_amlworld.csv",
+        "ablation_path": BASE_DIR / "results" / "rq4" / "amlworld_main_sweep.csv",
+        "supervised_path": BASE_DIR / "results" / "rq3" / "supervised_amlworld.csv",
         "extra_paths": [
-            BASE_DIR / "results" / "exp_results_consisgad_amlworld.csv",
-            BASE_DIR / "results" / "exp_results_caregnn_pcgnn_amlworld.csv",
-            BASE_DIR / "results" / "exp_results_bwgnn_gaga_amlworld.csv",
+            BASE_DIR / "results" / "rq3" / "consisgad_amlworld.csv",
+            BASE_DIR / "results" / "rq3" / "caregnn_pcgnn_amlworld.csv",
+            BASE_DIR / "results" / "rq3" / "bwgnn_gaga_amlworld.csv",
         ],
         "node_arg": "amlworld/AMLWORLD_NODE_FEAT",
         "edge_arg": "amlworld/AMLWORLD_EDGES",
@@ -165,7 +165,7 @@ C_BOX = "rgba(148, 163, 184, 0.45)"
 
 
 st.set_page_config(
-    page_title="BehaView 3D 기법 비교기",
+    page_title="BehaView 2D 기법 비교기",
     page_icon="B",
     layout="wide",
 )
@@ -558,10 +558,10 @@ def graph_edges_for_layout(edge_groups: list[tuple[str, np.ndarray, str]], max_e
 def initialize_graph_coords(Z: np.ndarray, seed: int) -> np.ndarray:
     rng = np.random.default_rng(seed)
     n = len(Z)
-    coords = rng.normal(0.0, 1.0, size=(n, 3))
+    coords = rng.normal(0.0, 1.0, size=(n, 2))
     Z = np.nan_to_num(Z)
     if Z.ndim == 2 and Z.shape[1] > 0:
-        dims = min(3, Z.shape[1])
+        dims = min(2, Z.shape[1])
         coords[:, :dims] += StandardScaler().fit_transform(Z[:, :dims])
     coords = np.nan_to_num(coords)
     coords -= coords.mean(axis=0, keepdims=True)
@@ -602,7 +602,7 @@ def enforce_minimum_node_spacing(coords: np.ndarray, min_distance: float, seed: 
     return coords
 
 
-def graph_layout_3d(
+def graph_layout_2d(
     Z: np.ndarray,
     y: np.ndarray,
     edge_groups: list[tuple[str, np.ndarray, str]],
@@ -611,7 +611,7 @@ def graph_layout_3d(
     max_layout_edges: int,
     node_spacing: float,
 ) -> tuple[np.ndarray, float]:
-    """Force-directed 3D graph layout driven by the displayed graph edges."""
+    """Force-directed 2D graph layout driven by the displayed graph edges."""
     n = len(y)
     coords = initialize_graph_coords(Z, seed)
     edges = graph_edges_for_layout(edge_groups, max_layout_edges, seed)
@@ -629,8 +629,8 @@ def graph_layout_3d(
     node_spacing = float(np.clip(node_spacing, 0.6, 2.8))
     rest_length = 0.38 * node_spacing
     step = 0.045
-    repulse_pairs = min(max(n * 5, 2500), 45000)
-    repulse_strength = 0.012 * node_spacing
+    repulse_pairs = min(max(n * 7, 3000), 55000)
+    repulse_strength = 0.016 * node_spacing
 
     for _ in range(int(iterations)):
         delta = np.zeros_like(coords)
@@ -657,7 +657,7 @@ def graph_layout_3d(
         coords -= coords.mean(axis=0, keepdims=True)
 
     coords = StandardScaler().fit_transform(np.nan_to_num(coords))
-    coords = enforce_minimum_node_spacing(coords, min_distance=0.09 * node_spacing, seed=seed + 211)
+    coords = enforce_minimum_node_spacing(coords, min_distance=0.11 * node_spacing, seed=seed + 211)
     if len(np.unique(y)) < 2:
         gap = 0.0
     else:
@@ -688,15 +688,12 @@ def edge_trace(
     edges = sample_edges(edges, max_edges, seed)
     xs: list[float | None] = []
     ys: list[float | None] = []
-    zs: list[float | None] = []
     for src, tgt in edges:
         xs.extend([coords[src, 0], coords[tgt, 0], None])
         ys.extend([coords[src, 1], coords[tgt, 1], None])
-        zs.extend([coords[src, 2], coords[tgt, 2], None])
-    return go.Scatter3d(
+    return go.Scatter(
         x=xs,
         y=ys,
-        z=zs,
         mode="lines",
         line={"color": color, "width": edge_width},
         opacity=edge_opacity,
@@ -706,7 +703,11 @@ def edge_trace(
     )
 
 
-def plot_3d(
+def recolor_edge_groups(edge_groups: list[tuple[str, np.ndarray, str]], color: str) -> list[tuple[str, np.ndarray, str]]:
+    return [(name, edges, color) for name, edges, _ in edge_groups]
+
+
+def plot_2d(
     coords: np.ndarray,
     sample: pd.DataFrame,
     edge_groups: list[tuple[str, np.ndarray, str]],
@@ -725,7 +726,7 @@ def plot_3d(
     ]
 
     if not PLOTLY_AVAILABLE:
-        st.warning("Plotly가 설치되어 있지 않아 3D 인터랙티브 그래프를 그릴 수 없습니다.")
+        st.warning("Plotly가 설치되어 있지 않아 2D 인터랙티브 그래프를 그릴 수 없습니다.")
         return
 
     fig = go.Figure()
@@ -743,10 +744,9 @@ def plot_3d(
         if not mask.any():
             continue
         fig.add_trace(
-            go.Scatter3d(
+            go.Scatter(
                 x=coords[mask, 0],
                 y=coords[mask, 1],
-                z=coords[mask, 2],
                 mode="markers",
                 marker={"size": size, "color": color, "opacity": 0.88, "line": {"width": 0}},
                 text=np.array(hover, dtype=object)[mask],
@@ -770,15 +770,12 @@ def plot_3d(
         title={"text": title, "x": 0.02, "xanchor": "left"},
         margin={"l": 0, "r": 0, "t": 46, "b": 0},
         height=620,
-        scene={
-            "xaxis": axis_style,
-            "yaxis": axis_style,
-            "zaxis": axis_style,
-            "camera": {"eye": {"x": 1.45, "y": 1.35, "z": 0.92}},
-        },
+        xaxis=axis_style,
+        yaxis={**axis_style, "scaleanchor": "x", "scaleratio": 1},
+        dragmode="pan",
         legend={"orientation": "h", "x": 0.0, "y": 1.02},
     )
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, width="stretch", config={"scrollZoom": True})
     visible_edges = [f"{name}: {len(edges):,}" for name, edges, _ in edge_groups]
     st.caption("계산된 엣지 수 - " + " / ".join(visible_edges))
 
@@ -947,7 +944,7 @@ with st.sidebar:
     st.header("데이터")
     dataset_name = st.selectbox("데이터셋", list(DATASETS.keys()), index=0)
     n_points = st.slider("샘플 수", min_value=800, max_value=12_000, value=3_000, step=200)
-    suspicious_share = st.slider("샘플 내 의심 비율", min_value=0.05, max_value=0.70, value=0.35, step=0.05)
+    suspicious_share = st.slider("샘플 내 의심 비율", min_value=0.01, max_value=0.70, value=0.01, step=0.01)
     seed = st.number_input("랜덤 시드", min_value=0, max_value=99_999, value=2025, step=1)
     feature_family_label = st.selectbox("피처 묶음", list(FEATURE_FAMILY_LABELS.keys()), index=0)
     feature_family = FEATURE_FAMILY_LABELS[feature_family_label]
@@ -993,21 +990,21 @@ with st.sidebar:
 
     st.header("렌더링")
     max_edges = st.slider("엣지 유형별 최대 표시 수", min_value=0, max_value=20_000, value=6_000, step=500)
-    edge_width = st.slider("엣지 선 두께", min_value=1, max_value=8, value=4, step=1)
-    edge_opacity = st.slider("엣지 선 불투명도", min_value=0.10, max_value=1.00, value=0.82, step=0.05)
+    edge_width = st.slider("엣지 선 두께", min_value=1, max_value=8, value=1, step=1)
+    edge_opacity = st.slider("엣지 선 불투명도", min_value=0.10, max_value=1.00, value=0.25, step=0.05)
     node_spacing = st.slider("노드 간 좌표 간격", min_value=0.6, max_value=2.8, value=1.7, step=0.1)
     node_size_scale = st.slider("노드 표시 크기", min_value=0.45, max_value=1.30, value=0.75, step=0.05)
     coordinate_tick = st.slider("좌표 눈금 단위", min_value=0.05, max_value=0.50, value=0.10, step=0.05)
-    layout_iterations = st.slider("3D 그래프 배치 반복 수", min_value=10, max_value=120, value=45, step=5)
+    layout_iterations = st.slider("2D 그래프 배치 반복 수", min_value=10, max_value=120, value=45, step=5)
 
 
-st.title("BehaView 3D 기법 비교기")
+st.title("BehaView 2D 기법 비교기")
 st.caption(
-    "HOFINET과 AMLworld에서 거래 그래프 기반 기존 기법과 복구 토폴로지 기반 우리 기법을 3D로 비교합니다."
+    "HOFINET과 AMLworld에서 거래 그래프 기반 기존 기법과 복구 토폴로지 기반 우리 기법을 2D 토폴로지 그래프로 비교합니다."
 )
 
 st.info(
-    "3D 출력은 선택한 기법이 사용하는 실제 엣지로 배치한 force-directed 그래프입니다. "
+    "2D 출력은 선택한 기법이 사용하는 실제 엣지로 배치한 force-directed 그래프입니다. "
     "노드 색은 라벨, 선은 거래 엣지와 복구 k-NN 엣지를 나타내며, 선 두께와 노드 간 좌표 간격은 왼쪽 렌더링 메뉴에서 조정할 수 있습니다."
 )
 
@@ -1039,7 +1036,7 @@ render_metric_cards(sample, tx_metrics, bhv_metrics, left_metric, right_metric)
 
 st.markdown("---")
 
-with st.spinner("기법별 표현과 실제 3D 그래프 배치를 계산하는 중입니다..."):
+with st.spinner("기법별 표현과 실제 2D 그래프 배치를 계산하는 중입니다..."):
     left_Z, left_edges = method_representation(
         X,
         labels,
@@ -1073,17 +1070,18 @@ with st.spinner("기법별 표현과 실제 3D 그래프 배치를 계산하는 
         loss_strength,
     )
     layout_edge_budget = max(1, max(max_edges * 3, int(n_points * 6)))
-    left_coords, left_gap = graph_layout_3d(left_Z, labels, left_edges, int(seed), layout_iterations, layout_edge_budget, node_spacing)
-    right_coords, right_gap = graph_layout_3d(right_Z, labels, right_edges, int(seed) + 7, layout_iterations, layout_edge_budget, node_spacing)
+    left_coords, left_gap = graph_layout_2d(left_Z, labels, left_edges, int(seed), layout_iterations, layout_edge_budget, node_spacing)
+    right_coords, right_gap = graph_layout_2d(right_Z, labels, right_edges, int(seed) + 7, layout_iterations, layout_edge_budget, node_spacing)
 
-left_title = f"왼쪽: {method_label(left_encoder, left_setting, left_loss)} | 의심 F1 {metric_text(left_metric, 'f1')} | 3D 군집거리 {left_gap:.2f}"
-right_title = f"오른쪽: {method_label(right_encoder, right_setting, right_loss)} | 의심 F1 {metric_text(right_metric, 'f1')} | 3D 군집거리 {right_gap:.2f}"
+left_title = f"왼쪽: {method_label(left_encoder, left_setting, left_loss)} | 의심 F1 {metric_text(left_metric, 'f1')} | 2D 군집거리 {left_gap:.2f}"
+right_title = f"오른쪽: {method_label(right_encoder, right_setting, right_loss)} | 의심 F1 {metric_text(right_metric, 'f1')} | 2D 군집거리 {right_gap:.2f}"
 
 col_left, col_right = st.columns(2)
 with col_left:
-    plot_3d(left_coords, sample, left_edges, left_title, max_edges, edge_width, edge_opacity, node_size_scale, coordinate_tick, int(seed))
+    plot_2d(left_coords, sample, left_edges, left_title, max_edges, edge_width, edge_opacity, node_size_scale, coordinate_tick, int(seed))
 with col_right:
-    plot_3d(right_coords, sample, right_edges, right_title, max_edges, edge_width, edge_opacity, node_size_scale, coordinate_tick, int(seed) + 11)
+    right_display_edges = recolor_edge_groups(right_edges, C_TX_EDGE)
+    plot_2d(right_coords, sample, right_display_edges, right_title, max_edges, edge_width, edge_opacity, node_size_scale, coordinate_tick, int(seed) + 11)
 
 st.markdown("---")
 

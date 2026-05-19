@@ -46,6 +46,8 @@ parser.add_argument('--tune_threshold', action='store_true',
                     help='Tune LogisticRegression decision threshold on validation split for suspicious-class F1')
 parser.add_argument('--skip_tsne', action='store_true', help='Skip t-SNE visualization (for HP search)')
 parser.add_argument('--train_ratio', type=float, default=0.1, help='Train split ratio (val=same, test=1-2*train)')
+parser.add_argument('--split_path', type=str, default=None,
+                    help='Optional .npz file with train/valid/test node indices, e.g. temporal split.')
 
 
 def get_config():
