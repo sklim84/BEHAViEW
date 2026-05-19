@@ -560,28 +560,9 @@ Thus, subgraph pooling efficacy is governed by (i) recovered homophily and (ii) 
 \textbf{Normalization as a stability factor.} Using Proposition~\ref{thm:bn_collapse} with the homophily-recovery and signal-preservation analyses in Appendix~\ref{app:theory}, we study normalization as a unified factor in training stability. Under the BYOL-style bootstrap loss, normalization controls stability, as Figure~\ref{fig:rq2_bn} shows for settings (a) vs. (d) across nine encoders. Table~\ref{tab:bn_summary} shows 4-seed paired $t$-tests with Holm correction for setting (d): (i) adding BN yields the largest performance change ($\Delta F1_{\text{susp}} \approx 0.60$) when all else is fixed, while (ii) BN position (per-layer $>$ final-only) and (iii) convolution type (GCNConv $>$ GINConv) have smaller but still visible effects. Across paradigms, per-layer BN encoders converge to 0.667--0.670 under the bootstrap loss and stay within 0.001 of this under their native losses (Appendix~\ref{app:loss_table}), suggesting that once training is stable, the repaired topology is the main driver of performance.
 \begin{figure}[t]
     \centering
-    \begin{subfigure}{0.45\columnwidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/fig_rq3_bn_a.pdf}
-        \caption{BN-augmented encoders}
-        \label{fig:rq2_bn_a}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.45\columnwidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/fig_rq3_bn_b.pdf}
-        \caption{BN-free encoders}
-        \label{fig:rq2_bn_b}
-    \end{subfigure}
-    \caption{$F1_{\text{susp}}$ trajectories for four ablations (a)/(b)/(c)/(d) across 9 encoders on \hofinet (4-seed mean$\pm$std). Note the differing y-axis scales between panels.}
-    \label{fig:rq2_bn}
-\end{figure}
-
-\begin{figure}[t]
-    \centering
     \includegraphics[width=0.95\columnwidth]{figures/fig_rq3_bn_heatmap.pdf}
-    \caption{\textbf{[Alternative for comparison.]} $F1_{\text{susp}}$ heatmap across 9 encoders on \hofinet (4-seed mean). BN-equipped encoders (top, above the red divider) reach 0.55--0.68 at (b) and (d); BN-free encoders (bottom) collapse to $\approx 0.04$--$0.06$ across all settings.}
-    \label{fig:rq2_bn_heatmap}
+    \caption{$F1_{\text{susp}}$ heatmap for the 4-setting ablation across 9 encoders on \hofinet (4-seed mean). BN-equipped encoders (left of the red divider) reach 0.55--0.68 at (b) and (d); BN-free encoders (right) collapse to $\approx 0.04$--$0.06$ across all settings.}
+    \label{fig:rq2_bn}
 \end{figure}
 
 \begin{proposition}[BN as a practical stabilizer under bootstrap objectives]\label{thm:bn_collapse}
