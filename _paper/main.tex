@@ -577,6 +577,13 @@ Thus, subgraph pooling efficacy is governed by (i) recovered homophily and (ii) 
     \label{fig:rq2_bn}
 \end{figure}
 
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\columnwidth]{figures/fig_rq3_bn_heatmap.pdf}
+    \caption{\textbf{[Alternative for comparison.]} $F1_{\text{susp}}$ heatmap across 9 encoders on \hofinet (4-seed mean). BN-equipped encoders (top, above the red divider) reach 0.55--0.68 at (b) and (d); BN-free encoders (bottom) collapse to $\approx 0.04$--$0.06$ across all settings.}
+    \label{fig:rq2_bn_heatmap}
+\end{figure}
+
 \begin{proposition}[BN as a practical stabilizer under bootstrap objectives]\label{thm:bn_collapse}
 Under the BYOL-style bootstrap loss~\eqref{eq:loss}, the trivial constant solution $f_\theta(\cdot) \equiv c$ can attain $\mathcal{L}=0$ when the encoder lacks batch normalization (BN). In our training configuration, adding BN prevents the constant-collapse behavior observed in BN-free encoders by enforcing non-degenerate batch statistics during training. We therefore use BN as a practical stabilizer rather than as a universal guarantee for all bootstrap objectives.
 \end{proposition}

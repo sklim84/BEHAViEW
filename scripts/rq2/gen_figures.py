@@ -243,6 +243,82 @@ def fig4_bn_effect():
     print(f'Saved: {path_b}')
 
 
+def fig4_bn_heatmap():
+    """Alternative Fig.4: 9 encoders x 4 settings heatmap of F1_susp.
+
+    Single-panel sequel to fig4_bn_effect. Same data, denser layout:
+    each row is an encoder (ordered per-layer BN -> final-only BGRL ->
+    BN-free), each column is an ablation setting (a/b/c/d), each cell is
+    the 4-seed mean F1_susp. A horizontal divider separates BN-equipped
+    from BN-free encoders to make the BN dependence visible at a glance.
+
+    Reads from results/rq1/main_sweep.csv.
+    """
+    import pandas as pd
+
+    csv_path = 'results/rq1/main_sweep.csv'
+    df = pd.read_csv(csv_path)
+    parsed = []
+    for name in df['Model']:
+        parts = name.split('_')
+        setting = parts[-2]
+        enc = '_'.join(parts[1:-2])
+        parsed.append((enc, setting))
+    df['encoder'] = [p[0] for p in parsed]
+    df['setting'] = [p[1] for p in parsed]
+
+    enc_order = ['gbt', 'dgi_bn', 'mvgrl_bn', 'grace_bn', 'gin', 'bgrl',
+                 'dgi', 'mvgrl', 'grace']
+    enc_labels = {
+        'gbt': 'GBT', 'dgi_bn': 'DGI+BN', 'mvgrl_bn': 'MVGRL+BN',
+        'grace_bn': 'GRACE+BN', 'gin': 'GIN', 'bgrl': 'BGRL',
+        'dgi': 'DGI', 'mvgrl': 'MVGRL', 'grace': 'GRACE',
+    }
+    settings = ['a', 'b', 'c', 'd']
+    setting_labels = ['(a)\nbaseline', '(b)\n+view', '(c)\n+level', '(d)\n+both']
+
+    matrix = np.zeros((len(enc_order), len(settings)))
+    for i, enc in enumerate(enc_order):
+        for j, s in enumerate(settings):
+            matrix[i, j] = df[(df['encoder'] == enc) & (df['setting'] == s)]['f1_1'].mean()
+
+    fig, ax = plt.subplots(figsize=(5.2, 4.5))
+    im = ax.imshow(matrix, cmap='YlGnBu', vmin=0.0, vmax=0.75, aspect='auto')
+
+    ax.set_xticks(np.arange(len(settings)))
+    ax.set_xticklabels(setting_labels, fontsize=11)
+    ax.set_yticks(np.arange(len(enc_order)))
+    ax.set_yticklabels([enc_labels[e] for e in enc_order], fontsize=11)
+
+    for i in range(len(enc_order)):
+        for j in range(len(settings)):
+            val = matrix[i, j]
+            color = 'white' if val > 0.45 else 'black'
+            ax.text(j, i, f'{val:.2f}', ha='center', va='center',
+                    color=color, fontsize=10)
+
+    ax.axhline(y=5.5, color='red', linestyle='--', linewidth=1.5, alpha=0.85)
+    ax.text(3.55, 2.5, 'BN-equipped', rotation=90, fontsize=10,
+            ha='left', va='center', color='dimgray')
+    ax.text(3.55, 7.0, 'BN-free', rotation=90, fontsize=10,
+            ha='left', va='center', color='dimgray')
+
+    ax.set_xlabel('Ablation setting', fontsize=12)
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.10)
+    cbar.set_label('$F1_{susp}$', fontsize=12)
+
+    plt.tight_layout()
+    path = os.path.join(OUT_DIR, 'fig_rq3_bn_heatmap.pdf')
+    plt.savefig(path, bbox_inches='tight', dpi=300)
+    plt.savefig(path.replace('.pdf', '.png'), bbox_inches='tight', dpi=300)
+    import shutil
+    shutil.copy(path, os.path.join('results/rq2/figures', os.path.basename(path)))
+    shutil.copy(path.replace('.pdf', '.png'),
+                os.path.join('results/rq2/figures', os.path.basename(path).replace('.pdf', '.png')))
+    plt.close()
+    print(f'Saved: {path}')
+
+
 def fig5_setting_comparison():
     """Fig.5: (a)(b)(c)(d) comparison across BN/non-BN encoders."""
     settings = ['(a)\norg', '(b)\nbehav', '(c)\nsub', '(d)\nboth']
@@ -720,6 +796,7 @@ if __name__ == '__main__':
     fig2_ablation_matrix()
     fig3_susp_connectivity()
     fig4_bn_effect()
+    fig4_bn_heatmap()
     fig5_setting_comparison()
     fig_rq3_baseline()
     print(f'\nAll figures saved to {OUT_DIR}/')
