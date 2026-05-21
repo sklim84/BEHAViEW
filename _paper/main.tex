@@ -102,7 +102,7 @@
 
 
 \begin{abstract}
-In anti-money laundering (AML) transaction graphs, suspicious accounts have predominantly benign neighbors, so graph neural network (GNN) aggregation dilutes a rare suspicious signal. We trace this to a topology-behavior mismatch: the evasion-shaped transaction network fails to reflect homophily within the suspicious class. To address this mismatch, we present \method, a self-supervised graph contrastive learning framework that performs topology repair through behavioral homophily recovery. \method builds a topology-independent recovered neighborhood graph from behavioral similarity (e.g., amount distributions) and aligns it with the transaction graph through contrastive learning. On \hofinet, a national interbank transfer network, the repair raises the suspicious ego-neighborhood ratio from 1:5.7 to 1:1.4. At 1\% labels, \method achieves the highest suspicious-class F1 on all three AML datasets, with a 0.010--0.017 gap over the strongest supervised baseline. These findings position \method as a label-efficient building block for money laundering detection under realistic label-delay constraints.
+In anti-money laundering (AML) transaction graphs, suspicious accounts have predominantly benign neighbors, so graph neural network (GNN) aggregation dilutes a rare suspicious signal. We trace this to a topology-behavior mismatch: the evasion-shaped transaction network fails to reflect homophily within the suspicious class. To address this mismatch, we present \method, a self-supervised graph contrastive learning framework that performs topology repair through behavioral homophily recovery. \method builds a topology-independent recovered neighborhood graph from behavioral similarity (e.g., amount distributions) and aligns it with the transaction graph through contrastive learning. On \hofinet, a national interbank transfer network, the repair raises the suspicious ego-neighborhood ratio from 1:5.7 to 1:1.4. At 1\% labels, \method achieves the highest suspicious-class F1 on all three AML datasets, with a 0.010--0.016 gap over the strongest supervised baseline. These findings position \method as a label-efficient building block for money laundering detection under realistic label-delay constraints.
 \end{abstract}
 
 \keywords{topology repair, behavioral homophily recovery, anti-money laundering, transaction networks, heterophily, self-supervised learning, graph contrastive learning}
@@ -574,14 +574,14 @@ GBT pool        & Repaired $k$-NN & \cmark & \textbf{0.667}{\scriptsize±.002} &
 RQ1 validated topology repair in the recovered neighborhood graph. RQ2 examines when aggregation (subgraph pooling) helps or hurts, and how repair alters this trade-off. Pooling is unreliable on the raw transaction graph but, on the repaired topology, it can amplify suspicious evidence, with the largest gains under suspicious-class-oriented scoring.
 \textbf{Pooling effects across the 4-setting ablation.} Subgraph pooling effectiveness depends on topology homophily and encoder normalization depth. On \hofinet, the (d)-over-(b) improvement shrinks with deeper normalization: per-layer BN encoders gain only about +0.003--0.005, BGRL gains +0.087, and BN-less encoders gain about +0.012 on average. Pooling on the transaction graph (c) reduces performance by 17--30\% relative to (a) for BN-equipped encoders ($-17.6\%$ for BGRL to $-29.8\%$ for GIN), consistent with the sign-flip analysis in Appendix~\ref{app:theory} (Theorem~\ref{thm:meanpool}).
 
-On \hofinet, topology repair is the main benefit ((b)$>$(a), (d)$>$(c)), while pooling yields a smaller, normalization-dependent gain: (d)$\approx$(b) with per-layer BN, but larger gains for BGRL and BN-less encoders. Because BGRL uses BN only at the final layer, its lower (b) score (0.542) suggests less stable intermediate messages; repaired-topology pooling closes part of the gap. The (b)$\to$(d) gain is statistically significant for representative encoders (GBT $p=2.1{\times}10^{-2}$, BGRL Holm-adjusted $p=1.8{\times}10^{-3}$). On AMLworld, Table~\ref{tab:rq4} shows that the pooling effect varies by encoder: BGRL and GRACE+BN show (d)$>$(b), while per-layer BN encoders (GBT, DGI+BN) show (b)$\approx$(d) at the lower end of the absolute scale.
+On \hofinet, topology repair is the main benefit ((b)$>$(a), (d)$>$(c)), while pooling yields a smaller, normalization-dependent gain: (d)$\approx$(b) with per-layer BN, but larger gains for BGRL and BN-less encoders. The (b)$\to$(d) gain is statistically significant for representative encoders (GBT $p=2.1{\times}10^{-2}$, BGRL Holm-adjusted $p=1.8{\times}10^{-3}$). On AMLworld, Table~\ref{tab:rq4} shows that the pooling effect varies by encoder: BGRL and GRACE+BN show (d)$>$(b), while per-layer BN encoders (GBT, DGI+BN) show (b)$\approx$(d) at the lower end of the absolute scale.
 
 Thus, subgraph pooling efficacy is governed by (i) recovered homophily and (ii) encoder normalization depth.
 
 \textbf{Normalization as a stability factor.} Using Proposition~\ref{thm:bn_collapse} with the homophily-recovery and signal-preservation analyses in Appendix~\ref{app:theory}, we study normalization as a unified factor in training stability. Under the BYOL-style bootstrap loss, normalization controls stability, as Figure~\ref{fig:rq2_bn} shows for settings (a) vs. (d) across nine encoders. Table~\ref{tab:bn_summary} shows 4-seed paired $t$-tests with Holm correction for setting (d): (i) adding BN yields the largest performance change ($\Delta F1_{\text{susp}} \approx 0.60$) when all else is fixed, while (ii) BN position (per-layer $>$ final-only) and (iii) convolution type (GCNConv $>$ GINConv) have smaller but still visible effects. Across paradigms, per-layer BN encoders converge to 0.667--0.670 under the bootstrap loss and stay within 0.001 of this under their native losses (Appendix~\ref{app:loss_table}), suggesting that once training is stable, the repaired topology is the main driver of performance.
 \begin{figure}[t]
     \centering
-    \includegraphics[width=1\columnwidth]{figures/fig_rq3_bn_heatmap.pdf}
+    \includegraphics[width=0.95\columnwidth]{figures/fig_rq3_bn_heatmap.pdf}
     \caption{$F1_{\text{susp}}$ heatmap for the 4-setting ablation across 9 encoders on \hofinet (4-seed mean). BN-equipped encoders (left of the red divider) reach 0.55--0.68 at (b) and (d); BN-free encoders (right) collapse to $\approx 0.04$--$0.06$ across all settings.}
     \label{fig:rq2_bn}
 \end{figure}
@@ -598,7 +598,7 @@ RQ3 asks whether \method's self-supervised representation remains competitive wi
 
 \begin{figure*}[h]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/fig_rq3_labeff.pdf}
+\includegraphics[width=1\textwidth]{figures/fig_rq3_labeff.pdf}
 \caption{Label-efficiency on three AML datasets at train label fractions $\{1\%, 5\%, 10\%\}$ (4-seed mean$\pm$std, shaded).}
 \label{fig:rq3_labeff}
 \end{figure*}
@@ -638,10 +638,10 @@ GRACE+BN  & \checkmark & 0.430{\scriptsize±.014} & \underline{0.672}{\scriptsiz
 
 \textbf{AMLworld: amplification in the low-prevalence regime.} On AMLworld ($\rho{=}1.23\%$), BGRL reaches $F1_{\text{susp}}=0.066$ in (d), a 73\% gain over (a), and all encoders satisfy (b)$>$(a). Pooling on the repaired topology boosts BGRL (0.062$\to$0.066) and GRACE+BN (0.048$\to$0.055), while per-layer BN encoders (GBT, DGI+BN) plateau with (b)$\approx$(d). Thus, topology repair, not aggregation choice, explains most of AMLworld’s improvement over the transaction-graph baseline.
 
-\textbf{AMLNet: high prevalence reduces instability in BN-free encoders.} On AMLNet ($\rho{=}13.52\%$), the baseline (a) already reaches $F1_{\text{susp}}=0.40$--$0.45$, far above \hofinet (0.04--0.27) and AMLworld (0.038--0.042). The high suspicious-account ratio keeps even BN-free DGI outside the unstable regime of Proposition~\ref{thm:bn_collapse}. Collapse prevention matters most at low prevalence and weakens as the random-classifier ceiling rises. Topology-repair and contrastive-level effects match \hofinet; for example, GBT improves from 0.426 in (a) to 0.678 in (d), a gain of over 50\%. All three datasets show the same topology-repair pattern in homophily and F1 (Tables~\ref{tab:ss_sb},~\ref{tab:rq4}).
+\textbf{AMLNet: high prevalence reduces instability in BN-free encoders.} On AMLNet ($\rho{=}13.52\%$), the baseline (a) already reaches $F1_{\text{susp}}=0.40$--$0.45$, far above \hofinet (0.04--0.27) and AMLworld (0.038--0.042). The high suspicious-account ratio keeps even BN-free DGI outside the unstable regime of Proposition~\ref{thm:bn_collapse}. Collapse prevention matters most at low prevalence and weakens as the random-classifier ceiling rises. Topology-repair and contrastive-level effects match \hofinet; for example, GBT improves from 0.426 in (a) to 0.678 in (d), a gain of over 50\%. All three datasets show the same topology-repair pattern as in Table~\ref{tab:ss_sb}.
 
 \section{Conclusion and Future Work}
-\paragraph{\textbf{Contributions.}} We propose \method, a topology-repair approach for AML detection on transaction networks with weak homophily. \method contrasts the observed transaction graph with a behavioral homophily recovery graph, preserving transaction-topology information while adding repaired suspicious-class neighborhoods (Eq.~\ref{eq:concat}). The repair raises \hofinet edge homophily from 0.690 to 0.981. With 1\% labeled nodes, \method achieves the best $F1_{\text{susp}}$ on all three datasets (0.010--0.017 above the strongest supervised baseline); with 10\% labels, tabular boosting matches \method, while \method continues to outperform every supervised graph baseline.
+\paragraph{\textbf{Contributions.}} We propose \method, a topology-repair approach for AML detection on transaction networks with weak homophily. \method contrasts the observed transaction graph with a behavioral homophily recovery graph, preserving transaction-topology information while adding repaired suspicious-class neighborhoods (Eq.~\ref{eq:concat}). The repair raises \hofinet edge homophily from 0.690 to 0.981. With 1\% labeled nodes, \method achieves the best $F1_{\text{susp}}$ on all three datasets (0.010--0.016 above the strongest supervised baseline); with 10\% labels, tabular boosting matches \method, while \method continues to outperform every supervised graph baseline.
 
 \paragraph{\textbf{Mechanism.}} Feature separability alone does not repair transaction neighborhoods; topology repair creates class-informative neighborhoods that message passing can use. Sign-flip analysis characterizes when aggregation on the original graph erodes this structure; repaired-topology pooling refines the recovered signal conditionally, and normalization mainly stabilizes the bootstrap objective (Appendix~\ref{app:theory}).
 
@@ -651,6 +651,7 @@ GRACE+BN  & \checkmark & 0.430{\scriptsize±.014} & \underline{0.672}{\scriptsiz
 
 \paragraph{\textbf{Reproducibility.}} We will release the source code, training scripts, and seed-level raw outputs; \hofinet cannot be shared due to its data-sharing agreement, but AMLworld and AMLNet experiments are reproducible from public benchmarks.
 
+\clearpage
 \appendix
 
 \section{Datasets and Transfer}\label{app:datasets}
@@ -813,7 +814,7 @@ For an encoder with BN and $\eta_h^{\text{tx}} > 1/2 + 1/(2k)$, we predict $F1(b
 
 \begin{table}[h]
 \centering
-\caption{Empirical validation of the homophily-gap reference and mean-pool flip condition. The ideal reference $1-h_{\text{tx}}$ corresponds to perfectly recovered homophily; \hofinet and AMLworld are within $\sim 0.02$ of this, while AMLNet falls short by 0.10. Ego-heterophily exceeds the mean-pool flip threshold $\eta_h^* = 0.55$.}
+\caption{Empirical validation of the homophily-gap reference and mean-pool flip condition. The ideal reference $1-h_{\text{tx}}$ corresponds to perfectly recovered homophily; \hofinet and AMLworld are within $\sim 0.02$ of this, while AMLNet falls short by 0.10. Ego-heterophily exceeds the mean-pool flipthreshold $\eta_h^* = 0.55$.}
 \label{tab:theory_verify}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lrrrrrrr}
