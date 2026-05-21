@@ -435,7 +435,7 @@ We evaluate \method in four phases, from mechanism to deployment. First, we test
 \begin{itemize}
 \item \textbf{RQ1. Behavioral homophily recovery:} Does the topology-independent recovered neighborhood graph repair the suspicious-class topology relative to the transaction graph?
 \item \textbf{RQ2. Signal preservation under aggregation:} When does subgraph pooling help versus hurt, and how does recovered homophily change this trade-off?
-\item \textbf{RQ3. Self-supervised AML detection under label scarcity:} Does the self-supervised representation from \method remain competitive with supervised models under label delay and cold start?
+\item \textbf{RQ3. Self-supervised money laundering detection under label scarcity:} Does the self-supervised representation from \method remain competitive with supervised models under label delay and cold start?
 \item \textbf{RQ4. Robustness across AML regimes:} Do the same mechanisms and trends apply to AML datasets with different prevalence and scale?
 \end{itemize}
 
@@ -564,7 +564,7 @@ GBT pool        & Repaired $k$-NN & \cmark & \textbf{0.667}{\scriptsize±.002} &
 \centering
 \caption{BatchNorm ablation for setting (d) on \hofinet (4-seed paired $t$-test, Holm–Bonferroni adjusted; \# = within-family pairs).}
 \label{tab:bn_summary}
-\begin{tabular}{ccccc}
+\begin{tabular}{llccc}
 \toprule
 \textbf{Axis} & \textbf{Better $>$ Worse (mean $F1_{\text{susp}}$)} & $\boldsymbol{\Delta F1_{\text{susp}}}$ & \textbf{\# pairs} & $\boldsymbol{\max p_{\text{adj}}}$ \\
 \midrule
@@ -658,7 +658,7 @@ The transaction graph is topologically misaligned for detection, whereas behavio
 Benchmarks are synthetic, and evaluation is transductive; future work includes chronological hold-outs with drift tracking, validation on real labeled transaction graphs, and calibration of alert budgets and thresholds.
 
 \section{Conclusion}
-We present \method, a self-supervised topology-repair framework for AML detection under weak homophily. By aligning the transaction graph with a behavioral homophily recovery graph, \method repairs suspicious-class neighborhoods (e.g., \hofinet homophily 0.690$\to$0.981) and achieves the best $F1_{\text{susp}}$ at 1\% labels across three AML datasets.
+We present \method, a self-supervised topology-repair framework for money laundering detection under weak homophily. By aligning the transaction graph with a behavioral homophily recovery graph, \method repairs suspicious-class neighborhoods (e.g., \hofinet homophily 0.690$\to$0.981) and achieves the best $F1_{\text{susp}}$ at 1\% labels across three AML datasets.
 
 \paragraph{\textbf{Reproducibility.}} We will release the source code, training scripts, and seed-level raw outputs; \hofinet cannot be shared due to its data-sharing agreement, but AMLworld and AMLNet experiments are reproducible from public benchmarks.
 

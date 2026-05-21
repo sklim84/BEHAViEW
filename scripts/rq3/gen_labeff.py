@@ -1,9 +1,9 @@
-"""Generate RQ3 label-efficiency line plot for BehaView paper.
+"""Generate RQ3 label-efficiency line plot for BEHAViEW paper.
 
 Single figure with 3 panels (ATNet, AMLworld, AMLNet).
 X-axis: train_ratio (log scale 1%, 5%, 10%).
 Y-axis: F1_susp with shaded ±std band.
-Lines: BehaView, MLP, XGBoost, LightGBM, GAT, GCN, CARE-GNN.
+Lines: BEHAViEW, MLP, XGBoost, LightGBM, GAT, GCN, CARE-GNN.
 
 Usage:
     python visualize/gen_rq3_labeff_figure.py
@@ -32,7 +32,7 @@ def load_behaview(ds):
     else:
         df = pd.read_csv(os.path.join(RESULTS, f'rq3/behaview_{ds}.csv'))
         df['train_ratio'] = df['Model'].apply(lambda m: float(m.split('_r')[1].split('_s')[0]))
-    return df[['train_ratio', 'f1_1']].assign(model='BehaView')
+    return df[['train_ratio', 'f1_1']].assign(model='BEHAViEW')
 
 
 def load_supervised(ds):
@@ -49,7 +49,7 @@ def aggregate(df):
 
 # Plot config — distinct colors and markers
 STYLE = {
-    'BehaView':  dict(color='#d62728', marker='o', lw=1.6, ms=5, zorder=10),
+    'BEHAViEW':  dict(color='#d62728', marker='o', lw=1.6, ms=5, zorder=10),
     'MLP':       dict(color='#7f7f7f', marker='s', lw=1.0, ms=4, ls='--'),
     'XGBoost':   dict(color='#1f77b4', marker='^', lw=1.0, ms=4),
     'LightGBM':  dict(color='#2ca02c', marker='v', lw=1.0, ms=4),
@@ -57,7 +57,7 @@ STYLE = {
     'GCN':       dict(color='#9467bd', marker='P', lw=1.0, ms=4),
     'CARE-GNN':  dict(color='#8c564b', marker='X', lw=1.0, ms=4),
 }
-MODEL_ORDER = ['BehaView', 'XGBoost', 'LightGBM', 'MLP', 'GAT', 'GCN', 'CARE-GNN']
+MODEL_ORDER = ['BEHAViEW', 'XGBoost', 'LightGBM', 'MLP', 'GAT', 'GCN', 'CARE-GNN']
 
 DATASETS = [
     ('hofinet',  'ATNet ($\\rho{=}2.13\\%$)'),
@@ -102,7 +102,7 @@ def main():
 
     # Shared legend at the bottom
     handles, labels = axes[0].get_legend_handles_labels()
-    # Ensure BehaView appears first
+    # Ensure BEHAViEW appears first
     order = sorted(range(len(labels)), key=lambda i: MODEL_ORDER.index(labels[i]) if labels[i] in MODEL_ORDER else 99)
     handles = [handles[i] for i in order]
     labels = [labels[i] for i in order]

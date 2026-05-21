@@ -1089,7 +1089,7 @@ tab_rq1, tab_rq2, tab_rq3, tab_rq4 = st.tabs(
     [
         "RQ1. Behavioral homophily recovery",
         "RQ2. Signal preservation under aggregation",
-        "RQ3. Self-supervised AML detection under label scarcity",
+        "RQ3. Self-supervised money laundering detection under label scarcity",
         "RQ4. Robustness across AML regimes",
     ]
 )
