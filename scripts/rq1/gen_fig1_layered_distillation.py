@@ -530,14 +530,15 @@ def draw_behavior_script(ax) -> None:
         mapped_vertices: list[tuple[float, float]] = []
         background_vertices: list[tuple[float, float]] = []
 
+        bg_pad = 0.100
         for t in np.linspace(-1.0, 1.0, 48):
             dx = t * half_width
             baseline_y = y_base + arc_lift * (t * t)
-            background_vertices.append((cx + dx, baseline_y + 0.075))
+            background_vertices.append((cx + dx, baseline_y + bg_pad))
         for t in np.linspace(1.0, -1.0, 48):
             dx = t * half_width
             baseline_y = y_base + arc_lift * (t * t)
-            background_vertices.append((cx + dx, baseline_y - 0.075))
+            background_vertices.append((cx + dx, baseline_y - bg_pad))
         background_vertices.append(background_vertices[0])
         background_path = MplPath(
             background_vertices,
@@ -571,8 +572,8 @@ def draw_behavior_script(ax) -> None:
         )
 
     wall_y = cy - ry - 0.070
-    add_cylinder_wall_text(BEHAVIOR_SCRIPT_LINE1, wall_y - 0.015, 0.104, 0.105)
-    add_cylinder_wall_text(BEHAVIOR_SCRIPT_LINE2, wall_y - 0.115, 0.096, 0.095)
+    add_cylinder_wall_text(BEHAVIOR_SCRIPT_LINE1, wall_y - 0.018, 0.125, 0.118)
+    add_cylinder_wall_text(BEHAVIOR_SCRIPT_LINE2, wall_y - 0.155, 0.116, 0.108)
 
 
 def build_figure(rep: dict, labels: np.ndarray, paths: dict[int, list[int]]) -> plt.Figure:

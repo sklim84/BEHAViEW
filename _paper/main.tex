@@ -236,7 +236,7 @@ On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:
     $\downarrow$ {\scriptsize LogReg}\\
     {$F1_{\text{susp}}$/AUROC}};
 \draw[myarrow] (loss.east) -- (inf.west);
-\node[above=0.2cm of loss, yshift=0.5cm, xshift=1cm font=\bfseries, text=red!90] {Contrastive Learning};
+\node[above=0.2cm of loss, yshift=0.5cm, xshift=1cm, font=\bfseries, text=red!90] {Contrastive Learning};
 % --- Background boxes ---
 \begin{scope}[on background layer]
   \node[secbox, fit=(v1)(v2), fill=blue!3, inner xsep=4pt, inner ysep=2pt] {};
@@ -260,8 +260,7 @@ On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:
     \hline
   \end{tabular}
 };
-\end{tikzpicture}
-}% end resizebox
+\end{tikzpicture}}% end resizebox
 \caption{Overview of \method. We contrast the observed transaction topology with a recovered neighborhood graph built from behavioral similarity. Both branches are encoded by a shared online GNN $f_\theta$ and its exponential moving average (EMA) target $f_\xi$, trained with a symmetric BYOL-style loss. The contrasted representation varies by setting: (a)(b) use node embeddings, while (c)(d) apply subgraph pooling before contrast. Bottom legend: (d) is the proposed setting.}
 \label{fig:framework}
 \end{figure*}
