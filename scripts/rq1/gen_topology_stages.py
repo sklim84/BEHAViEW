@@ -76,6 +76,11 @@ C_FINAL_TEXT = "#2E6F4E"
 C_BYOL = "#6D5EF7"
 C_BYOL_DARK = "#4F46B8"
 C_ARROW = "#6F7785"
+PANEL_VALUE_Y = 0.67
+PANEL_NOTE_Y = 0.34
+PANEL_VALUE_SIZE = 12.6
+PANEL_VALUE_SMALL_SIZE = 10.4
+PANEL_NOTE_SIZE = 8.7
 
 
 def load_representative() -> dict:
@@ -771,20 +776,20 @@ def draw_tx_graph(ax, layout: dict, cx: float, cy: float) -> None:
     for x, y, radius, label in egos[1:]:
         node(ax, x, y, C_EGO, r=radius, label=label, edge="#111827", lw=0.48, z=15)
     node(ax, egos[0][0], egos[0][1], C_EGO, r=egos[0][2], label="E", edge="#111827", lw=0.72, z=16)
-    text(ax, cx, 0.62, "1/26", size=11.0, weight="bold")
-    text(ax, cx, 0.40, "focal 1-hop suspicious", size=7.6, color=C_MUTED)
+    text(ax, cx, PANEL_VALUE_Y, "1/26", size=PANEL_VALUE_SIZE, weight="bold")
+    text(ax, cx, PANEL_NOTE_Y, "focal 1-hop suspicious", size=PANEL_NOTE_SIZE, color=C_MUTED)
 
 
 def draw_behavior_space(ax, layout: dict, cx: float, cy: float) -> None:
     stage_title(ax, cx, "3.2 Behavior\nView", r"$X^{bhv}$ feature space")
-    text(ax, cx, 0.60, "no edges yet", size=7.0, weight="bold")
-    text(ax, cx, 0.39, "suspicious-side PC", size=7.6, color=C_MUTED)
+    text(ax, cx, PANEL_VALUE_Y, "no edges yet", size=PANEL_VALUE_SMALL_SIZE, weight="bold")
+    text(ax, cx, PANEL_NOTE_Y, "suspicious-side PC", size=PANEL_NOTE_SIZE, color=C_MUTED)
 
 
 def draw_knn_candidates(ax, layout: dict, cx: float, cy: float) -> None:
     stage_title(ax, cx, "3.3 Graph\nRecovery", "behaviorally similar neighborhood")
-    text(ax, cx, 0.60, "top-10", size=9.2, weight="bold")
-    text(ax, cx, 0.39, "recovered neighbors", size=7.6, color=C_MUTED)
+    text(ax, cx, PANEL_VALUE_Y, "top-10", size=PANEL_VALUE_SMALL_SIZE, weight="bold")
+    text(ax, cx, PANEL_NOTE_Y, "recovered neighbors", size=PANEL_NOTE_SIZE, color=C_MUTED)
 
 
 def draw_repaired_graph(ax, layout: dict, cx: float, cy: float) -> None:
@@ -800,8 +805,8 @@ def draw_repaired_graph(ax, layout: dict, cx: float, cy: float) -> None:
         if u in pos and v in pos and u != ego and v != ego:
             edge(ax, pos[u], pos[v], color=C_BHV_EDGE, lw=0.30, alpha=0.25, dashed=True, rad=0.14)
     draw_nodes(ax, layout, pos)
-    text(ax, cx, 0.62, "9/10", size=11.0, weight="bold")
-    text(ax, cx, 0.40, "suspicious neighbors", size=7.6, color=C_MUTED)
+    text(ax, cx, PANEL_VALUE_Y, "9/10", size=PANEL_VALUE_SIZE, weight="bold")
+    text(ax, cx, PANEL_NOTE_Y, "suspicious neighbors", size=PANEL_NOTE_SIZE, color=C_MUTED)
 
 
 def draw_pooling(ax, layout: dict, cx: float, cy: float) -> None:
@@ -840,8 +845,8 @@ def draw_pooling(ax, layout: dict, cx: float, cy: float) -> None:
     out_x = cx + 1.18
     text(ax, out_x, cy + 0.045, r"$s_i^{bhv}$", size=7.3, color=C_POOL_TEXT, weight="bold")
     text(ax, out_x, cy - 0.085, "pooled vector", size=5.6, color=C_POOL_TEXT)
-    text(ax, cx, 0.60, "90%", size=9.4, weight="bold")
-    text(ax, cx, 0.39, "pooled suspicious subgraph", size=7.6, color=C_MUTED)
+    text(ax, cx, PANEL_VALUE_Y, "90%", size=PANEL_VALUE_SMALL_SIZE, weight="bold")
+    text(ax, cx, PANEL_NOTE_Y, "pooled suspicious\nsubgraph", size=PANEL_NOTE_SIZE, color=C_MUTED)
 
 
 def draw_alignment(ax, layout: dict, cx: float, cy: float) -> None:
@@ -899,8 +904,8 @@ def draw_alignment(ax, layout: dict, cx: float, cy: float) -> None:
     final_x = cx + 1.36
     text(ax, final_x, cy + 0.045, "$z_i$", size=8.3, color=C_FINAL_TEXT, weight="bold")
     text(ax, final_x, cy - 0.085, "final vector", size=5.6, color=C_FINAL_TEXT)
-    text(ax, cx, 0.64, "$z_i=[s_i^{tx}\\Vert s_i^{bhv}]$", size=8.2, weight="bold")
-    text(ax, cx, 0.39, "final ranking representation", size=7.6, color=C_MUTED)
+    text(ax, cx, PANEL_VALUE_Y, "$z_i=[s_i^{tx}\\Vert s_i^{bhv}]$", size=9.3, weight="bold")
+    text(ax, cx, PANEL_NOTE_Y, "final ranking\nrepresentation", size=PANEL_NOTE_SIZE, color=C_MUTED)
 
 
 def build_figure(layout: dict) -> plt.Figure:
