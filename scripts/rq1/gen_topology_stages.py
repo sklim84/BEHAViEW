@@ -78,9 +78,9 @@ C_BYOL_DARK = "#4F46B8"
 C_ARROW = "#6F7785"
 PANEL_VALUE_Y = 0.67
 PANEL_NOTE_Y = 0.34
-PANEL_VALUE_SIZE = 12.6
-PANEL_VALUE_SMALL_SIZE = 10.4
-PANEL_NOTE_SIZE = 8.7
+PANEL_VALUE_SIZE = 14.2
+PANEL_VALUE_SMALL_SIZE = 11.7
+PANEL_NOTE_SIZE = 9.8
 
 
 def load_representative() -> dict:
@@ -224,9 +224,9 @@ def text(ax, x: float, y: float, s: str, *, size: float = 7.0, color: str = C_TE
     ax.text(x, y, s, ha="center", va="center", fontsize=size, color=color, fontweight=weight, linespacing=0.92, zorder=50)
 
 
-def stage_title(ax, cx: float, title: str, subtitle: str, *, title_size: float = 8.8, subtitle_y: float = 2.71) -> None:
+def stage_title(ax, cx: float, title: str, subtitle: str, *, title_size: float = 9.8, subtitle_y: float = 2.71) -> None:
     text(ax, cx, 3.03, title, size=title_size, weight="bold")
-    text(ax, cx, subtitle_y, subtitle, size=7.3, color=C_MUTED)
+    text(ax, cx, subtitle_y, subtitle, size=8.3, color=C_MUTED)
 
 
 def node_color(label: int, *, ego: bool = False) -> str:
@@ -260,7 +260,7 @@ def node(
         )
     )
     if label:
-        text(ax, x, y, label, size=max(4.5, r * 78), color="#111827" if color == C_EGO else "white", weight="bold")
+        text(ax, x, y, label, size=max(5.2, r * 88), color="#111827" if color == C_EGO else "white", weight="bold")
 
 
 def edge(
@@ -454,7 +454,7 @@ def draw_3d_frame(ax, cx: float, cy: float) -> None:
                 zorder=5,
             )
         )
-        text(ax, end[0] + dx, end[1] + dy, label, size=4.9, color=C_TEXT)
+        text(ax, end[0] + dx, end[1] + dy, label, size=5.8, color=C_TEXT)
 
 
 def class_separated_pca3d_positions(
@@ -619,7 +619,7 @@ def add_pca3d_panel(fig: plt.Figure, base_ax, layout: dict, cx: float, *, with_e
     ax3.set_zlim(-1.12, 1.12)
     ax3.view_init(elev=18, azim=-60)
     ax3.set_box_aspect((1.25, 1.0, 0.95))
-    ax3.set_xlabel("Suspicious ->", fontsize=5.2, labelpad=-17, color=C_TEXT)
+    ax3.set_xlabel("Suspicious ->", fontsize=6.2, labelpad=-17, color=C_TEXT)
     ax3.set_ylabel("")
     ax3.set_zlabel("")
     ax3.set_xticks([-1.0, 0.0, 1.0])
@@ -628,7 +628,7 @@ def add_pca3d_panel(fig: plt.Figure, base_ax, layout: dict, cx: float, *, with_e
     ax3.set_xticklabels([])
     ax3.set_yticklabels([])
     ax3.set_zticklabels([])
-    ax3.tick_params(axis="both", which="major", labelsize=3.6, pad=-3, length=0, width=0, colors=(0, 0, 0, 0))
+    ax3.tick_params(axis="both", which="major", labelsize=4.4, pad=-3, length=0, width=0, colors=(0, 0, 0, 0))
 
     for axis in [ax3.xaxis, ax3.yaxis, ax3.zaxis]:
         axis.pane.set_facecolor((1, 1, 1, 0.0))
@@ -810,7 +810,7 @@ def draw_repaired_graph(ax, layout: dict, cx: float, cy: float) -> None:
 
 
 def draw_pooling(ax, layout: dict, cx: float, cy: float) -> None:
-    stage_title(ax, cx, "3.5 Subgraph\nPooling", r"repaired $\mathcal{N}(v)$", title_size=8.6)
+    stage_title(ax, cx, "3.5 Subgraph\nPooling", r"repaired $\mathcal{N}(v)$", title_size=9.6)
     node_ids = [layout["ego"]] + layout["bhv_ids"]
     pos = panel_positions(layout, node_ids, cx - 0.50, cy + 0.02, scale=0.44)
     ego = layout["ego"]
@@ -837,20 +837,20 @@ def draw_pooling(ax, layout: dict, cx: float, cy: float) -> None:
         zorder=28,
     )
     ax.add_patch(pool)
-    text(ax, pool_x, cy + 0.03, r"$\Sigma$", size=8.4, weight="bold")
-    text(ax, pool_x, cy - 0.10, "pool", size=5.5, color=C_MUTED)
+    text(ax, pool_x, cy + 0.03, r"$\Sigma$", size=9.5, weight="bold")
+    text(ax, pool_x, cy - 0.10, "pool", size=6.3, color=C_MUTED)
     for start in [(cx - 0.14, cy + 0.22), (cx - 0.08, cy + 0.02), (cx - 0.14, cy - 0.20)]:
         arrow(ax, start, (pool_x - 0.20, cy + 0.42 * (start[1] - cy)), color=C_BHV_EDGE, lw=0.42)
     arrow(ax, (pool_x + 0.20, cy), (cx + 0.74, cy), color=C_BHV_EDGE, lw=0.82)
     out_x = cx + 1.18
-    text(ax, out_x, cy + 0.045, r"$s_i^{bhv}$", size=7.3, color=C_POOL_TEXT, weight="bold")
-    text(ax, out_x, cy - 0.085, "pooled vector", size=5.6, color=C_POOL_TEXT)
+    text(ax, out_x, cy + 0.045, r"$s_i^{bhv}$", size=8.2, color=C_POOL_TEXT, weight="bold")
+    text(ax, out_x, cy - 0.085, "pooled vector", size=6.4, color=C_POOL_TEXT)
     text(ax, cx, PANEL_VALUE_Y, "90%", size=PANEL_VALUE_SMALL_SIZE, weight="bold")
     text(ax, cx, PANEL_NOTE_Y, "pooled suspicious\nsubgraph", size=PANEL_NOTE_SIZE, color=C_MUTED)
 
 
 def draw_alignment(ax, layout: dict, cx: float, cy: float) -> None:
-    stage_title(ax, cx, "3.6 Training\n& Inference", "BYOL loss -> concat", title_size=8.6)
+    stage_title(ax, cx, "3.6 Training\n& Inference", "BYOL loss -> concat", title_size=9.6)
     ego = layout["ego"]
 
     def widen(pos: dict[int, tuple[float, float]], center_x: float, factor: float) -> dict[int, tuple[float, float]]:
@@ -892,24 +892,24 @@ def draw_alignment(ax, layout: dict, cx: float, cy: float) -> None:
             zorder=28,
         )
     )
-    text(ax, (bx0 + bx1) / 2, by0 - pad_y - 0.10, "BYOL loss", size=5.8, color=C_BYOL_DARK, weight="bold")
+    text(ax, (bx0 + bx1) / 2, by0 - pad_y - 0.10, "BYOL loss", size=6.7, color=C_BYOL_DARK, weight="bold")
 
     concat_x = cx + 0.60
-    text(ax, concat_x, cy + 0.20, "CONCAT", size=6.6, color=C_TEXT, weight="bold")
-    text(ax, concat_x, cy - 0.005, r"$\Vert$", size=10.0, color=C_TEXT, weight="bold")
+    text(ax, concat_x, cy + 0.20, "CONCAT", size=7.5, color=C_TEXT, weight="bold")
+    text(ax, concat_x, cy - 0.005, r"$\Vert$", size=11.2, color=C_TEXT, weight="bold")
     arrow(ax, (cx + 0.08, cy + 0.14), (concat_x - 0.12, cy + 0.055), color=C_ARROW, lw=0.68)
     arrow(ax, (cx + 0.08, cy - 0.30), (concat_x - 0.12, cy - 0.055), color=C_ARROW, lw=0.68)
     arrow(ax, (concat_x + 0.10, cy), (cx + 1.05, cy), color=C_ARROW, lw=0.80)
 
     final_x = cx + 1.36
-    text(ax, final_x, cy + 0.045, "$z_i$", size=8.3, color=C_FINAL_TEXT, weight="bold")
-    text(ax, final_x, cy - 0.085, "final vector", size=5.6, color=C_FINAL_TEXT)
-    text(ax, cx, PANEL_VALUE_Y, "$z_i=[s_i^{tx}\\Vert s_i^{bhv}]$", size=9.3, weight="bold")
+    text(ax, final_x, cy + 0.045, "$z_i$", size=9.4, color=C_FINAL_TEXT, weight="bold")
+    text(ax, final_x, cy - 0.085, "final vector", size=6.4, color=C_FINAL_TEXT)
+    text(ax, cx, PANEL_VALUE_Y, "$z_i=[s_i^{tx}\\Vert s_i^{bhv}]$", size=10.3, weight="bold")
     text(ax, cx, PANEL_NOTE_Y, "final ranking\nrepresentation", size=PANEL_NOTE_SIZE, color=C_MUTED)
 
 
 def build_figure(layout: dict) -> plt.Figure:
-    plt.rcParams.update({"font.family": "sans-serif", "font.size": 8.0, "figure.dpi": 300, "savefig.dpi": 300})
+    plt.rcParams.update({"font.family": "sans-serif", "font.size": 8.8, "figure.dpi": 300, "savefig.dpi": 300})
 
     fig, ax = plt.subplots(figsize=(10.25, 3.18))
     fig.patch.set_facecolor("white")
@@ -926,9 +926,9 @@ def build_figure(layout: dict) -> plt.Figure:
         draw(ax, layout, cx, 1.62)
 
     handles = [
-        mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_EGO, markeredgecolor="#111827", markersize=6.4, label="ego"),
-        mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_SUSP, markeredgecolor="white", markersize=6.4, label="suspicious"),
-        mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_BENIGN, markeredgecolor="white", markersize=6.4, label="benign"),
+        mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_EGO, markeredgecolor="#111827", markersize=7.2, label="ego"),
+        mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_SUSP, markeredgecolor="white", markersize=7.2, label="suspicious"),
+        mlines.Line2D([], [], marker="o", linestyle="None", markerfacecolor=C_BENIGN, markeredgecolor="white", markersize=7.2, label="benign"),
         mlines.Line2D([], [], color=C_TX_EDGE, linewidth=1.0, label="transaction edge"),
         mlines.Line2D([], [], color=C_BHV_EDGE, linewidth=1.0, linestyle="--", label="behavioral kNN edge"),
     ]
@@ -938,7 +938,7 @@ def build_figure(layout: dict) -> plt.Figure:
         bbox_to_anchor=(0.5, 0.006),
         ncol=5,
         frameon=False,
-        fontsize=7.8,
+        fontsize=8.8,
         handlelength=1.35,
         handletextpad=0.34,
         columnspacing=0.82,

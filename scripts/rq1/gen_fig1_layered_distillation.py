@@ -58,7 +58,10 @@ TOP_ELLIPSE_WIDTH = 6.12
 TOP_ELLIPSE_HEIGHT = 1.72
 SPECIAL_BOTTOM_POSITIONS = {
     1: (-0.34, -1.50),
-    4: (-0.56, 0.86),
+    4: (-0.56, 0.68),
+}
+BOTTOM_LABEL_Y_OFFSETS = {
+    3: -0.16,
 }
 BEHAVIOR_SCRIPT_LINE1 = "Behavioral similar features from transaction-derived topology:"
 BEHAVIOR_SCRIPT_LINE2 = "amount scale | in/out frequency | 3/6/12-month activity | type entropy"
@@ -373,6 +376,9 @@ def draw_transaction_layer(
             else:
                 node_radius = 0.054
             x, y = separate_node_position(x, y, node_radius, occupied, origin=ego_xy)
+            if node in recovered_targets:
+                label_id = recovered_targets.index(node) + 1
+                y += BOTTOM_LABEL_Y_OFFSETS.get(label_id, 0.0)
             xy = (x, y)
             occupied.append((x, y, node_radius))
             edge_width = 0.78 + 0.18 * (1.0 - frac)
@@ -530,7 +536,7 @@ def draw_behavior_script(ax) -> None:
         mapped_vertices: list[tuple[float, float]] = []
         background_vertices: list[tuple[float, float]] = []
 
-        bg_pad = 0.100
+        bg_pad = 0.118
         for t in np.linspace(-1.0, 1.0, 48):
             dx = t * half_width
             baseline_y = y_base + arc_lift * (t * t)
@@ -572,8 +578,8 @@ def draw_behavior_script(ax) -> None:
         )
 
     wall_y = cy - ry - 0.070
-    add_cylinder_wall_text(BEHAVIOR_SCRIPT_LINE1, wall_y - 0.018, 0.125, 0.118)
-    add_cylinder_wall_text(BEHAVIOR_SCRIPT_LINE2, wall_y - 0.155, 0.116, 0.108)
+    add_cylinder_wall_text(BEHAVIOR_SCRIPT_LINE1, wall_y - 0.004, 0.155, 0.132)
+    add_cylinder_wall_text(BEHAVIOR_SCRIPT_LINE2, wall_y - 0.166, 0.144, 0.122)
 
 
 def build_figure(rep: dict, labels: np.ndarray, paths: dict[int, list[int]]) -> plt.Figure:
