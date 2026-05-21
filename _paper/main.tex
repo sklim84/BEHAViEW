@@ -521,6 +521,26 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \textbf{Topology repair via behavioral similarity.} As shown in Table~\ref{tab:ss_sb} and Figure~\ref{fig:intro_topology_repair}, the transaction graph's S-S:S-B ratio of 1:5.7 improves to 1:1.4 in the recovered neighborhood graph, and edge homophily $h$ (fraction of edges whose endpoints share the same label) rises from 0.690 to 0.981. Because money-laundering accounts exhibit similar behaviors (e.g., split transfers, multi-hop routing), behavioral similarity tends to reconnect them in the recovered graph. The structural-feature recovery ablation worsens the ratio to 1:9.7, supporting our choice to exclude structural features from graph construction and use them only for analysis. The empirical homophily gap is consistent with the DCSBM-based lower bound on the recovered-versus-transaction gap (Theorem~\ref{thm:combined}, Appendix~\ref{app:theory}).
 
+\begin{table}[t]
+\centering
+\caption{Separating feature separability from topology repair on \hofinet. The feature-only probe uses a standardized logistic classifier on the 20 behavioral repair features, while the GBT rows reuse the self-supervised RQ1 protocol from Table~\ref{tab:rq1}.}
+\label{tab:feat_sep_topology}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llccc}
+\toprule
+\textbf{Diagnostic} & \textbf{Message graph} & \textbf{Repair} & $F1_{\text{susp}}$ & \textbf{AUPRC} \\
+\midrule
+Feature-only LR & None & \xmark & 0.659{\scriptsize±.002} & 0.579{\scriptsize±.003} \\
+GBT node        & Transaction & \xmark & 0.265{\scriptsize±.011} & 0.368{\scriptsize±.004} \\
+GBT node        & Recovered $k$-NN & \cmark & 0.664{\scriptsize±.002} & \textbf{0.604}{\scriptsize±.006} \\
+GBT pool        & Transaction & \xmark & 0.197{\scriptsize±.002} & 0.255{\scriptsize±.004} \\
+GBT pool        & Repaired $k$-NN & \cmark & \textbf{0.667}{\scriptsize±.002} & 0.587{\scriptsize±.006} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\textbf{Feature separability is not topology repair.} Table~\ref{tab:feat_sep_topology} isolates a possible alternative explanation: behavioral features may already be separable enough to explain the gains. A feature-only linear probe on $\mathbf{X}^{\text{bhv}}$ is indeed strong ($F1_{\text{susp}}=0.659$, AUPRC$=0.579$), confirming that the repair features contain class signal. However, this separability does not make the original transaction neighborhoods useful for message passing: under the same GBT protocol, the transaction graph reaches only $0.265$ at node level and drops to $0.197$ with pooling. Replacing the message graph with the recovered behavioral neighborhood graph raises performance to $0.664$--$0.667$. Thus, the mechanism is not merely that separable features exist; the method converts feature-space similarity into a class-informative topology that GNN aggregation and pooling can use.
+
 \textbf{From the case study to Table~\ref{tab:rq1}.} For the Figure~\ref{fig:intro_topology_repair} account, the suspicious share in the aggregation neighborhood jumps from $\le 7.4\%$ on the transaction graph ((a)/(c)) to $\approx 90\%$ after repair ((b)/(d)), matching the large (a)$\to$(b) gains in Table~\ref{tab:rq1}. This behavior generalizes: after repair, the share of suspicious accounts with majority-suspicious 1-hop egos rises from $47.7\%$ to $71.6\%$, and $66.1\%$ of majority-benign egos flip to majority-suspicious.
 % \begin{figure}[t]
 % \centering
@@ -622,7 +642,7 @@ GRACE+BN  & \checkmark & 0.430{\scriptsize±.014} & \underline{0.672}{\scriptsiz
 \section{Conclusion and Future Work}
 We propose \method, a topology-repair method for AML detection on transaction networks with weak homophily. \method contrasts the observed transaction graph with a behavioral homophily recovery graph, preserving transaction-topology information while adding repaired suspicious-class neighborhoods (Eq.~\ref{eq:concat}). The repair raises \hofinet edge homophily from 0.690 to 0.981. With only 1\% labeled nodes, \method achieves the best $F1_{\text{susp}}$ on all three datasets, surpassing the strongest supervised baseline by 0.010--0.016; with 10\% labels, tabular boosting matches \method on all three datasets, while \method continues to outperform every supervised graph baseline.
 
-The results isolate the mechanism. Topology repair creates class-informative neighborhoods; sign-flip analysis explains when aggregation on the original graph erodes this structure; repaired-topology pooling refines the recovered signal conditionally; and normalization mainly stabilizes the bootstrap objective. The supporting BN-stability, homophily-recovery, and aggregation-signal results are stated in Appendix~\ref{app:theory}.
+The results isolate the mechanism. Feature separability alone does not repair transaction neighborhoods; topology repair creates class-informative neighborhoods that message passing can use. Sign-flip analysis explains when aggregation on the original graph erodes this structure, repaired-topology pooling refines the recovered signal conditionally, and normalization mainly stabilizes the bootstrap objective. The supporting BN-stability, homophily-recovery, and aggregation-signal results are stated in Appendix~\ref{app:theory}.
 
 \textbf{Operational interpretation.} \method targets delayed-label, low-prevalence AML settings as a first-stage account-ranking model. An account with benign-dominated transaction neighbors can still be prioritized when its behavior-only recovered neighborhood contains laundering-like peers. Analysts then inspect the original transaction graph for STR preparation, mule-network reconstruction, and fund-flow tracing; thus, detection uses repaired topology, while investigation remains grounded in transaction topology. 
 
