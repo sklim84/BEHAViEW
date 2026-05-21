@@ -63,8 +63,8 @@ SPECIAL_BOTTOM_POSITIONS = {
 BOTTOM_LABEL_Y_OFFSETS = {
     3: -0.16,
 }
-BEHAVIOR_SCRIPT_LINE1 = "Behavioral similar features from transaction-derived topology:"
-BEHAVIOR_SCRIPT_LINE2 = "amount scale | in/out frequency | 3/6/12-month activity | type entropy"
+BEHAVIOR_SCRIPT_LINE1 = "Behaviorally similar transaction features:"
+BEHAVIOR_SCRIPT_LINE2 = "amount scale | in/out frequency | activity windows | type entropy"
 
 
 def load_representative() -> dict:
@@ -536,7 +536,7 @@ def draw_behavior_script(ax) -> None:
         mapped_vertices: list[tuple[float, float]] = []
         background_vertices: list[tuple[float, float]] = []
 
-        bg_pad = 0.118
+        bg_pad = 0.135
         for t in np.linspace(-1.0, 1.0, 48):
             dx = t * half_width
             baseline_y = y_base + arc_lift * (t * t)
@@ -578,8 +578,8 @@ def draw_behavior_script(ax) -> None:
         )
 
     wall_y = cy - ry - 0.070
-    add_cylinder_wall_text(BEHAVIOR_SCRIPT_LINE1, wall_y - 0.004, 0.155, 0.132)
-    add_cylinder_wall_text(BEHAVIOR_SCRIPT_LINE2, wall_y - 0.166, 0.144, 0.122)
+    add_cylinder_wall_text(BEHAVIOR_SCRIPT_LINE1, wall_y - 0.004, 0.186, 0.150)
+    add_cylinder_wall_text(BEHAVIOR_SCRIPT_LINE2, wall_y - 0.166, 0.173, 0.140)
 
 
 def build_figure(rep: dict, labels: np.ndarray, paths: dict[int, list[int]]) -> plt.Figure:

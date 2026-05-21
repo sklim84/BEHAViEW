@@ -102,7 +102,7 @@
 
 
 \begin{abstract}
-In anti-money laundering (AML) transaction graphs, suspicious accounts have predominantly benign neighbors, so graph neural network (GNN) aggregation dilutes a rare suspicious signal. We trace this to a topology-behavior mismatch: the evasion-shaped transaction network fails to reflect homophily within the suspicious class. To address this mismatch, we present \method, a self-supervised graph contrastive learning framework that performs topology repair through behavioral homophily recovery. \method builds a topology-independent recovered neighborhood graph from behavioral similarity (e.g., amount distributions) and aligns it with the transaction graph through contrastive learning. On \hofinet, a national interbank transfer network, the repair improves the suspicious-edge S-S:S-B ratio from 1:5.7 to 1:1.4. At 1\% labels, \method achieves the highest suspicious-class F1 on all three AML datasets, with a 0.010--0.016 gap over the strongest supervised baseline. These findings position \method as a label-efficient building block for money laundering detection under realistic label-delay constraints.
+In anti-money laundering (AML) transaction graphs, suspicious accounts have predominantly benign neighbors, so graph neural network (GNN) aggregation dilutes a rare suspicious signal. We trace this to a topology-behavior mismatch: the evasion-shaped transaction network fails to reflect homophily within the suspicious class. To address this mismatch, we present \method, a self-supervised graph contrastive learning framework that performs topology repair through behavioral homophily recovery. \method builds a topology-independent recovered neighborhood graph from behavioral similarity (e.g., amount distributions) and aligns it with the transaction graph through contrastive learning. On \hofinet, a real-derived synthetic interbank transfer dataset, the repair improves the suspicious-edge S-S:S-B ratio from 1:5.7 to 1:1.4. At 1\% labels, \method achieves the highest suspicious-class F1 on all three AML datasets, with a 0.010--0.016 gap over the strongest supervised baseline. These findings position \method as a label-efficient building block for money laundering detection under realistic label-delay constraints.
 \end{abstract}
 
 \keywords{topology repair, behavioral homophily recovery, anti-money laundering, transaction networks, heterophily, self-supervised learning, graph contrastive learning}
@@ -114,8 +114,8 @@ In anti-money laundering (AML) transaction graphs, suspicious accounts have pred
 \begin{figure}[t]
     \centering
     \includegraphics[width=\columnwidth]{figures/fig1_layered_distillation.pdf}
-    \Description{Topology repair visualization using real \hofinet experiment data. In the observed multi-hop transaction network, suspicious peers appear dispersed and intermingled with benign accounts. In contrast, the reconstructed behavioral-homophily topology provides a behavior-focused perspective that concentrates similar accounts into a compact cluster of suspicious peers.}
-\caption{Topology repair for a suspicious \hofinet account (real case). In the raw transaction graph, the ego node has 1 suspicious counterparty among 26 first-hop neighbors; other suspicious accounts are several hops away. A behavior-centric reconstruction groups similar accounts into a dense cluster, producing 9 suspicious nodes among 10 neighbors. Nodes 1 and 4 are unreachable from the ego in this component; they appear as recovered-topology neighbors from another component, with lift arrows showing cross-topology alignment. Node labels are only for visualization and are not used to build the recovered graph.}
+    \Description{Topology repair visualization using sampled \hofinet experiment data. In the observed multi-hop transaction network, suspicious peers appear dispersed and intermingled with benign accounts. In contrast, the reconstructed behavioral-homophily topology provides a behavior-focused perspective that concentrates similar accounts into a compact cluster of suspicious peers.}
+\caption{Topology repair for a sampled \hofinet account. The raw transaction neighborhood contains 1 suspicious account among 26 first-hop neighbors, whereas the recovered behavioral neighborhood contains 9 among 10. Nodes 1 and 4 illustrate recovered neighbors outside the local transaction component; labels are for visualization only.}
 \label{fig:intro_topology_repair}
 \end{figure}
 
@@ -127,15 +127,15 @@ Money laundering, accounting for an estimated 2--5\% of global GDP~\cite{unodc_m
 
 \textbf{Challenge 3: delayed, sparse labels cause a cold start.} Labels typically appear only after retrospective investigations and reporting processes that can take months~\cite{fatf2013guidance,kofia2024aml}. Combined with weak suspicious-class neighborhood signals, this delay creates cold-start problems for supervised fraud models in production.
 
-We propose \method, a self-supervised graph contrastive learning framework that repairs evasion-shaped detection topologies by restoring behavioral homophily. We study two steps: (1) whether the recovered graph yields class-relevant suspicious neighborhoods, and (2) whether pooling over these neighborhoods preserves or dilutes the recovered signal. Normalization determines whether this mechanism works reliably under the BYOL-style objective.
+We propose \method, a self-supervised graph contrastive learning framework that repairs evasion-shaped detection topologies by restoring behavioral homophily. We study two steps: (1) whether the recovered neighborhood graph yields class-relevant suspicious neighborhoods, and (2) whether pooling over these neighborhoods preserves or dilutes the recovered signal. Normalization determines whether this mechanism works reliably under the BYOL-style objective.
 
-The central contribution is using a behavior-only k-NN graph, tailored to AML, to repair suspicious-class neighborhoods, unlike prior work that builds feature-derived k-NN or affinity graphs and compares them to the original topology~\cite{shang2023mlgcl,fan2021featuretopology,chen2023asp,lu2024graph}. In AML, transaction topology can be evasion-shaped: suspicious accounts route through benign counterparties, so local neighborhoods poorly indicate suspicious behavior. The repaired branch reconstructs the missing aggregation neighborhood for suspicious evidence, and the final representation preserves both original and repaired topology signals. This yields two testable implications. First, behavioral features should repair topology better than connectivity-based or all-feature affinities, which inherit topological bias. Second, aggregation should use the repaired topology, not just the original transaction graph. We validate these points in Section~\ref{sec:experiments}.
+The central contribution is using a behavior-only k-NN graph, tailored to AML, to repair suspicious-class neighborhoods, unlike prior work that builds feature-derived k-NN or affinity graphs and compares them to the original topology~\cite{shang2023mlgcl,fan2021featuretopology,chen2023asp,lu2024graph}. In AML, transaction topology can be evasion-shaped: suspicious accounts route through benign counterparties, so local neighborhoods poorly indicate suspicious behavior. The recovered-neighborhood branch reconstructs the missing aggregation neighborhood for suspicious evidence, and the final representation preserves both transaction and recovered-neighborhood signals. This yields two testable implications. First, behavioral features should repair topology better than connectivity-based or all-feature affinities, which inherit topological bias. Second, aggregation should use the recovered neighborhood graph, not just the original transaction graph. We validate these points in Section~\ref{sec:experiments}.
 
 On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:5.7 to 1:1.4, with similar gains on AMLworld~\cite{amlpatterns2024realistic} and AMLNet. At 1\% labels, \method attains the highest suspicious-class F1 on all three datasets. Our contributions are:
 
 \begin{itemize}[leftmargin=*, topsep=2pt, itemsep=1pt, parsep=0pt, partopsep=0pt]
     \item \textbf{Topology repair via behavioral homophily recovery.} We propose \method, which constructs a topology-independent recovered neighborhood graph from behavioral similarity to repair evasion-shaped suspicious-class topologies. We establish a probabilistic homophily-recovery guarantee under mild feature-separation and a lower bound on the homophily gap.
-    \item \textbf{Signal preservation under aggregation.} A sign-flip threshold determines when pooling on the repaired topology preserves rather than dilutes suspicious signals; we empirically validate this regime.
+    \item \textbf{Signal preservation under aggregation.} A sign-flip threshold determines when pooling on the recovered neighborhood graph preserves rather than dilutes suspicious signals; we empirically validate this regime.
     \item \textbf{Self-supervised representations under label scarcity.} Frozen representations of \method outperform supervised tabular and GNN baselines at 1\% labels and remain competitive at 10\% labels, addressing the multi-month label delays typical in AML.
 \end{itemize}
 
@@ -261,7 +261,7 @@ On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:
   \end{tabular}
 };
 \end{tikzpicture}}% end resizebox
-\caption{Overview of \method. We contrast the observed transaction topology with a recovered neighborhood graph built from behavioral similarity. Both branches are encoded by a shared online GNN $f_\theta$ and its exponential moving average (EMA) target $f_\xi$, trained with a symmetric BYOL-style loss. The contrasted representation varies by setting: (a)(b) use node embeddings, while (c)(d) apply subgraph pooling before contrast. Bottom legend: (d) is the proposed setting.}
+\caption{Overview of \method. The model contrasts the observed transaction graph with a recovered neighborhood graph using shared online/EMA GNN branches; settings (a)(b) use node embeddings, while (c)(d) add subgraph pooling.}
 \label{fig:framework}
 \end{figure*}
 
@@ -269,7 +269,7 @@ On \hofinet, the recovered neighborhood graph improves the S-S:S-B ratio from 1:
 We survey three research areas related to \method: heterophily-aware GNNs, graph contrastive learning with feature-derived auxiliary graphs, and fraud or anomaly detection with limited labels.
 
 \subsection{Heterophily-aware GNNs}
-Prior work improves message passing under low label homophily by separating ego and neighbor embeddings, modifying propagation, or decoupling structure from attributes (e.g., H2GCN~\cite{zhu2020beyond}, Geom-GCN~\cite{pei2020geom}, LINKX~\cite{zhu2021linkx}). Yet these models still depend on the observed transaction topology; in AML, suspicious accounts intentionally mix with benign counterparties, so suspicious--suspicious edges are rare. \method instead repairs the topology, complementing heterophily-aware propagation by building a class-relevant neighborhood from a topology-independent behavioral homophily recovery graph.
+Prior work improves message passing under low label homophily by separating ego and neighbor embeddings, modifying propagation, or decoupling structure from attributes (e.g., H2GCN~\cite{zhu2020beyond}, Geom-GCN~\cite{pei2020geom}, LINKX~\cite{zhu2021linkx}). Yet these models still depend on the observed transaction topology; in AML, suspicious accounts intentionally mix with benign counterparties, so suspicious--suspicious edges are rare. \method instead repairs the topology by building a class-relevant recovered neighborhood graph from topology-independent behavioral similarity.
 
 \subsection{GCL with Feature-Derived Auxiliary Graphs}
 Self-supervised GCL enforces consistency across multiple graph branches~\cite{velivckovic2018deep,you2020graph}. Multi-view GCL often contrasts the observed graph with another topology view, such as a diffusion view in MVGRL~\cite{hassani2020contrastive}. More directly related to \method, feature-topology methods construct a k-NN or affinity graph from node attributes and learn across the feature-derived view and the original topology~\cite{shang2023mlgcl,fan2021featuretopology,chen2023asp}. In AML, GCPAL also uses a k-NN view together with stochastic graph augmentations for contrastive pretraining~\cite{lu2024graph}. These works show that feature-derived topologies can improve representation learning, but they generally treat the k-NN graph as an auxiliary or augmented view. \method instead asks whether the observed transaction topology is evasion-shaped and whether a behavior-only k-NN graph repairs suspicious-class neighborhoods. This distinction matters because all-feature affinity graphs can mix behavioral similarity with topology-correlated variables. \method instead excludes network-derived and structural variables from repair construction and evaluates the recovered graph as a topology repair mechanism.
@@ -277,12 +277,12 @@ Self-supervised GCL enforces consistency across multiple graph branches~\cite{ve
 This auxiliary-view interpretation is natural when the observed graph already encodes semantic affinity, as in many citation or social benchmarks. AML transaction graphs play a different role: edges record fund transfers, while suspicious-class evidence may be hidden by benign-looking counterparties. The transaction topology is therefore useful for fund-flow context but can be weak as an aggregation neighborhood for detection. This motivates our repair view of the behavior-only k-NN graph, which supplies class-relevant neighborhoods while the transaction branch preserves transfer structure.
 
 \subsection{Money Laundering and Fraud Detection}
-In AML and fraud detection, supervised GNNs can mitigate class imbalance via neighborhood selection, reweighting, and imbalanced-learning strategies~\cite{dou2020enhancing,liu2021pick,zhao2021graphsmote,song2022tam}, but require timely, abundant labels that AML rarely provides. Recent AML-specific representation learning also explores self-supervised pretraining on transaction graphs~\cite{cardoso2022laundrograph,lu2024graph}. Unsupervised graph anomaly detection avoids labels~\cite{ding2019dominant,liu2021anomaly,jin2021anemone,tang2022rethinking,liu2022bond}, yet is primarily evaluated on generic graph benchmarks and does not address suspicious-class neighborhood mismatch in transaction networks. \method overcomes this by combining topology-independent behavioral homophily recovery with self-supervised learning and by analyzing aggregation-level signal preservation on the repaired topology.
+In AML and fraud detection, supervised GNNs can mitigate class imbalance via neighborhood selection, reweighting, and imbalanced-learning strategies~\cite{dou2020enhancing,liu2021pick,zhao2021graphsmote,song2022tam}, but require timely, abundant labels that AML rarely provides. Recent AML-specific representation learning also explores self-supervised pretraining on transaction graphs~\cite{cardoso2022laundrograph,lu2024graph}. Unsupervised graph anomaly detection avoids labels~\cite{ding2019dominant,liu2021anomaly,jin2021anemone,tang2022rethinking,liu2022bond}, yet is primarily evaluated on generic graph benchmarks and does not address suspicious-class neighborhood mismatch in transaction networks. \method overcomes this by combining a topology-independent recovered neighborhood graph with self-supervised learning and by analyzing aggregation-level signal preservation on that graph.
 
 \section{Method: \method}
 \label{sec:method}
 
-\method comprises a behavioral homophily recovery graph, a topology-repair contrastive encoder with subgraph pooling, and BYOL-style training.
+\method turns behavioral similarity into an aggregation neighborhood that GNNs can use. It does so in three stages: recovered-neighborhood construction, topology-repair contrastive encoding, and BYOL-style self-supervised training.
 
 
 \subsection{Problem Formulation}
@@ -290,7 +290,7 @@ We model the transaction network as a directed graph $\mathcal{G}_{\text{trans}}
 
 \subsection{Feature Taxonomy}
 \label{subsec:feature_taxonomy}
-Table~\ref{tab:features} groups node features into behavioral, network-derived, and structural categories. Behavioral features describe transaction patterns via amount statistics, time-window frequencies, and transaction-type entropies. Network-derived features (transaction counts and degrees) are fed to the encoder but excluded from recovered-neighborhood construction, while structural features (centrality, hub/authority, topology) are used only for analysis and auxiliary comparison. We denote by $\mathbf{X}^{\text{enc}}$ the behavioral and network-derived features used by the GNN encoder, and by $\mathbf{X}^{\text{bhv}}$ the 20 behavioral features used to build a behavioral homophily recovery graph. Because suspicious accounts often transact with benign ones to evade detection, they show low neighborhood homophily in the observed topology. We address this by recovering topology-independent behavioral homophily, linking behaviorally similar accounts even when they are not directly connected.
+Table~\ref{tab:features} groups node features into behavioral, network-derived, and structural categories. Behavioral features describe transaction patterns via amount statistics, time-window frequencies, and transaction-type entropies. Network-derived features (transaction counts and degrees) are fed to the encoder but excluded from recovered-neighborhood construction, while structural features (centrality, hub/authority, topology) are used only for analysis and auxiliary comparison. We denote by $\mathbf{X}^{\text{enc}}$ the behavioral and network-derived features used by the GNN encoder, and by $\mathbf{X}^{\text{bhv}}$ the 20 behavioral features used to build the recovered neighborhood graph. Because suspicious accounts often transact with benign ones to evade detection, they show low neighborhood homophily in the observed topology. We address this by recovering topology-independent behavioral homophily, linking behaviorally similar accounts even when they are not directly connected.
 
 \begin{table}[h]
 \centering
@@ -327,13 +327,13 @@ Topology         & kcore, triangle                  & 2 &  &  \\
     \centering
     \includegraphics[width=1\textwidth]{figures/fig_topology_stages.pdf}
     \Description{Six-stage topology evolution diagram. The observed transaction topology is projected into a behavioral view, rewired by graph recovery, encoded with a GNN, pooled into a suspicious subgraph representation, and aligned with the transaction branch through contrastive learning.}
-    \caption{Topology evolution through \method. The observed transaction topology is first viewed through behavioral features, then graph recovery forms a suspicious-dominated neighborhood. GNN encoding and subgraph pooling operate on this repaired topology, and contrastive learning aligns the transaction and recovered-topology branches into the final ranking representation.}
+    \caption{Topology evolution in \method. Behavioral features induce a recovered neighborhood, which is encoded, pooled, and aligned with the transaction branch for ranking.}
     \label{fig:topology_stages}
 \end{figure*}
 
 \subsection{Recovered Neighborhood Graph}
 \label{subsec:knn_view}
-\method repairs topology by constructing a concrete, topology-independent recovered neighborhood graph $\mathcal{G}_{\text{bhv}}$ that provides a repaired neighborhood branch for heterophilous suspicious accounts in the transaction graph. As illustrated in Figure~\ref{fig:framework}, unlike standard augmentation-based GCL, which perturbs the original graph by dropping edges or masking features and thus preserves original neighborhoods, we build $\mathcal{G}_{\text{bhv}}$ solely from behavioral features, independent of the edge structure of $\mathcal{G}_{\text{trans}}$, preventing any connectivity-derived information from affecting the repair.
+\method repairs topology by constructing a concrete, topology-independent recovered neighborhood graph $\mathcal{G}_{\text{bhv}}$ that provides a recovered-neighborhood branch for heterophilous suspicious accounts in the transaction graph. As illustrated in Figure~\ref{fig:framework}, unlike standard augmentation-based GCL, which perturbs the original graph by dropping edges or masking features and thus preserves original neighborhoods, we build $\mathcal{G}_{\text{bhv}}$ solely from behavioral features, independent of the edge structure of $\mathcal{G}_{\text{trans}}$, preventing any connectivity-derived information from affecting the repair.
 
 \textbf{Recovered-neighborhood construction.} We standardize the behavioral features $\mathbf{x}_i^{\text{bhv}} \in \mathbb{R}^{20}$ to zero mean and unit variance to remove scale differences, then apply L2 normalization so that similarity depends only on the feature vector direction:
 
@@ -358,9 +358,9 @@ Money-laundering accounts that split transactions and layer transfers tend to sh
 
 \subsection{Topology-Repair GNN Encoder}
 \label{subsec:dual_view}
-\textbf{Topology-repair contrastive branches.} Contrastive learning aligns the observed transaction topology, which captures transfer structure, with the recovered neighborhood topology, which captures behavioral homophily of the same account. \method builds these two branches from $\mathcal{G}_{\text{trans}}$ and $\mathcal{G}_{\text{bhv}}$.
+\textbf{Topology-repair contrastive branches.} Contrastive learning aligns the observed transaction topology, which captures transfer structure, with the recovered neighborhood graph, which captures behavioral homophily of the same account. \method builds these two branches from $\mathcal{G}_{\text{trans}}$ and $\mathcal{G}_{\text{bhv}}$.
 
-\textbf{Observed and repaired topologies.} Using only the transaction topology mixes suspicious and benign accounts, while using only the recovered neighborhood graph discards transaction-structure information. \method jointly learns account representations from both branches so embeddings capture both transaction structure and behavioral homophily.
+\textbf{Transaction and recovered-neighborhood branches.} Using only the transaction topology mixes suspicious and benign accounts, while using only the recovered neighborhood graph discards transaction-structure information. \method jointly learns account representations from both branches so embeddings capture both transaction structure and behavioral homophily.
 
 \textbf{GNN encoder.} A shared online encoder $f_\theta$ produces embeddings $\mathbf{H}^{(1)} = f_\theta(\mathbf{X}^{\text{enc}}, \mathcal{E}_{\text{trans}})$ and $\mathbf{H}^{(2)} = f_\theta(\mathbf{X}^{\text{enc}}, \mathcal{E}_{\text{bhv}})$. The target encoder $f_\xi$ is an exponential moving average (EMA) copy that provides stop-gradient representations for the opposite BYOL branch. The online encoder stacks GCNConv~\cite{kipf2016semi} layers with batch normalization, nonlinearity, and dropout. \method is encoder-agnostic and supports nine encoders, including GIN~\cite{xu2018powerful}, MVGRL, and GBT; Section~\ref{subsec:rq2} studies the impact of batch normalization.
 
@@ -376,7 +376,7 @@ Money-laundering accounts that split transactions and layer transfers tend to sh
 
 $\mathcal{N}^{(1)}(v_i)$ denotes the neighborhood of $v_i$ in the transaction topology, and $\mathcal{N}^{(2)}(v_i)$ its recovered neighborhood. For both topology branches, we perform message passing and pooling on a bidirected graph, so $\mathcal{N}^{(t)}(v_i)$ is the union of in- and out-neighbors. The mean pooling in Eq.~\eqref{eq:subgraph_pool} is the default in \method.
 
-\textbf{Repair-aware pooling effect.} Subgraph pooling is applied separately to each topology branch: transaction-graph neighbors for the observed topology and behaviorally similar neighbors for the repaired topology. Because pooling aggregates neighbor information, the chosen topology shapes the result. The repaired neighborhood brings behaviorally similar suspicious accounts closer, so pooling on it tends to preserve suspicious signals and can amplify them when the encoder remains stable. In the transaction graph, suspicious accounts often connect to benign ones (high S-B ratio), so pooling can dilute suspicious signals with benign information.
+\textbf{Repair-aware pooling effect.} Subgraph pooling is applied separately to each topology branch: transaction-graph neighbors for the observed topology and behaviorally similar neighbors from the recovered neighborhood graph. Because pooling aggregates neighbor information, the chosen topology shapes the result. Pooling on the recovered neighborhood graph preserves the recovered suspicious signal and conditionally refines it when the encoder remains stable. In the transaction graph, suspicious accounts often connect to benign ones (high S-B ratio), so pooling can dilute suspicious signals with benign information.
 
 \textbf{Pooling variants.} We use mean pooling by default, but other options are possible, including similarity-weighted pooling (HAP). We analyze its expected signal-preservation behavior in Appendix~\ref{app:theory} (Proposition~\ref{thm:hap}).
 
@@ -438,7 +438,7 @@ We evaluate \method in four phases, from mechanism to deployment. First, we test
 All experiments use Python 3.12, PyTorch 2.10, CUDA 12.8, and NVIDIA H100 80GB GPUs.
 
 \subsubsection{Datasets}
-Table~\ref{tab:datasets} summarizes the three AML datasets used in this work. \hofinet contains ~4.7M synthetic transactions from a national interbank settlement network over 40 months of household and corporate transfers. AMLworld~\cite{amlpatterns2024realistic}, the NeurIPS 2023 open synthetic benchmark, models eight transaction patterns (e.g., fan-out, scatter-gather, cycle); we use the HI-Small variant (high illicit ratio, small size). AMLNet~\cite{huda2025amlnet} is a small synthetic benchmark for high-prevalence settings that shares AMLworld’s feature schema. All three datasets include transaction-level suspicious labels. Following standard graph-based AML and fraud detection practice~\cite{dou2020enhancing,liu2021pick}, we max-aggregate to the account level: an account is suspicious (label$=1$) if it appears on either side of any suspicious transaction and normal (label$=0$) otherwise. The resulting suspicious-account ratios are 2.13\% (\hofinet), 1.23\% (AMLworld), and 13.52\% (AMLNet).
+Table~\ref{tab:datasets} summarizes the three AML datasets used in this work. \hofinet contains ~4.7M transactions from a real-derived synthetic interbank settlement network over 40 months of household and corporate transfers. AMLworld~\cite{amlpatterns2024realistic}, the NeurIPS 2023 open synthetic benchmark, models eight transaction patterns (e.g., fan-out, scatter-gather, cycle); we use the HI-Small variant (high illicit ratio, small size). AMLNet~\cite{huda2025amlnet} is a small synthetic benchmark for high-prevalence settings that shares AMLworld’s feature schema. All three datasets include transaction-level suspicious labels. Following standard graph-based AML and fraud detection practice~\cite{dou2020enhancing,liu2021pick}, we max-aggregate to the account level: an account is suspicious (label$=1$) if it appears on either side of any suspicious transaction and normal (label$=0$) otherwise. The resulting suspicious-account ratios are 2.13\% (\hofinet), 1.23\% (AMLworld), and 13.52\% (AMLNet).
 
 \begin{table}[t]
 \centering
@@ -464,13 +464,13 @@ For the label-efficiency study (Section~\ref{subsec:rq3}), we additionally inclu
 \subsubsection{Evaluation metrics} We evaluate self-supervised models by freezing the encoder and training Logistic Regression~\cite{pedregosa2011scikit} on embeddings $\mathbf{z}_i = [\mathbf{s}_i^{(1)} \| \mathbf{s}_i^{(2)}]$. The main metric is suspicious-class F1 ($F1_{\text{susp}}$); AUROC and AUPRC are secondary. We use a 10\%/10\%/80\% train/validation/test split, fixed per seed for paired comparisons. We report mean$\pm$std over four seeds and assess significance with a 4-seed paired $t$-test and Holm--Bonferroni correction. Seed-level results and reproduction scripts are available at an anonymized link.
 
 \subsection{Homophily Recovery (RQ1)}\label{subsec:rq1}
-RQ1 tests whether the topology-independent recovered neighborhood graph repairs the suspicious-class topology relative to the transaction graph.
+\paragraph{\textbf{Question.}} RQ1 tests whether the topology-independent recovered neighborhood graph repairs the suspicious-class topology relative to the transaction graph.
 
-\textbf{Quantitative gains across all 9 encoders.} Table~\ref{tab:rq1} shows that replacing the transaction topology with the recovered neighborhood graph consistently outperforms the baseline across all nine encoders, with gains of +77\% to +227\% for the six encoders with BN and +19\% to +23\% for the three without BN. For the six BN-equipped encoders, a four-seed paired $t$-test remains significant after Holm--Bonferroni correction (adjusted $p < 2 \times 10^{-4}$).
+\paragraph{\textbf{Topology repair improves performance across encoders.}} Table~\ref{tab:rq1} shows that replacing the transaction topology with the recovered neighborhood graph consistently outperforms the baseline across all nine encoders, with gains of +77\% to +227\% for the six encoders with BN and +19\% to +23\% for the three without BN. For the six BN-equipped encoders, a four-seed paired $t$-test remains significant after Holm--Bonferroni correction (adjusted $p < 2 \times 10^{-4}$).
 
 \begin{table}[t]
 \centering
-\caption{$F1_{\text{susp}}$ on \hofinet for nine encoders under four topology-by-level ablations (4-seed mean$\pm$std). \textit{Paired BN}: three GCN encoder families (DGI, MVGRL, GRACE) with vs.\ without per-layer BN. \textit{Native BN}: reference encoders (GBT, BGRL, GIN). All encoders here use the unified BYOL-style bootstrap loss (Eq.~\eqref{eq:loss}) to isolate topology-repair effects; Appendix~\ref{app:loss_table} verifies this substitution does not penalize baselines. Best per row in \textbf{bold}, second-best \underline{underlined}.}
+\caption{$F1_{\text{susp}}$ on \hofinet under four topology-by-level ablations across nine encoders (4-seed mean$\pm$std). All rows use the unified BYOL-style loss; Appendix~\ref{app:loss_table} checks native-loss robustness. Bold and underline denote best and second-best values.}
 \label{tab:rq1}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lllcccc}
@@ -497,7 +497,7 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 
 \begin{table}[t]
 \centering
-\caption{S-S:S-B edge ratio and homophily by graph type across the three AML datasets. Best per dataset in bold, second-best underlined (higher homophily and a smaller S-B multiplier in 1:$x$ are better).}
+\caption{S-S:S-B edge ratio and homophily by graph type. Best per dataset in bold, second-best underlined.}
 \label{tab:ss_sb}
 \small
 \setlength{\tabcolsep}{5pt}
@@ -521,11 +521,11 @@ RQ1 tests whether the topology-independent recovered neighborhood graph repairs 
 \end{tabular}
 \end{table}
 
-\textbf{Topology repair via behavioral similarity.} As shown in Table~\ref{tab:ss_sb} and Figure~\ref{fig:intro_topology_repair}, the transaction graph's S-S:S-B ratio of 1:5.7 improves to 1:1.4 in the recovered neighborhood graph, and edge homophily $h$ (fraction of edges whose endpoints share the same label) rises from 0.690 to 0.981. Because money-laundering accounts exhibit similar behaviors (e.g., split transfers, multi-hop routing), behavioral similarity tends to reconnect them in the recovered graph. The structural-feature recovery ablation worsens the ratio to 1:9.7, supporting our choice to exclude structural features from graph construction and use them only for analysis. The empirical homophily gap is consistent with the DCSBM-based lower bound on the recovered-versus-transaction gap (Theorem~\ref{thm:combined}, Appendix~\ref{app:theory}).
+\paragraph{\textbf{Behavioral similarity repairs suspicious neighborhoods.}} As shown in Table~\ref{tab:ss_sb} and Figure~\ref{fig:intro_topology_repair}, the transaction graph's S-S:S-B ratio of 1:5.7 improves to 1:1.4 in the recovered neighborhood graph, and edge homophily $h$ (fraction of edges whose endpoints share the same label) rises from 0.690 to 0.981. Because money-laundering accounts exhibit similar behaviors (e.g., split transfers, multi-hop routing), behavioral similarity tends to reconnect them in the recovered graph. The structural-feature recovery ablation worsens the ratio to 1:9.7, supporting our choice to exclude structural features from graph construction and use them only for analysis. The empirical homophily gap is consistent with the DCSBM-based lower bound on the recovered-versus-transaction gap (Theorem~\ref{thm:combined}, Appendix~\ref{app:theory}).
 
 \begin{table}[t]
 \centering
-\caption{Separating feature separability from topology repair on \hofinet. The feature-only probe uses a standardized logistic classifier on the 20 behavioral repair features, while the GBT rows reuse the self-supervised RQ1 protocol from Table~\ref{tab:rq1}.}
+\caption{Feature separability versus topology repair on \hofinet. Feature-only LR uses the same 10\%/10\%/80\% split and four seeds as the frozen probe; GBT rows follow the RQ1 protocol.}
 \label{tab:feat_sep_topology}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{llccc}
@@ -541,9 +541,9 @@ GBT pool        & Repaired $k$-NN & \cmark & \textbf{0.667}{\scriptsize±.002} &
 \end{tabular}}
 \end{table}
 
-\textbf{Feature--topology mechanism.} Table~\ref{tab:feat_sep_topology} decomposes the source of the gains. A feature-only linear probe on $\mathbf{X}^{\text{bhv}}$ is already strong ($F1_{\text{susp}}=0.659$, AUPRC$=0.579$), indicating that the behavioral features contain class signal. Yet this signal does not automatically translate into effective message passing on the original transaction neighborhoods: under the same GBT protocol, using the transaction graph yields only $0.265$ at the node level and further drops to $0.197$ with pooling. In contrast, replacing the message graph with the recovered behavioral neighborhood graph increases performance to $0.664$--$0.667$. This supports a topology-repair mechanism: converting feature-space similarity into a class-informative neighborhood structure that GNN aggregation and pooling can exploit.
+\paragraph{\textbf{Feature separability is not topology repair.}} Table~\ref{tab:feat_sep_topology} decomposes the source of the gains. A feature-only linear probe on $\mathbf{X}^{\text{bhv}}$ is already strong ($F1_{\text{susp}}=0.659$, AUPRC$=0.579$), indicating that the behavioral features contain class signal. Yet this signal does not automatically translate into effective message passing on the original transaction neighborhoods: under the same GBT protocol, using the transaction graph yields only $0.265$ at the node level and further drops to $0.197$ with pooling. In contrast, replacing the message graph with the recovered behavioral neighborhood graph increases performance to $0.664$--$0.667$. This supports a topology-repair mechanism: converting feature-space similarity into a class-informative neighborhood structure that GNN aggregation and pooling can exploit.
 
-\textbf{From the case study to Table~\ref{tab:rq1}.} For the Figure~\ref{fig:intro_topology_repair} account, the suspicious share in the aggregation neighborhood jumps from $\le 7.4\%$ on the transaction graph ((a)/(c)) to $\approx 90\%$ after repair ((b)/(d)), matching the large (a)$\to$(b) gains in Table~\ref{tab:rq1}. This behavior generalizes: after repair, the share of suspicious accounts with majority-suspicious 1-hop egos rises from $47.7\%$ to $71.6\%$, and $66.1\%$ of majority-benign egos flip to majority-suspicious.
+\paragraph{\textbf{Case-study consistency.}} For the Figure~\ref{fig:intro_topology_repair} account, the suspicious share in the aggregation neighborhood jumps from $\le 7.4\%$ on the transaction graph ((a)/(c)) to $\approx 90\%$ after repair ((b)/(d)), matching the large (a)$\to$(b) gains in Table~\ref{tab:rq1}. This behavior generalizes: after repair, the share of suspicious accounts with majority-suspicious 1-hop egos rises from $47.7\%$ to $71.6\%$, and $66.1\%$ of majority-benign egos flip to majority-suspicious.
 % \begin{figure}[t]
 % \centering
 % \includegraphics[width=0.95\columnwidth]{figures/fig_rq1_shift_hist.pdf}
@@ -551,9 +551,9 @@ GBT pool        & Repaired $k$-NN & \cmark & \textbf{0.667}{\scriptsize±.002} &
 % \label{fig:rq1_shift_hist}
 % \end{figure}
 
-\textbf{Robustness to $k$.} On GBT, $k{=}10$ performs best over $k \in $ \{5, 10, 20, 50\}, with $k{=}5$ a close second at (d) $F1_{\text{susp}}{=}0.676$. For $k>10$, benign mixing reduces S-S density and (d) decreases monotonically (0.661 at $k{=}50$). The total (d) $F1_{\text{susp}}$ range is only 0.021, indicating robustness to $k$.
+\paragraph{\textbf{Neighborhood-size sensitivity.}} On GBT, $k{=}10$ performs best over $k \in $ \{5, 10, 20, 50\}, with $k{=}5$ a close second at (d) $F1_{\text{susp}}{=}0.676$. For $k>10$, benign mixing reduces S-S density and (d) decreases monotonically (0.661 at $k{=}50$). The total (d) $F1_{\text{susp}}$ range is only 0.021, indicating robustness to $k$.
 
-\textbf{Additional checks.} Seed-level analyses show that building the recovered neighborhood graph from behavioral features alone improves over the all-feature baseline (MLGCL-/GCPAL-style affinity graph) by $+0.040$ $F1_{\text{susp}}$ on \hofinet. The repair is a one-time preprocessing step (608.9\,s on \hofinet). We report another pooling variant (HAP) in Appendix~\ref{app:theory}.
+\paragraph{\textbf{Auxiliary design checks.}} Seed-level analyses show that building the recovered neighborhood graph from behavioral features alone improves over the all-feature baseline (MLGCL-/GCPAL-style affinity graph) by $+0.040$ $F1_{\text{susp}}$ on \hofinet. The repair is a one-time preprocessing step (608.9\,s on \hofinet). We report another pooling variant (HAP) in Appendix~\ref{app:theory}.
 
 \begin{table*}[t]
 \centering
@@ -581,8 +581,8 @@ GBT pool        & Repaired $k$-NN & \cmark & \textbf{0.667}{\scriptsize±.002} &
 \paragraph{\textbf{Normalization determines whether the mechanism is realized.}} Using Proposition~\ref{thm:bn_collapse} with the homophily-recovery and signal-preservation analyses in Appendix~\ref{app:theory}, we study normalization as a unified factor in training stability. Under the BYOL-style bootstrap loss, normalization controls stability, as Figure~\ref{fig:rq2_bn} shows for settings (a) vs. (d) across nine encoders. Table~\ref{tab:bn_summary} shows 4-seed paired $t$-tests with Holm correction for setting (d): (i) adding BN yields the largest performance change ($\Delta F1_{\text{susp}} \approx 0.60$) when all else is fixed, while (ii) BN position (per-layer $>$ final-only) and (iii) convolution type (GCNConv $>$ GINConv) have smaller but still visible effects. Across paradigms, per-layer BN encoders converge to 0.667--0.670 under the bootstrap loss and stay within 0.001 of this under their native losses (Appendix~\ref{app:loss_table}), suggesting that once training is stable, the repaired topology is the main driver of performance.
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.95\columnwidth]{figures/fig_rq3_bn_heatmap.pdf}
-    \caption{$F1_{\text{susp}}$ heatmap for the 4-setting ablation across 9 encoders on \hofinet (4-seed mean). BN-equipped encoders (left of the red divider) reach 0.55--0.68 at (b) and (d); BN-free encoders (right) collapse to $\approx 0.04$--$0.06$ across all settings.}
+    \includegraphics[width=1\columnwidth]{figures/fig_rq3_bn_heatmap.pdf}
+    \caption{$F1_{\text{susp}}$ heatmap for the 4-setting ablation on \hofinet (4-seed mean). BN-equipped encoders remain high under repaired topology, while BN-free encoders collapse near random.}
     \label{fig:rq2_bn}
 \end{figure}
 
@@ -600,7 +600,7 @@ RQ3 asks whether \method's self-supervised representation remains competitive wi
 
 \begin{figure*}[h]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/fig_rq3_labeff.pdf}
+\includegraphics[width=0.8\textwidth]{figures/fig_rq3_labeff.pdf}
 \caption{Label-efficiency on three AML datasets at train label fractions $\{1\%, 5\%, 10\%\}$ (4-seed mean$\pm$std, shaded).}
 \label{fig:rq3_labeff}
 \end{figure*}
@@ -643,7 +643,7 @@ GRACE+BN  & \checkmark & 0.430{\scriptsize±.014} & \underline{0.672}{\scriptsiz
 \textbf{AMLNet: high prevalence reduces instability in BN-free encoders.} On AMLNet ($\rho{=}13.52\%$), the baseline (a) already reaches $F1_{\text{susp}}=0.40$--$0.45$, far above \hofinet (0.04--0.27) and AMLworld (0.038--0.042). The high suspicious-account ratio keeps even BN-free DGI outside the unstable regime of Proposition~\ref{thm:bn_collapse}. Collapse prevention matters most at low prevalence and weakens as the random-classifier ceiling rises. Topology-repair and contrastive-level effects match \hofinet; for example, GBT improves from 0.426 in (a) to 0.678 in (d), a gain of over 50\%. All three datasets show the same topology-repair pattern in homophily and F1 (Tables~\ref{tab:ss_sb},~\ref{tab:rq4}).
 
 \section{Conclusion and Future Work}
-\paragraph{\textbf{Contributions.}} We propose \method, a topology-repair approach for AML detection on transaction networks with weak homophily. \method contrasts the observed transaction graph with a behavioral homophily recovery graph, preserving transaction-topology information while adding repaired suspicious-class neighborhoods (Eq.~\ref{eq:concat}). The repair raises \hofinet edge homophily from 0.690 to 0.981. With 1\% labeled nodes, \method achieves the best $F1_{\text{susp}}$ on all three datasets (0.010--0.016 above the strongest supervised baseline); with 10\% labels, tabular boosting matches \method, while \method continues to outperform every supervised graph baseline.
+\paragraph{\textbf{Contributions.}} We propose \method, a topology-repair approach for AML detection on transaction networks with weak homophily. \method contrasts the observed transaction graph with a behavioral homophily recovery graph, preserving transaction-topology information while adding repaired suspicious-class neighborhoods (Eq.~\ref{eq:concat}). The repair raises \hofinet edge homophily from 0.690 to 0.981. With 1\% labeled nodes, \method achieves the best $F1_{\text{susp}}$ on all three datasets (0.010--0.016 above the strongest supervised baseline); with 10\% labels, tabular boosting catches up to or slightly exceeds \method, while \method continues to outperform every supervised graph baseline.
 
 \paragraph{\textbf{Mechanism.}} Feature separability alone does not repair transaction neighborhoods; topology repair creates class-informative neighborhoods that message passing can use. Sign-flip analysis characterizes when aggregation on the original graph erodes this structure; repaired-topology pooling refines the recovered signal conditionally, and normalization mainly stabilizes the bootstrap objective (Appendix~\ref{app:theory}).
 
@@ -656,7 +656,7 @@ GRACE+BN  & \checkmark & 0.430{\scriptsize±.014} & \underline{0.672}{\scriptsiz
 \appendix
 
 \section{Datasets and Transfer}\label{app:datasets}
-\hofinet is a synthetic inter-bank transfer dataset with 452,816 accounts, 4,732,130 directed multi-edges, and 9,644 suspicious accounts ($\rho=2.13\%$) over 40 months. AMLworld~\cite{amlpatterns2024realistic} HI-Small has 515,088 accounts and 5,078,345 directed multi-edges ($\rho=1.23\%$; transaction-level laundering rate 0.10\%). AMLNet~\cite{huda2025amlnet} has 11,000 accounts and 1,090,172 directed multi-edges ($\rho=13.52\%$; 1,487 suspicious accounts) and shares AMLworld's 20 behavioral features, enabling transfer analysis.
+\hofinet is a real-derived synthetic interbank transfer dataset with 452,816 accounts, 4,732,130 directed multi-edges, and 9,644 suspicious accounts ($\rho=2.13\%$) over 40 months. AMLworld~\cite{amlpatterns2024realistic} HI-Small has 515,088 accounts and 5,078,345 directed multi-edges ($\rho=1.23\%$; transaction-level laundering rate 0.10\%). AMLNet~\cite{huda2025amlnet} has 11,000 accounts and 1,090,172 directed multi-edges ($\rho=13.52\%$; 1,487 suspicious accounts) and shares AMLworld's 20 behavioral features, enabling transfer analysis.
 
 \subsection{Cross-Dataset Transfer}\label{app:transfer}
 Table~\ref{tab:transfer} reports transfer results: we pre-train on AMLworld and evaluate on AMLNet. Linear probing degrades under prevalence and scale shift, while fine-tuning recovers performance.
@@ -710,14 +710,14 @@ GIN~\cite{xu2018powerful}              & supervised CE          & \cmark & 0.590
 
 \textbf{Loss robustness.} On setting (d) with GBT, four contrastive losses yield essentially identical performance ($F1_{\text{susp}}=0.667$--$0.668$; 4 seeds), suggesting that the gains stem primarily from the topology/level design rather than from any particular loss.
 
-\textbf{Low loss does not imply utility in setting (a).} In (a), both branches use the same transaction graph and differ mainly by dropout, so the objective can be minimized by near-identity mappings. Consistent with Proposition~\ref{thm:bn_collapse}, this behavior is largely loss-agnostic: on DGI+BN, (a) attains much lower loss than (b) but $F1_{\text{susp}}$ remains low ($\approx 0.26$), whereas (b) recovers ($\approx 0.66$) for BootstrapLatent, BarlowTwins, InfoNCE, and JSD. Across datasets, BN-equipped baselines under their native losses match the BYOL-bootstrap results in Table~\ref{tab:rq4} within $\pm 0.005$.
+\textbf{Objective value and downstream utility.} In (a), both branches use the same transaction graph and differ mainly by dropout, so the objective can be minimized by near-identity mappings. Consistent with Proposition~\ref{thm:bn_collapse}, this behavior is largely loss-agnostic: on DGI+BN, (a) attains much lower loss than (b) but $F1_{\text{susp}}$ remains low ($\approx 0.26$), whereas (b) recovers ($\approx 0.66$) for BootstrapLatent, BarlowTwins, InfoNCE, and JSD. Across datasets, BN-equipped baselines under their native losses match the BYOL-bootstrap results in Table~\ref{tab:rq4} within $\pm 0.005$.
 
 \begin{table*}[h]
 \centering
-\caption{Full results for Figure~\ref{fig:rq3_labeff}: $F1_{\text{susp}}$ (4-seed mean$\pm$std) at label fractions $\{1\%, 5\%, 10\%\}$ on three AML datasets. Best per (dataset, fraction) in \textbf{bold}, second-best \underline{underlined}. \method uses setting (d) with the strongest encoder per dataset (GBT on \hofinet and AMLNet, BGRL on AMLworld). MLP follows the standard fraud-GNN setup (Linear$+$ReLU, no BatchNorm).}
+\caption{Full label-efficiency results: $F1_{\text{susp}}$ at $\{1\%,5\%,10\%\}$ labels on three AML datasets (4-seed mean$\pm$std). Bold and underline denote best and second-best values.}
 
 \label{tab:label_eff_full}
-\resizebox{0.8\textwidth}{!}{%
+\resizebox{1\textwidth}{!}{%
 \begin{tabular}{l ccc ccc ccc}
 \toprule
 & \multicolumn{3}{c}{\textbf{\hofinet ($\rho{=}2.13\%$)}} & \multicolumn{3}{c}{\textbf{AMLworld ($\rho{=}1.23\%$)}} & \multicolumn{3}{c}{\textbf{AMLNet ($\rho{=}13.52\%$)}} \\
@@ -815,7 +815,7 @@ For an encoder with BN and $\eta_h^{\text{tx}} > 1/2 + 1/(2k)$, we predict $F1(b
 
 \begin{table}[h]
 \centering
-\caption{Empirical validation of the homophily-gap reference and mean-pool flip condition. The ideal reference $1-h_{\text{tx}}$ corresponds to perfectly recovered homophily; \hofinet and AMLworld are within $\sim 0.02$ of this, while AMLNet falls short by 0.10. Ego-heterophily exceeds the mean-pool flip threshold $\eta_h^* = 0.55$.}
+\caption{Empirical checks for the homophily-gap reference and mean-pool flip condition.}
 \label{tab:theory_verify}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lrrrrrrr}
