@@ -610,8 +610,8 @@ def main():
     print(f'Device: {device}')
 
     if args.dataset == 'hofinet':
-        node_data = 'HOFINET_NODE_FEAT'
-        edge_data = 'HOFINET_EDGES'
+        node_data = 'hofinet/HOFINET_NODE_FEAT'
+        edge_data = 'hofinet/HOFINET_EDGES'
     elif args.dataset == 'amlworld':
         node_data = 'amlworld/AMLWORLD_NODE_FEAT'
         edge_data = 'amlworld/AMLWORLD_EDGES'

@@ -30,9 +30,9 @@ GPU="${GPU:-3}"
 SEEDS="${SEEDS:-2024 2025 2026 2027}"
 HP="--lr 0.0005 --hidden_dim 256 --gconv_nlayers 2"
 
-NODE="HOFINET_NODE_FEAT"
-EDGE="HOFINET_EDGES"
-KNN="HOFINET_KNN_BEHAV_k10"
+NODE="hofinet/HOFINET_NODE_FEAT"
+EDGE="hofinet/HOFINET_EDGES"
+KNN="hofinet/HOFINET_KNN_BEHAV_k10"
 RESULT="results/appendix/loss_ablation/native_loss.csv"
 
 # Default: full Table 8 Native re-experiment (28 runs = 7 encoders x 4 seeds)

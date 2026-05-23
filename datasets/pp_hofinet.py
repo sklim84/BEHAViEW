@@ -405,7 +405,7 @@ def save_outputs(node_features, edge_df, output_name, output_dir='./datasets'):
 
 def main():
     parser = argparse.ArgumentParser(description='HOFINET preprocessing pipeline')
-    parser.add_argument('--input', type=str, default='./datasets/HOFINET.csv')
+    parser.add_argument('--input', type=str, default='./datasets/hofinet/HOFINET.csv')
     parser.add_argument('--output_name', type=str, default='HOFINET')
     parser.add_argument('--output_dir', type=str, default='./datasets')
     parser.add_argument('--cpu_only', action='store_true',

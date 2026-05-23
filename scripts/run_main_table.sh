@@ -126,9 +126,9 @@ for DS in $DATASETS; do
     case "$DS" in
         hofinet)
             DS_TAG="hof"
-            NODE="HOFINET_NODE_FEAT"
-            EDGE="HOFINET_EDGES"
-            KNN="HOFINET_KNN_BEHAV_k10"
+            NODE="hofinet/HOFINET_NODE_FEAT"
+            EDGE="hofinet/HOFINET_EDGES"
+            KNN="hofinet/HOFINET_KNN_BEHAV_k10"
             OUT_DIR="$OUTPUT_DIR_HOFINET"
             ;;
         amlworld)

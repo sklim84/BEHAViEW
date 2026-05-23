@@ -8,7 +8,7 @@ Lines: BEHAViEW, MLP, XGBoost, LightGBM, GAT, GCN, CARE-GNN.
 Usage:
     python visualize/gen_rq3_labeff_figure.py
 Output:
-    _paper/figures/fig_rq3_labeff.pdf
+    _manuscript/figures/fig_rq3_labeff.pdf
 """
 import os
 import sys

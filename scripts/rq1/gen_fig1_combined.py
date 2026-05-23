@@ -5,7 +5,7 @@ Panel A: transaction star graph vs behavioral recovered cluster.
 Panel B: the existing encoder-space PCA Figure 1.
 
 Outputs:
-  _paper/figures/fig_intro_topology_repair_combined.{pdf,png}
+  _manuscript/figures/fig_intro_topology_repair_combined.{pdf,png}
   results/rq1/figures/fig_intro_topology_repair_combined.{pdf,png}
 
 Usage:

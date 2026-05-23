@@ -8,9 +8,9 @@ Subgraph-Level Contrastive Learning for AML Detection.
     python models/subgraph_cl.py \
         --model_name subgraph_cl \
         --gpu 5 --seed 2025 \
-        --node_data_name HOFINET_NODE_FEAT \
-        --edge_data_name HOFINET_EDGES \
-        --knn_graph HOFINET_KNN_BEHAV_k10 \
+        --node_data_name hofinet/HOFINET_NODE_FEAT \
+        --edge_data_name hofinet/HOFINET_EDGES \
+        --knn_graph hofinet/HOFINET_KNN_BEHAV_k10 \
         --lr 0.0005 --hidden_dim 256 --gconv_nlayers 2 \
         --loss BarlowTwins --skip_tsne
 """

@@ -34,8 +34,8 @@ CASE_STUDY_DIRS = [
     BASE / "results" / "rq1" / "case_study",
     BASE / "results" / "case_study",
 ]
-NODE_FEAT = BASE / "datasets" / "HOFINET_NODE_FEAT.csv"
-EDGE_FILE = BASE / "datasets" / "HOFINET_EDGES.csv"
+NODE_FEAT = BASE / "datasets" / "hofinet" / "HOFINET_NODE_FEAT.csv"
+EDGE_FILE = BASE / "datasets" / "hofinet" / "HOFINET_EDGES.csv"
 OUT_DIRS = [BASE / "_paper" / "figures", BASE / "results" / "rq1" / "figures"]
 
 BEHAVIOR_COLS = [

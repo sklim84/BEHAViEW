@@ -16,9 +16,9 @@ set -e
 GPU="${GPU:-4}"
 SEED="${SEED:-2025}"
 HP="--lr 0.0005 --hidden_dim 256 --gconv_nlayers 2"
-NODE="HOFINET_NODE_FEAT"
-EDGE="HOFINET_EDGES"
-KNN="HOFINET_KNN_BEHAV_k10"
+NODE="hofinet/HOFINET_NODE_FEAT"
+EDGE="hofinet/HOFINET_EDGES"
+KNN="hofinet/HOFINET_KNN_BEHAV_k10"
 OUT_DIR="results/embeddings/tsne_v0"
 
 mkdir -p "$OUT_DIR"

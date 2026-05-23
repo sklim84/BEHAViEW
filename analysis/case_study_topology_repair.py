@@ -67,7 +67,7 @@ def main():
 
     t0 = time.time()
     print('Loading node features...')
-    df, behav_cols = load_features(os.path.join(base, 'datasets', 'HOFINET_NODE_FEAT.csv'))
+    df, behav_cols = load_features(os.path.join(base, 'datasets', 'hofinet', 'HOFINET_NODE_FEAT.csv'))
     print(f'  Nodes: {len(df):,}  behavioral features: {len(behav_cols)}')
     labels = df['label'].to_numpy()
     accounts = df['account'].to_numpy()
@@ -76,7 +76,7 @@ def main():
     print(f'  Suspicious accounts: {len(susp_indices):,} ({len(susp_indices) / len(df) * 100:.2f}%)')
 
     print(f'Building tx-graph adjacency from edges...')
-    adj_tx = build_tx_adjacency(os.path.join(base, 'datasets', 'HOFINET_EDGES.csv'),
+    adj_tx = build_tx_adjacency(os.path.join(base, 'datasets', 'hofinet', 'HOFINET_EDGES.csv'),
                                 account_to_idx)
     print(f'  Adjacency for {len(adj_tx):,} nodes, took {time.time() - t0:.1f}s total')
 

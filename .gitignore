@@ -56,3 +56,12 @@ main.pdf
 
 results/*_tmp/
 results/rq*/.tmp_*/
+
+# Local agent notes (not for upstream)
+CLAUDE.md
+
+# Isolated exploratory experiments (kept locally, easy to discard)
+_exp/
+
+# Manuscript lives in a sibling repo (BEHAViEW-paper.git)
+_manuscript/

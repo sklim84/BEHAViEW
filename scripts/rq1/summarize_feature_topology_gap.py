@@ -26,11 +26,11 @@ from sklearn.preprocessing import StandardScaler
 
 
 BASE = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(BASE))
+sys.path.insert(0, str(BASE / "models"))
 
 from utils import make_split  # noqa: E402
 
-NODE_FEAT = BASE / "datasets" / "HOFINET_NODE_FEAT.csv"
+NODE_FEAT = BASE / "datasets" / "hofinet" / "HOFINET_NODE_FEAT.csv"
 MAIN_SWEEP = BASE / "results" / "rq1" / "main_sweep.csv"
 OUT = BASE / "results" / "rq1" / "feature_topology_gap.csv"
 SEEDS = (2024, 2025, 2026, 2027)

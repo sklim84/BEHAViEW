@@ -13,7 +13,7 @@ KNN_GRAPHS="${KNN_GRAPHS:-HOFINET_KNN_BEHAV_k10 HOFINET_KNN_PURE_k10 HOFINET_KNN
 
 RESULT="./results/appendix/feature_ablation.csv"
 HP="--lr 0.0005 --hidden_dim 256 --gconv_nlayers 2"
-COMMON="--node_data_name HOFINET_NODE_FEAT --edge_data_name HOFINET_EDGES --skip_tsne --encoder_type gbt"
+COMMON="--node_data_name hofinet/HOFINET_NODE_FEAT --edge_data_name hofinet/HOFINET_EDGES --skip_tsne --encoder_type gbt"
 
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 

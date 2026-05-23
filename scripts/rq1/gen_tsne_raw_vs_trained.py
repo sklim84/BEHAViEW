@@ -18,7 +18,7 @@ DATA_DIR = 'results/embeddings/tsne_v0'
 FIG_DIR = 'results/rq1/figures'
 os.makedirs(FIG_DIR, exist_ok=True)
 
-NODE_DATA = 'datasets/HOFINET_NODE_FEAT.csv'
+NODE_DATA = 'datasets/hofinet/HOFINET_NODE_FEAT.csv'
 
 # Same as build_knn_graph_variants._behavioral_columns(): exclude label,
 # account, network-derived counts/degree, and structural features.

@@ -30,8 +30,8 @@ import pandas as pd
 
 BASE = Path(__file__).resolve().parents[2]
 CASE_STUDY = BASE / "results" / "rq1" / "case_study" / "representative.json"
-NODE_FEAT = BASE / "datasets" / "HOFINET_NODE_FEAT.csv"
-TX_EDGES = BASE / "datasets" / "HOFINET_EDGES.csv"
+NODE_FEAT = BASE / "datasets" / "hofinet" / "HOFINET_NODE_FEAT.csv"
+TX_EDGES = BASE / "datasets" / "hofinet" / "HOFINET_EDGES.csv"
 OUT_DIRS = [BASE / "_paper" / "figures", BASE / "results" / "rq1" / "figures"]
 
 C_SUSP = "#D64045"

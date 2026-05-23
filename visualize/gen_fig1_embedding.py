@@ -35,7 +35,7 @@ def load_embeddings():
 
 def load_node_features():
     """Load node labels and features."""
-    df = pd.read_csv('datasets/HOFINET_NODE_FEAT.csv')
+    df = pd.read_csv('datasets/hofinet/HOFINET_NODE_FEAT.csv')
     return df['label'].to_numpy(), df
 
 
@@ -235,8 +235,8 @@ def main():
                         new_w, new_h])
 
     # Save
-    pdf_path = '_paper/figures/fig_intro_topology_repair.pdf'
-    png_path = '_paper/figures/fig_intro_topology_repair.png'
+    pdf_path = '_manuscript/figures/fig_intro_topology_repair.pdf'
+    png_path = '_manuscript/figures/fig_intro_topology_repair.png'
     os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
 
     print(f"Saving {pdf_path}...")

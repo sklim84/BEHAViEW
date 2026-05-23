@@ -9,7 +9,7 @@ import matplotlib.patches as mpatches
 import numpy as np
 import os
 
-OUT_DIRS = ['_paper/figures', 'results/rq2/figures']
+OUT_DIRS = ['_manuscript/figures', 'results/rq2/figures']
 for _d in OUT_DIRS:
     os.makedirs(_d, exist_ok=True)
 OUT_DIR = OUT_DIRS[0]   # primary path (paper); loop OUT_DIRS to mirror on save

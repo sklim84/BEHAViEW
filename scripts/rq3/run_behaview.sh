@@ -15,9 +15,9 @@ EPOCHS="${EPOCHS:-200}"
 
 # Per-dataset config (matches paper's best encoder per dataset)
 if [[ "$DATASET" == "hofinet" ]]; then
-    NODE="HOFINET_NODE_FEAT"
-    EDGE="HOFINET_EDGES"
-    KNN="HOFINET_KNN_BEHAV_k10"
+    NODE="hofinet/HOFINET_NODE_FEAT"
+    EDGE="hofinet/HOFINET_EDGES"
+    KNN="hofinet/HOFINET_KNN_BEHAV_k10"
     ENCODER="${ENCODER:-gbt}"
 elif [[ "$DATASET" == "amlworld" ]]; then
     NODE="amlworld/AMLWORLD_NODE_FEAT"

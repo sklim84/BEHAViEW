@@ -8,8 +8,8 @@ Inputs (from analysis/case_study_topology_repair.py):
   results/rq1/case_study/aggregate_stats.json
 
 Outputs:
-  _paper/figures/fig_intro_topology_repair.pdf      (Figure 1, replaces fig_intro_homophily.pdf)
-  _paper/figures/fig_rq1_shift_hist.pdf             (aggregate distribution shift)
+  _manuscript/figures/fig_intro_topology_repair.pdf      (Figure 1, replaces fig_intro_homophily.pdf)
+  _manuscript/figures/fig_rq1_shift_hist.pdf             (aggregate distribution shift)
 """
 import json
 import math

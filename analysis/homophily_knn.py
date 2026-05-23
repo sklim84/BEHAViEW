@@ -18,7 +18,7 @@ def main():
     base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     # Load labels
-    node_df = pd.read_csv(os.path.join(base, 'datasets/HOFINET_NODE_FEAT.csv'))
+    node_df = pd.read_csv(os.path.join(base, 'datasets/hofinet/HOFINET_NODE_FEAT.csv'))
     labels = node_df['label'].values
     n_susp = (labels == 1).sum()
     n_total = len(labels)
@@ -27,12 +27,12 @@ def main():
 
     # Graphs to measure
     graphs = [
-        ('Transaction (original)', 'datasets/HOFINET_EDGES.csv', True),
-        ('Behavioral k-NN (A, 8 feats)', 'datasets/HOFINET_KNN_BEHAV_k10.csv', False),
-        ('Feature k-NN (A+B1, 12 feats)', 'datasets/HOFINET_KNN_FEAT_k10.csv', False),
-        ('Structural k-NN (B, 11 feats)', 'datasets/HOFINET_KNN_STRUCT_k10.csv', False),
-        ('Centrality k-NN (B2, 7 feats)', 'datasets/HOFINET_KNN_CEN_k10.csv', False),
-        ('Hybrid k-NN (A+B, 19 feats)', 'datasets/HOFINET_KNN_HYBRID_k10.csv', False),
+        ('Transaction (original)', 'datasets/hofinet/HOFINET_EDGES.csv', True),
+        ('Behavioral k-NN (A, 8 feats)', 'datasets/hofinet/HOFINET_KNN_BEHAV_k10.csv', False),
+        ('Feature k-NN (A+B1, 12 feats)', 'datasets/hofinet/HOFINET_KNN_FEAT_k10.csv', False),
+        ('Structural k-NN (B, 11 feats)', 'datasets/hofinet/HOFINET_KNN_STRUCT_k10.csv', False),
+        ('Centrality k-NN (B2, 7 feats)', 'datasets/hofinet/HOFINET_KNN_CEN_k10.csv', False),
+        ('Hybrid k-NN (A+B, 19 feats)', 'datasets/hofinet/HOFINET_KNN_HYBRID_k10.csv', False),
     ]
 
     print(f'{"Graph":<35s} {"Edges":>12s} {"Homophily":>10s} {"S-S":>12s} {"S-B":>13s}')
