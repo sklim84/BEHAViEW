@@ -629,6 +629,18 @@ def main(args):
     z = get_embeddings(model, data.x, edge_index_v1, edge_index_v2)
     z_cpu = z.detach().cpu()
 
+    # Optional: dump the joint embeddings for downstream visualization
+    # (e.g., t-SNE / UMAP) by isolated scripts under _exp/tsne_viz/.
+    embedding_path = getattr(args, 'save_embeddings_to', None)
+    if embedding_path:
+        os.makedirs(os.path.dirname(embedding_path) or '.', exist_ok=True)
+        import numpy as _np
+        _np.savez_compressed(embedding_path,
+                             z=z_cpu.numpy(),
+                             y=data.y.cpu().numpy(),
+                             model_name=args.model_name)
+        print(f'(E) saved embeddings -> {embedding_path}')
+
     os.makedirs('./visualize/SubgraphCL', exist_ok=True)
     vis_save_path = f'./visualize/SubgraphCL/tsne_{args.model_name}.png'
     ari_score, sil_score = visualize_tsne(
