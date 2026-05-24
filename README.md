@@ -29,7 +29,7 @@ The 4-setting ablation:
 | **RQ1** Homophily Recovery | Does the recovered graph carry class-relevant evidence? | edge homophily 0.690 → 0.981; S-S:S-B 1:5.7 → 1:1.4 |
 | **RQ2** Signal Preservation | Does pooling on the repaired topology preserve or dilute the signal? | sign-flip threshold separates amplification from dilution; (c) hurts by 17--30%, (d) wins |
 | **RQ3** Label-Efficiency | Is the self-supervised representation competitive under label scarcity? | best F1_susp at 1% labels on all three datasets; +0.010--0.016 over the strongest baseline |
-| **RQ4** Cross-dataset Robustness | Do the patterns transfer across AML prevalences? | (d) > (b) > (a) > (c) holds on AMLworld (ρ=1.23%) and AMLNet (ρ=13.52%) |
+| **RQ4** Cross-dataset Robustness | Do the patterns transfer across AML prevalences? | topology repair dominates on AMLworld (ρ=1.23%) and AMLNet (ρ=13.52%): (b),(d) ≫ (a),(c); the (d)-over-(b) pooling gain is conditional |
 
 ---
 
