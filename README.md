@@ -86,29 +86,30 @@ Full tables for label fractions {1%, 5%, 10%}: `results/rq3/`.
 ## Quick start
 
 ```bash
-# (d) proposed: behavior-recovered view + subgraph pooling
+# (d) proposed: behavior-recovered view + subgraph pooling (AMLworld, public)
 python models/subgraph_cl.py \
     --encoder_type gbt \
-    --knn_graph hofinet/HOFINET_KNN_BEHAV_k10 \
+    --node_data_name amlworld/AMLWORLD_NODE_FEAT \
+    --edge_data_name amlworld/AMLWORLD_EDGES \
+    --knn_graph amlworld/AMLWORLD_KNN_BEHAV_k10 \
     --subgraph_pool \
     --gpu 0 --seed 2025 \
     --lr 0.0005 --hidden_dim 256 --gconv_nlayers 2
 
-# 4-setting ablation:
-#   (a) --encoder_type gbt                                              # baseline
-#   (b) --encoder_type gbt --knn_graph hofinet/HOFINET_KNN_BEHAV_k10            # +view
-#   (c) --encoder_type gbt --subgraph_pool                              # +level
-#   (d) --encoder_type gbt --knn_graph ... --subgraph_pool              # +both
+# 4-setting ablation (toggle topology and level on the same command):
+#   (a) baseline:  omit --knn_graph and --subgraph_pool
+#   (b) +view:     --knn_graph amlworld/AMLWORLD_KNN_BEHAV_k10
+#   (c) +level:    --subgraph_pool
+#   (d) proposed:  --knn_graph amlworld/AMLWORLD_KNN_BEHAV_k10 --subgraph_pool
 
 # Supervised baselines used in the paper: XGBoost, LightGBM, MLP, GCN, GAT, CARE-GNN.
 # Heterophily-aware models (MixHop, FAGCN, H2GCN, ACM-GCN) and fraud-specific GNNs
 # (BWGNN, GAGA, PCGNN) are also implemented in models/supervised_baselines.py.
-python models/supervised_baselines.py --gpu 0 --dataset hofinet
+python models/supervised_baselines.py --gpu 0 --dataset amlworld
 
 # Main table sweep (9 encoders × 4 settings × 4 seeds × dataset)
-GPU=0 DATASETS=hofinet  bash scripts/run_main_table.sh &
-GPU=1 DATASETS=amlworld bash scripts/run_main_table.sh &
-GPU=2 DATASETS=amlnet   bash scripts/run_main_table.sh &
+GPU=0 DATASETS=amlworld bash scripts/run_main_table.sh &
+GPU=1 DATASETS=amlnet   bash scripts/run_main_table.sh &
 wait
 
 # Build the behavioral k-NN graph (one-time preprocessing)
@@ -117,7 +118,7 @@ python datasets/build_knn_graph.py --k 10
 
 Key arguments (see `models/config.py`):
 - `--encoder_type`: gbt, bgrl, dgi, mvgrl, grace, gca, dgi_bn, mvgrl_bn, grace_bn, gin
-- `--knn_graph`: k-NN graph name (e.g., `hofinet/HOFINET_KNN_BEHAV_k10`)
+- `--knn_graph`: k-NN graph name (e.g., `amlworld/AMLWORLD_KNN_BEHAV_k10`)
 - `--subgraph_pool`: enable subgraph pooling
 - `--loss`: contrastive loss (`BootstrapLatent` default, also `InfoNCE`, `JSD`, `BarlowTwins`)
 - `--train_ratio`: train split ratio (default 0.1; val = same; test = 1 − 2 · train)
