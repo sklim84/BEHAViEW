@@ -62,7 +62,7 @@ def load_split(path):
 
 
 def create_loss(loss_name):
-    """손실 함수 이름으로부터 GCL Loss 객체를 생성한다."""
+    """Create a GCL Loss object from the loss-function name."""
     import GCL.losses as L
 
     if loss_name == 'BootstrapLatent':
@@ -77,7 +77,7 @@ def create_loss(loss_name):
 
 
 def build_result_dict(model_name, args, test_result, ari_score, sil_score, use_cen=True, final_loss=None):
-    """실험 결과 딕셔너리를 구성한다."""
+    """Assemble the experiment-result dictionary."""
     return {
         'Model': model_name,
         'Data': args.node_data_name,
@@ -217,7 +217,7 @@ def evaluate_with_metrics(z, y, split, tune_threshold=False):
         auc = roc_auc_score(y_test, y_score)
         ap = average_precision_score(y_test, y_score)
     except Exception as e:
-        print("AUROC/AUPRC 계산 실패:", e)
+        print("AUROC/AUPRC computation failed:", e)
         auc, ap = None, None
 
     print(f"\n AUROC={auc:.4f}  AUPRC={ap:.4f}" if auc is not None else "\n AUROC/AUPRC unavailable")

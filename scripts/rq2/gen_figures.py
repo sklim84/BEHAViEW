@@ -1,6 +1,6 @@
 """
-논문용 Figure 생성 스크립트.
-사용법: python visualize/gen_paper_figures.py
+Figure generation script for the paper.
+Usage: python visualize/gen_paper_figures.py
 """
 import matplotlib
 matplotlib.use('Agg')

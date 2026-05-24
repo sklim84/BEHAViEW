@@ -126,29 +126,29 @@ LOSS_CHOICES = ["BootstrapLatent", "InfoNCE", "BarlowTwins", "JSD", "None"]
 
 SETTINGS = {
     "a": {
-        "label": "(a) 거래 토폴로지 + 노드 표현",
-        "short": "거래/노드",
+        "label": "(a) Transaction topology + node representation",
+        "short": "Transaction/Node",
         "use_knn": False,
         "use_pool": False,
         "ours": False,
     },
     "b": {
-        "label": "(b) 복구 k-NN 토폴로지 + 노드 표현",
-        "short": "복구/노드",
+        "label": "(b) Repaired k-NN topology + node representation",
+        "short": "Repaired/Node",
         "use_knn": True,
         "use_pool": False,
         "ours": False,
     },
     "c": {
-        "label": "(c) 거래 토폴로지 + 서브그래프 풀링",
-        "short": "거래/풀링",
+        "label": "(c) Transaction topology + subgraph pooling",
+        "short": "Transaction/Pooling",
         "use_knn": False,
         "use_pool": True,
         "ours": False,
     },
     "d": {
-        "label": "(d) BehaView: 복구 토폴로지 + 서브그래프 풀링",
-        "short": "복구/풀링",
+        "label": "(d) BehaView: repaired topology + subgraph pooling",
+        "short": "Repaired/Pooling",
         "use_knn": True,
         "use_pool": True,
         "ours": True,
@@ -165,7 +165,7 @@ C_BOX = "rgba(148, 163, 184, 0.45)"
 
 
 st.set_page_config(
-    page_title="BehaView 2D 기법 비교기",
+    page_title="BehaView 2D method comparator",
     page_icon="B",
     layout="wide",
 )
@@ -220,7 +220,7 @@ def load_comparison_results(dataset_name: str) -> pd.DataFrame:
         for (encoder, setting), grp in ablation.groupby(["encoder", "setting"]):
             rows.append(
                 {
-                    "family": "자기지도 GCL",
+                    "family": "Self-supervised GCL",
                     "method": f"{ENCODER_LABELS.get(encoder, encoder.upper())} {SETTINGS[setting]['short']}",
                     "encoder": encoder,
                     "setting": setting,
@@ -239,7 +239,7 @@ def load_comparison_results(dataset_name: str) -> pd.DataFrame:
             for model, grp in df.groupby("model"):
                 rows.append(
                     {
-                        "family": "지도학습/표형 기준선",
+                        "family": "Supervised/tabular baseline",
                         "method": model.upper(),
                         "encoder": model,
                         "setting": "",
@@ -259,7 +259,7 @@ def load_comparison_results(dataset_name: str) -> pd.DataFrame:
             for model, grp in df.groupby("model"):
                 rows.append(
                     {
-                        "family": "기존 그래프 기준선",
+                        "family": "Existing graph baseline",
                         "method": str(model).upper(),
                         "encoder": model,
                         "setting": "",
@@ -531,11 +531,11 @@ def method_representation(
 
     if spec["use_knn"]:
         Z_out = (1.0 - view_weight) * tx_pooled + view_weight * bhv_pooled
-        edge_groups.append(("거래 엣지", tx_edges, C_TX_EDGE))
-        edge_groups.append(("복구 k-NN 엣지", knn_edges, C_BHV_EDGE))
+        edge_groups.append(("Transaction edges", tx_edges, C_TX_EDGE))
+        edge_groups.append(("Repaired k-NN edges", knn_edges, C_BHV_EDGE))
     else:
         Z_out = tx_pooled
-        edge_groups.append(("거래 엣지", tx_edges, C_TX_EDGE))
+        edge_groups.append(("Transaction edges", tx_edges, C_TX_EDGE))
 
     return np.nan_to_num(Z_out), edge_groups
 
@@ -721,12 +721,12 @@ def plot_2d(
 ):
     y = sample["label"].to_numpy()
     hover = [
-        f"계좌={acc}<br>라벨={'의심' if label == 1 else '정상'}<br>원본 인덱스={idx}"
+        f"Account={acc}<br>Label={'Suspicious' if label == 1 else 'Benign'}<br>Source index={idx}"
         for acc, label, idx in zip(sample["account"], y, sample["global_idx"])
     ]
 
     if not PLOTLY_AVAILABLE:
-        st.warning("Plotly가 설치되어 있지 않아 2D 인터랙티브 그래프를 그릴 수 없습니다.")
+        st.warning("Plotly is not installed, so the 2D interactive graph cannot be drawn.")
         return
 
     fig = go.Figure()
@@ -737,8 +737,8 @@ def plot_2d(
             fig.add_trace(trace)
 
     for label_value, label_name, color, size in [
-        (0, "정상", C_BENIGN, 2.8 * node_size_scale),
-        (1, "의심", C_SUSPICIOUS, 4.4 * node_size_scale),
+        (0, "Benign", C_BENIGN, 2.8 * node_size_scale),
+        (1, "Suspicious", C_SUSPICIOUS, 4.4 * node_size_scale),
     ]:
         mask = y == label_value
         if not mask.any():
@@ -777,7 +777,7 @@ def plot_2d(
     )
     st.plotly_chart(fig, width="stretch", config={"scrollZoom": True})
     visible_edges = [f"{name}: {len(edges):,}" for name, edges, _ in edge_groups]
-    st.caption("계산된 엣지 수 - " + " / ".join(visible_edges))
+    st.caption("Computed edge counts - " + " / ".join(visible_edges))
 
 
 def selected_metric(dataset_name: str, encoder: str, setting: str) -> dict[str, float] | None:
@@ -835,69 +835,69 @@ def render_metric_cards(
 ):
     y = sample["label"].to_numpy()
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("샘플 노드", _format_int(len(sample)), f"의심 {(y == 1).mean() * 100:.1f}%")
+    c1.metric("Sample nodes", _format_int(len(sample)), f"Suspicious {(y == 1).mean() * 100:.1f}%")
     c2.metric(
-        "거래 S-S:S-B",
+        "Transaction S-S:S-B",
         str(tx_metrics["ratio"]),
-        f"동질성 {tx_metrics['homophily']:.3f}" if not math.isnan(float(tx_metrics["homophily"])) else "엣지 없음",
+        f"Homophily {tx_metrics['homophily']:.3f}" if not math.isnan(float(tx_metrics["homophily"])) else "No edges",
     )
     c3.metric(
-        "복구 S-S:S-B",
+        "Repaired S-S:S-B",
         str(bhv_metrics["ratio"]),
-        f"동질성 {bhv_metrics['homophily']:.3f}" if not math.isnan(float(bhv_metrics["homophily"])) else "엣지 없음",
+        f"Homophily {bhv_metrics['homophily']:.3f}" if not math.isnan(float(bhv_metrics["homophily"])) else "No edges",
     )
     if left_metric and right_metric:
         delta = right_metric["f1"] - left_metric["f1"]
-        c4.metric("의심 F1 변화", f"{delta:+.3f}", "오른쪽 - 왼쪽")
+        c4.metric("Suspicious F1 change", f"{delta:+.3f}", "Right - Left")
     else:
-        c4.metric("의심 F1 변화", "n/a", "결과 CSV 없음")
+        c4.metric("Suspicious F1 change", "n/a", "No result CSV")
 
 
 def method_label(encoder: str, setting: str, loss_name: str) -> str:
-    suffix = " (우리 기법)" if SETTINGS[setting]["ours"] else ""
+    suffix = " (ours)" if SETTINGS[setting]["ours"] else ""
     return f"{ENCODER_LABELS.get(encoder, encoder.upper())} {SETTINGS[setting]['short']} / {loss_name}{suffix}"
 
 
 FEATURE_FAMILY_LABELS = {
-    "행동 피처": "Behavioral",
-    "혼합 피처": "Hybrid",
-    "구조 피처": "Structural",
+    "Behavioral features": "Behavioral",
+    "Hybrid features": "Hybrid",
+    "Structural features": "Structural",
 }
 POOL_LABELS = {
-    "Mean": "평균 풀링",
-    "Heterophily-aware": "이질성 완화 풀링",
-    "Cycle-aware": "사이클 강조 풀링",
+    "Mean": "Mean pooling",
+    "Heterophily-aware": "Heterophily-aware pooling",
+    "Cycle-aware": "Cycle-emphasis pooling",
 }
 
 
 def label_name_array(labels: np.ndarray) -> np.ndarray:
-    return np.where(labels == 1, "의심", "정상")
+    return np.where(labels == 1, "Suspicious", "Benign")
 
 
 def plot_selected_metric_summary(left_metric: dict[str, float] | None, right_metric: dict[str, float] | None) -> None:
     if not PLOTLY_AVAILABLE:
         return
     rows = []
-    for side, metric in [("왼쪽", left_metric), ("오른쪽", right_metric)]:
+    for side, metric in [("Left", left_metric), ("Right", right_metric)]:
         if not metric:
             continue
-        for key, label in [("f1", "의심 F1"), ("auroc", "AUROC"), ("auprc", "AUPRC")]:
+        for key, label in [("f1", "Suspicious F1"), ("auroc", "AUROC"), ("auprc", "AUPRC")]:
             value = metric.get(key, np.nan)
             if not math.isnan(float(value)):
-                rows.append({"선택": side, "지표": label, "값": float(value)})
+                rows.append({"Selection": side, "Metric": label, "Value": float(value)})
     if not rows:
         return
     fig = px.bar(
         pd.DataFrame(rows),
-        x="지표",
-        y="값",
-        color="선택",
+        x="Metric",
+        y="Value",
+        color="Selection",
         barmode="group",
         text_auto=".3f",
         height=320,
-        color_discrete_map={"왼쪽": "#7A8A99", "오른쪽": C_SUSPICIOUS},
+        color_discrete_map={"Left": "#7A8A99", "Right": C_SUSPICIOUS},
     )
-    fig.update_layout(title="선택한 두 기법의 성능 비교", margin={"l": 0, "r": 10, "t": 48, "b": 0}, yaxis_range=[0, 1])
+    fig.update_layout(title="Performance comparison of the two selected methods", margin={"l": 0, "r": 10, "t": 48, "b": 0}, yaxis_range=[0, 1])
     st.plotly_chart(fig, width="stretch")
 
 
@@ -906,106 +906,106 @@ def plot_graph_diagnostics(tx_metrics: dict[str, float | int | str], bhv_metrics
         return
     hom = pd.DataFrame(
         [
-            {"토폴로지": "거래 그래프", "동질성": float(tx_metrics["homophily"]) if not math.isnan(float(tx_metrics["homophily"])) else 0.0},
-            {"토폴로지": "복구 k-NN 그래프", "동질성": float(bhv_metrics["homophily"]) if not math.isnan(float(bhv_metrics["homophily"])) else 0.0},
+            {"Topology": "Transaction graph", "Homophily": float(tx_metrics["homophily"]) if not math.isnan(float(tx_metrics["homophily"])) else 0.0},
+            {"Topology": "Repaired k-NN graph", "Homophily": float(bhv_metrics["homophily"]) if not math.isnan(float(bhv_metrics["homophily"])) else 0.0},
         ]
     )
     comp = pd.DataFrame(
         [
-            {"토폴로지": "거래 그래프", "엣지 유형": "S-S", "개수": int(tx_metrics["ss"])},
-            {"토폴로지": "거래 그래프", "엣지 유형": "S-B", "개수": int(tx_metrics["sb"])},
-            {"토폴로지": "거래 그래프", "엣지 유형": "B-B", "개수": int(tx_metrics["bb"])},
-            {"토폴로지": "복구 k-NN 그래프", "엣지 유형": "S-S", "개수": int(bhv_metrics["ss"])},
-            {"토폴로지": "복구 k-NN 그래프", "엣지 유형": "S-B", "개수": int(bhv_metrics["sb"])},
-            {"토폴로지": "복구 k-NN 그래프", "엣지 유형": "B-B", "개수": int(bhv_metrics["bb"])},
+            {"Topology": "Transaction graph", "Edge type": "S-S", "Count": int(tx_metrics["ss"])},
+            {"Topology": "Transaction graph", "Edge type": "S-B", "Count": int(tx_metrics["sb"])},
+            {"Topology": "Transaction graph", "Edge type": "B-B", "Count": int(tx_metrics["bb"])},
+            {"Topology": "Repaired k-NN graph", "Edge type": "S-S", "Count": int(bhv_metrics["ss"])},
+            {"Topology": "Repaired k-NN graph", "Edge type": "S-B", "Count": int(bhv_metrics["sb"])},
+            {"Topology": "Repaired k-NN graph", "Edge type": "B-B", "Count": int(bhv_metrics["bb"])},
         ]
     )
     left, right = st.columns([0.8, 1.2])
     with left:
-        fig_h = px.bar(hom, x="토폴로지", y="동질성", color="토폴로지", text_auto=".3f", height=330)
-        fig_h.update_layout(title="샘플 그래프 동질성", showlegend=False, margin={"l": 0, "r": 10, "t": 48, "b": 0}, yaxis_range=[0, 1])
+        fig_h = px.bar(hom, x="Topology", y="Homophily", color="Topology", text_auto=".3f", height=330)
+        fig_h.update_layout(title="Sample graph homophily", showlegend=False, margin={"l": 0, "r": 10, "t": 48, "b": 0}, yaxis_range=[0, 1])
         st.plotly_chart(fig_h, width="stretch")
     with right:
         fig_c = px.bar(
             comp,
-            x="토폴로지",
-            y="개수",
-            color="엣지 유형",
+            x="Topology",
+            y="Count",
+            color="Edge type",
             barmode="stack",
             text_auto=True,
             height=330,
             color_discrete_map={"S-S": C_SUSPICIOUS, "S-B": "#9E6B45", "B-B": C_BENIGN},
         )
-        fig_c.update_layout(title="엣지 구성 비교", margin={"l": 0, "r": 10, "t": 48, "b": 0})
+        fig_c.update_layout(title="Edge composition comparison", margin={"l": 0, "r": 10, "t": 48, "b": 0})
         st.plotly_chart(fig_c, width="stretch")
 
 
 with st.sidebar:
-    st.header("데이터")
-    dataset_name = st.selectbox("데이터셋", list(DATASETS.keys()), index=0)
-    n_points = st.slider("샘플 수", min_value=800, max_value=12_000, value=3_000, step=200)
-    suspicious_share = st.slider("샘플 내 의심 비율", min_value=0.01, max_value=0.70, value=0.01, step=0.01)
-    seed = st.number_input("랜덤 시드", min_value=0, max_value=99_999, value=2025, step=1)
-    feature_family_label = st.selectbox("피처 묶음", list(FEATURE_FAMILY_LABELS.keys()), index=0)
+    st.header("Data")
+    dataset_name = st.selectbox("Dataset", list(DATASETS.keys()), index=0)
+    n_points = st.slider("Sample size", min_value=800, max_value=12_000, value=3_000, step=200)
+    suspicious_share = st.slider("Suspicious ratio in sample", min_value=0.01, max_value=0.70, value=0.01, step=0.01)
+    seed = st.number_input("Random seed", min_value=0, max_value=99_999, value=2025, step=1)
+    feature_family_label = st.selectbox("Feature group", list(FEATURE_FAMILY_LABELS.keys()), index=0)
     feature_family = FEATURE_FAMILY_LABELS[feature_family_label]
 
-    st.header("왼쪽 기법")
-    left_encoder = st.selectbox("기본 인코더", ENCODERS, format_func=lambda x: ENCODER_LABELS[x], index=1, key="left_encoder")
-    left_setting = st.selectbox("토폴로지 설정", list(SETTINGS.keys()), format_func=lambda x: SETTINGS[x]["label"], index=0, key="left_setting")
-    left_default_loss = st.checkbox("인코더 기본 loss 사용", value=True, key="left_default_loss")
+    st.header("Left method")
+    left_encoder = st.selectbox("Base encoder", ENCODERS, format_func=lambda x: ENCODER_LABELS[x], index=1, key="left_encoder")
+    left_setting = st.selectbox("Topology setting", list(SETTINGS.keys()), format_func=lambda x: SETTINGS[x]["label"], index=0, key="left_setting")
+    left_default_loss = st.checkbox("Use encoder default loss", value=True, key="left_default_loss")
     if left_default_loss:
         left_loss = DEFAULT_LOSS[left_encoder]
-        st.caption(f"기본값: {left_loss}")
+        st.caption(f"Default: {left_loss}")
     else:
         left_loss = st.selectbox(
-            "Loss 함수",
+            "Loss function",
             LOSS_CHOICES,
             index=LOSS_CHOICES.index(DEFAULT_LOSS[left_encoder]),
             key="left_loss",
         )
 
-    st.header("오른쪽 기법")
-    right_encoder = st.selectbox("기본 인코더", ENCODERS, format_func=lambda x: ENCODER_LABELS[x], index=0, key="right_encoder")
-    right_setting = st.selectbox("토폴로지 설정", list(SETTINGS.keys()), format_func=lambda x: SETTINGS[x]["label"], index=3, key="right_setting")
-    right_default_loss = st.checkbox("인코더 기본 loss 사용", value=True, key="right_default_loss")
+    st.header("Right method")
+    right_encoder = st.selectbox("Base encoder", ENCODERS, format_func=lambda x: ENCODER_LABELS[x], index=0, key="right_encoder")
+    right_setting = st.selectbox("Topology setting", list(SETTINGS.keys()), format_func=lambda x: SETTINGS[x]["label"], index=3, key="right_setting")
+    right_default_loss = st.checkbox("Use encoder default loss", value=True, key="right_default_loss")
     if right_default_loss:
         right_loss = DEFAULT_LOSS[right_encoder]
-        st.caption(f"기본값: {right_loss}")
+        st.caption(f"Default: {right_loss}")
     else:
         right_loss = st.selectbox(
-            "Loss 함수",
+            "Loss function",
             LOSS_CHOICES,
             index=LOSS_CHOICES.index(DEFAULT_LOSS[right_encoder]),
             key="right_loss",
         )
 
-    st.header("그래프 파라미터")
-    k = st.slider("복구 k-NN의 k", min_value=3, max_value=50, value=10, step=1)
-    graph_alpha = st.slider("메시지 패싱 강도", min_value=0.0, max_value=1.0, value=0.35, step=0.05)
-    view_weight = st.slider("복구 토폴로지 가중치", min_value=0.0, max_value=1.0, value=0.70, step=0.05)
-    pool_strength = st.slider("서브그래프 풀링 강도", min_value=0.0, max_value=1.0, value=0.85, step=0.05)
-    pool_variant = st.selectbox("풀링 방식", ["Mean", "Heterophily-aware", "Cycle-aware"], format_func=lambda x: POOL_LABELS[x], index=0)
-    cycle_alpha = st.slider("사이클 강조 계수", min_value=0.0, max_value=5.0, value=2.0, step=0.25)
-    loss_strength = st.slider("시각화 loss 프로파일 강도", min_value=0.0, max_value=1.0, value=0.45, step=0.05)
+    st.header("Graph parameters")
+    k = st.slider("k for repaired k-NN", min_value=3, max_value=50, value=10, step=1)
+    graph_alpha = st.slider("Message-passing strength", min_value=0.0, max_value=1.0, value=0.35, step=0.05)
+    view_weight = st.slider("Repaired topology weight", min_value=0.0, max_value=1.0, value=0.70, step=0.05)
+    pool_strength = st.slider("Subgraph pooling strength", min_value=0.0, max_value=1.0, value=0.85, step=0.05)
+    pool_variant = st.selectbox("Pooling method", ["Mean", "Heterophily-aware", "Cycle-aware"], format_func=lambda x: POOL_LABELS[x], index=0)
+    cycle_alpha = st.slider("Cycle-emphasis coefficient", min_value=0.0, max_value=5.0, value=2.0, step=0.25)
+    loss_strength = st.slider("Visualization loss profile strength", min_value=0.0, max_value=1.0, value=0.45, step=0.05)
 
-    st.header("렌더링")
-    max_edges = st.slider("엣지 유형별 최대 표시 수", min_value=0, max_value=20_000, value=6_000, step=500)
-    edge_width = st.slider("엣지 선 두께", min_value=1, max_value=8, value=1, step=1)
-    edge_opacity = st.slider("엣지 선 불투명도", min_value=0.10, max_value=1.00, value=0.25, step=0.05)
-    node_spacing = st.slider("노드 간 좌표 간격", min_value=0.6, max_value=2.8, value=1.7, step=0.1)
-    node_size_scale = st.slider("노드 표시 크기", min_value=0.45, max_value=1.30, value=0.75, step=0.05)
-    coordinate_tick = st.slider("좌표 눈금 단위", min_value=0.05, max_value=0.50, value=0.10, step=0.05)
-    layout_iterations = st.slider("2D 그래프 배치 반복 수", min_value=10, max_value=120, value=45, step=5)
+    st.header("Rendering")
+    max_edges = st.slider("Max edges shown per type", min_value=0, max_value=20_000, value=6_000, step=500)
+    edge_width = st.slider("Edge line width", min_value=1, max_value=8, value=1, step=1)
+    edge_opacity = st.slider("Edge line opacity", min_value=0.10, max_value=1.00, value=0.25, step=0.05)
+    node_spacing = st.slider("Coordinate spacing between nodes", min_value=0.6, max_value=2.8, value=1.7, step=0.1)
+    node_size_scale = st.slider("Node display size", min_value=0.45, max_value=1.30, value=0.75, step=0.05)
+    coordinate_tick = st.slider("Coordinate tick unit", min_value=0.05, max_value=0.50, value=0.10, step=0.05)
+    layout_iterations = st.slider("2D graph layout iterations", min_value=10, max_value=120, value=45, step=5)
 
 
-st.title("BehaView 2D 기법 비교기")
+st.title("BehaView 2D method comparator")
 st.caption(
-    "HOFINET과 AMLworld에서 거래 그래프 기반 기존 기법과 복구 토폴로지 기반 우리 기법을 2D 토폴로지 그래프로 비교합니다."
+    "On HOFINET and AMLworld, this compares the transaction-graph-based existing method against our repaired-topology method as 2D topology graphs."
 )
 
 st.info(
-    "2D 출력은 선택한 기법이 사용하는 실제 엣지로 배치한 force-directed 그래프입니다. "
-    "노드 색은 라벨, 선은 거래 엣지와 복구 k-NN 엣지를 나타내며, 선 두께와 노드 간 좌표 간격은 왼쪽 렌더링 메뉴에서 조정할 수 있습니다."
+    "The 2D output is a force-directed graph laid out from the actual edges used by the selected method. "
+    "Node color encodes the label, lines represent transaction edges and repaired k-NN edges, and line width and node coordinate spacing can be adjusted in the Rendering menu on the left."
 )
 
 df_all = load_nodes(dataset_name)
@@ -1036,7 +1036,7 @@ render_metric_cards(sample, tx_metrics, bhv_metrics, left_metric, right_metric)
 
 st.markdown("---")
 
-with st.spinner("기법별 표현과 실제 2D 그래프 배치를 계산하는 중입니다..."):
+with st.spinner("Computing per-method representations and the actual 2D graph layout..."):
     left_Z, left_edges = method_representation(
         X,
         labels,
@@ -1073,8 +1073,8 @@ with st.spinner("기법별 표현과 실제 2D 그래프 배치를 계산하는 
     left_coords, left_gap = graph_layout_2d(left_Z, labels, left_edges, int(seed), layout_iterations, layout_edge_budget, node_spacing)
     right_coords, right_gap = graph_layout_2d(right_Z, labels, right_edges, int(seed) + 7, layout_iterations, layout_edge_budget, node_spacing)
 
-left_title = f"왼쪽: {method_label(left_encoder, left_setting, left_loss)} | 의심 F1 {metric_text(left_metric, 'f1')} | 2D 군집거리 {left_gap:.2f}"
-right_title = f"오른쪽: {method_label(right_encoder, right_setting, right_loss)} | 의심 F1 {metric_text(right_metric, 'f1')} | 2D 군집거리 {right_gap:.2f}"
+left_title = f"Left: {method_label(left_encoder, left_setting, left_loss)} | Suspicious F1 {metric_text(left_metric, 'f1')} | 2D cluster gap {left_gap:.2f}"
+right_title = f"Right: {method_label(right_encoder, right_setting, right_loss)} | Suspicious F1 {metric_text(right_metric, 'f1')} | 2D cluster gap {right_gap:.2f}"
 
 col_left, col_right = st.columns(2)
 with col_left:
@@ -1095,44 +1095,44 @@ tab_rq1, tab_rq2, tab_rq3, tab_rq4 = st.tabs(
 )
 
 with tab_rq1:
-    st.subheader("복구 토폴로지가 의심 이웃을 얼마나 회복하는지 확인")
+    st.subheader("Check how much the repaired topology recovers suspicious neighbors")
     plot_graph_diagnostics(tx_metrics, bhv_metrics)
     if PLOTLY_AVAILABLE:
-        class_df = pd.DataFrame({"라벨": label_name_array(labels)})
+        class_df = pd.DataFrame({"Label": label_name_array(labels)})
         fig = px.pie(
             class_df,
-            names="라벨",
-            color="라벨",
-            color_discrete_map={"의심": C_SUSPICIOUS, "정상": C_BENIGN},
-            title="현재 샘플의 라벨 구성",
+            names="Label",
+            color="Label",
+            color_discrete_map={"Suspicious": C_SUSPICIOUS, "Benign": C_BENIGN},
+            title="Label composition of the current sample",
             height=330,
         )
         fig.update_layout(margin={"l": 0, "r": 10, "t": 48, "b": 0})
         st.plotly_chart(fig, width="stretch")
     if feature_cols and PLOTLY_AVAILABLE:
-        feature_for_plot = st.selectbox("분포로 볼 행동 피처", feature_cols[: min(60, len(feature_cols))], key="rq1_feature_plot")
+        feature_for_plot = st.selectbox("Behavioral feature to view as a distribution", feature_cols[: min(60, len(feature_cols))], key="rq1_feature_plot")
         plot_df = sample[[feature_for_plot, "label"]].copy()
-        plot_df["라벨"] = label_name_array(plot_df["label"].to_numpy())
+        plot_df["Label"] = label_name_array(plot_df["label"].to_numpy())
         fig = px.histogram(
             plot_df,
             x=feature_for_plot,
-            color="라벨",
+            color="Label",
             barmode="overlay",
             opacity=0.62,
             nbins=45,
-            title=f"{feature_for_plot} 분포",
-            color_discrete_map={"의심": C_SUSPICIOUS, "정상": C_BENIGN},
+            title=f"{feature_for_plot} distribution",
+            color_discrete_map={"Suspicious": C_SUSPICIOUS, "Benign": C_BENIGN},
             height=360,
         )
         fig.update_layout(margin={"l": 0, "r": 10, "t": 48, "b": 0})
         st.plotly_chart(fig, width="stretch")
 
 with tab_rq2:
-    st.subheader("집계 방식과 토폴로지가 의심 신호를 보존하는지 비교")
+    st.subheader("Compare whether the aggregation method and topology preserve the suspicious signal")
     plot_selected_metric_summary(left_metric, right_metric)
     ablation = load_ablation_results(dataset_name)
     if len(ablation) == 0 or not PLOTLY_AVAILABLE:
-        st.warning("RQ2 ablation 결과 CSV를 찾지 못했습니다.")
+        st.warning("Could not find the RQ2 ablation result CSV.")
     else:
         rows = []
         for (encoder, setting), grp in ablation.groupby(["encoder", "setting"]):
@@ -1140,45 +1140,45 @@ with tab_rq2:
                 continue
             rows.append(
                 {
-                    "인코더": ENCODER_LABELS.get(encoder, encoder.upper()),
-                    "설정": SETTINGS[setting]["short"],
+                    "Encoder": ENCODER_LABELS.get(encoder, encoder.upper()),
+                    "Setting": SETTINGS[setting]["short"],
                     "setting_order": "abcd".index(setting),
-                    "의심 F1": float(grp["f1_1"].mean()),
+                    "Suspicious F1": float(grp["f1_1"].mean()),
                 }
             )
-        chart = pd.DataFrame(rows).sort_values(["인코더", "setting_order"])
+        chart = pd.DataFrame(rows).sort_values(["Encoder", "setting_order"])
         keep = [ENCODER_LABELS.get(e, e.upper()) for e in dict.fromkeys([left_encoder, right_encoder, "gbt", "bgrl"])]
-        chart = chart[chart["인코더"].isin(keep)] if len(chart) else chart
+        chart = chart[chart["Encoder"].isin(keep)] if len(chart) else chart
         fig = px.line(
             chart,
-            x="설정",
-            y="의심 F1",
-            color="인코더",
+            x="Setting",
+            y="Suspicious F1",
+            color="Encoder",
             markers=True,
-            category_orders={"설정": [SETTINGS[s]["short"] for s in "abcd"]},
-            title="4개 설정 ablation: 토폴로지 branch × contrastive level",
+            category_orders={"Setting": [SETTINGS[s]["short"] for s in "abcd"]},
+            title="Four-setting ablation: topology branch x contrastive level",
             height=430,
         )
         fig.update_layout(margin={"l": 0, "r": 10, "t": 52, "b": 0}, yaxis_range=[0, 1])
         st.plotly_chart(fig, width="stretch")
 
-    loss_df = pd.DataFrame({"인코더": [ENCODER_LABELS[e] for e in ENCODERS], "기본 loss": [DEFAULT_LOSS[e] for e in ENCODERS]})
+    loss_df = pd.DataFrame({"Encoder": [ENCODER_LABELS[e] for e in ENCODERS], "Default loss": [DEFAULT_LOSS[e] for e in ENCODERS]})
     if PLOTLY_AVAILABLE:
         fig = px.scatter(
             loss_df,
-            x="인코더",
-            y="기본 loss",
-            color="기본 loss",
-            title="기법별 기본 loss 매핑",
+            x="Encoder",
+            y="Default loss",
+            color="Default loss",
+            title="Default loss mapping per method",
             height=310,
         )
         fig.update_traces(marker={"size": 14})
         fig.update_layout(margin={"l": 0, "r": 10, "t": 48, "b": 0})
         st.plotly_chart(fig, width="stretch")
-    st.caption("실제 학습은 `models/subgraph_cl.py`의 `compute_loss(...)`가 `--loss`를 dispatch합니다. 이 앱은 재학습 없이 시각화용 프로파일을 적용합니다.")
+    st.caption("In actual training, `compute_loss(...)` in `models/subgraph_cl.py` dispatches on `--loss`. This app applies a visualization profile without retraining.")
 
 with tab_rq3:
-    st.subheader("라벨이 적을 때 우리 표현이 지도학습 기준선과 경쟁적인지 확인")
+    st.subheader("Check whether our representation is competitive with supervised baselines under label scarcity")
     rq3_rows = []
     for ds in ["hofinet", "amlworld", "amlnet"]:
         behav_path = BASE_DIR / "results" / "rq3" / f"behaview_{ds}.csv"
@@ -1186,36 +1186,36 @@ with tab_rq3:
             df = pd.read_csv(behav_path)
             ratios = df["Model"].astype(str).str.extract(r"_r(?P<ratio>0\.\d+)_")["ratio"].astype(float)
             for ratio, grp in df.assign(train_ratio=ratios).dropna(subset=["train_ratio"]).groupby("train_ratio"):
-                rq3_rows.append({"데이터셋": ds.upper(), "모델": "BehaView", "라벨 비율": float(ratio), "의심 F1": float(grp["f1_1"].mean())})
+                rq3_rows.append({"Dataset": ds.upper(), "Model": "BehaView", "Label ratio": float(ratio), "Suspicious F1": float(grp["f1_1"].mean())})
         sup_path = BASE_DIR / "results" / "rq3" / f"supervised_{ds}.csv"
         if sup_path.exists():
             df = pd.read_csv(sup_path)
             for (model, ratio), grp in df.groupby(["model", "train_ratio"]):
-                rq3_rows.append({"데이터셋": ds.upper(), "모델": str(model).upper(), "라벨 비율": float(ratio), "의심 F1": float(grp["f1_1"].mean())})
+                rq3_rows.append({"Dataset": ds.upper(), "Model": str(model).upper(), "Label ratio": float(ratio), "Suspicious F1": float(grp["f1_1"].mean())})
     boost_path = BASE_DIR / "results" / "rq3" / "boosting_behav.csv"
     if boost_path.exists():
         df = pd.read_csv(boost_path)
         for (ds, model, ratio), grp in df.groupby(["dataset", "model", "train_ratio"]):
-            rq3_rows.append({"데이터셋": str(ds).upper(), "모델": str(model).upper(), "라벨 비율": float(ratio), "의심 F1": float(grp["f1_1"].mean())})
+            rq3_rows.append({"Dataset": str(ds).upper(), "Model": str(model).upper(), "Label ratio": float(ratio), "Suspicious F1": float(grp["f1_1"].mean())})
     if rq3_rows and PLOTLY_AVAILABLE:
         chart = pd.DataFrame(rq3_rows)
         fig = px.line(
             chart,
-            x="라벨 비율",
-            y="의심 F1",
-            color="모델",
-            facet_col="데이터셋",
+            x="Label ratio",
+            y="Suspicious F1",
+            color="Model",
+            facet_col="Dataset",
             markers=True,
-            title="라벨 비율별 의심 클래스 F1",
+            title="Suspicious-class F1 by label ratio",
             height=500,
         )
         fig.update_layout(margin={"l": 0, "r": 10, "t": 56, "b": 0}, yaxis_range=[0, 1])
         st.plotly_chart(fig, width="stretch")
     else:
-        st.warning("RQ3 label-efficiency 결과 CSV를 찾지 못했습니다.")
+        st.warning("Could not find the RQ3 label-efficiency result CSV.")
 
 with tab_rq4:
-    st.subheader("데이터 규모와 의심 비율이 달라도 같은 패턴이 유지되는지 확인")
+    st.subheader("Check whether the same pattern holds across different data scales and suspicious ratios")
     rq4_sources = [
         ("HOFINET", BASE_DIR / "results" / "rq1" / "main_sweep.csv"),
         ("AMLWORLD", BASE_DIR / "results" / "rq4" / "amlworld_main_sweep.csv"),
@@ -1231,27 +1231,27 @@ with tab_rq4:
         for (encoder, setting), grp in df.groupby(["encoder", "setting"]):
             rows.append(
                 {
-                    "데이터셋": ds,
-                    "인코더": ENCODER_LABELS.get(str(encoder), str(encoder).upper()),
-                    "설정": SETTINGS[str(setting)]["short"],
+                    "Dataset": ds,
+                    "Encoder": ENCODER_LABELS.get(str(encoder), str(encoder).upper()),
+                    "Setting": SETTINGS[str(setting)]["short"],
                     "setting_order": "abcd".index(str(setting)),
-                    "의심 F1": float(grp["f1_1"].mean()),
+                    "Suspicious F1": float(grp["f1_1"].mean()),
                 }
             )
     if rows and PLOTLY_AVAILABLE:
-        chart = pd.DataFrame(rows).sort_values(["데이터셋", "setting_order"])
+        chart = pd.DataFrame(rows).sort_values(["Dataset", "setting_order"])
         fig = px.bar(
             chart,
-            x="설정",
-            y="의심 F1",
-            color="데이터셋",
+            x="Setting",
+            y="Suspicious F1",
+            color="Dataset",
             barmode="group",
-            facet_col="인코더",
-            category_orders={"설정": [SETTINGS[s]["short"] for s in "abcd"]},
-            title="데이터셋별 topology repair 패턴",
+            facet_col="Encoder",
+            category_orders={"Setting": [SETTINGS[s]["short"] for s in "abcd"]},
+            title="Topology repair pattern by dataset",
             height=520,
         )
         fig.update_layout(margin={"l": 0, "r": 10, "t": 56, "b": 0}, yaxis_range=[0, 1])
         st.plotly_chart(fig, width="stretch")
     else:
-        st.warning("RQ4 cross-dataset 결과 CSV를 찾지 못했습니다.")
+        st.warning("Could not find the RQ4 cross-dataset result CSV.")

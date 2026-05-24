@@ -1,6 +1,6 @@
-"""AMLNet 전처리 파이프라인.
+"""AMLNet preprocessing pipeline.
 
-Transaction CSV → Node features + Edge list (HOFINET/AMLworld와 동일 schema)
+Transaction CSV -> node features + edge list (same schema as the AMLworld pipeline)
 
 - Source/Target: nameOrig/nameDest (account ID)
 - Amount stats: out/in × {mean, max, std, count}

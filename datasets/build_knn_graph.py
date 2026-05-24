@@ -1,7 +1,7 @@
 """
-k-NN 그래프 사전 구축 — feature 유사도 및 centrality 유사도 기반.
+Precompute k-NN graphs based on feature similarity and centrality similarity.
 
-사용법:
+Usage:
     python datasets/build_knn_graph.py --k 10
     python datasets/build_knn_graph.py --k 10 20 50
 """
@@ -16,7 +16,7 @@ from sklearn.preprocessing import StandardScaler
 
 
 def build_knn_edges(features, k):
-    """feature matrix로부터 k-NN edge list 생성.
+    """Build a k-NN edge list from a feature matrix.
     L2-normalized + euclidean ≈ cosine similarity, but uses ball_tree for speed.
     """
     scaler = StandardScaler()

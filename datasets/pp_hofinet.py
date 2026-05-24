@@ -1,15 +1,15 @@
 """
-HOFINET.csv 전처리 파이프라인
-원시 거래 데이터 → 노드 피처 CSV + 엣지 CSV 생성
+HOFINET.csv preprocessing pipeline
+Raw transaction data -> node feature CSV + edge CSV
 
-사용법:
-    python datasets/pp_hofinet.py                          # 하이브리드: cuGraph(GPU) + Memgraph (권장)
-    python datasets/pp_hofinet.py --mg_host 192.168.1.10   # 원격 Memgraph
-    python datasets/pp_hofinet.py --gpu_only               # cuGraph만 (Memgraph 미사용, 피처 8개)
-    python datasets/pp_hofinet.py --cpu_only               # NetworkX만 (GPU/Memgraph 없는 환경)
+Usage:
+    python datasets/pp_hofinet.py                          # Hybrid: cuGraph (GPU) + Memgraph (recommended)
+    python datasets/pp_hofinet.py --mg_host 192.168.1.10   # Remote Memgraph
+    python datasets/pp_hofinet.py --gpu_only               # cuGraph only (no Memgraph, 8 features)
+    python datasets/pp_hofinet.py --cpu_only               # NetworkX only (for environments without GPU/Memgraph)
 
-그래프 피처 (19개):
-    cuGraph (GPU, 수초): dc, in_dc, out_dc, pagerank, hits_hub, hits_auth, kcore, triangle, betweenness
+Graph features (19 total):
+    cuGraph (GPU, seconds): dc, in_dc, out_dc, pagerank, hits_hub, hits_auth, kcore, triangle, betweenness
     Memgraph (CPU): cc, harmonic, clustering, sq_clustering, avg_neighbor_deg,
                     load_cen, voterank, constraint, effective_size, eigenvector
 """
@@ -27,7 +27,7 @@ try:
 except ImportError:
     from feature_utils import run_feature
 
-# HOFINET 한글 → 영문 컬럼 매핑
+# HOFINET Korean -> English column mapping
 COLUMN_MAP = {
     '거래일자': 'tran_dt',
     '거래시간대': 'tran_tmrg',
@@ -73,11 +73,11 @@ def compute_entropy_feat(group):
 
 
 # ============================================================
-# cuGraph (GPU) — 빠른 피처 9개
+# cuGraph (GPU): fast features (9)
 # ============================================================
 def compute_graph_features_gpu(edge_df, node_index, gpu_id=0):
-    """cuGraph GPU 기반 그래프 피처 계산 (수초~수십초)
-    피처: dc, in_dc, out_dc, pagerank, hits_hub, hits_auth, kcore, triangle, betweenness
+    """Compute graph features on cuGraph GPU (seconds to tens of seconds)
+    Features: dc, in_dc, out_dc, pagerank, hits_hub, hits_auth, kcore, triangle, betweenness
     """
     os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
     import cudf
@@ -156,17 +156,17 @@ def compute_graph_features_gpu(edge_df, node_index, gpu_id=0):
     del G_un, gdf
     gc.collect()
 
-    # CUDA_VISIBLE_DEVICES 복원
+    # Restore CUDA_VISIBLE_DEVICES
     os.environ.pop('CUDA_VISIBLE_DEVICES', None)
 
     return results
 
 
 # ============================================================
-# Memgraph — 느린 피처 (cuGraph 미지원)
+# Memgraph: slow features (not supported by cuGraph)
 # ============================================================
 def _load_graph_to_memgraph(session, edge_df, node_index, batch_size=10000):
-    """Memgraph에 그래프 데이터 적재"""
+    """Load graph data into Memgraph"""
     session.run('MATCH (n) DETACH DELETE n')
     session.run('CREATE INDEX ON :Account(nid)')
 
@@ -190,7 +190,7 @@ def _load_graph_to_memgraph(session, edge_df, node_index, batch_size=10000):
 
 
 def _run_memgraph_proc(session, query, key_field='nid', value_fields=None):
-    """Memgraph 프로시저 실행 후 {nid: value} dict 반환"""
+    """Run a Memgraph procedure and return a {nid: value} dict"""
     result = session.run(query)
     if len(value_fields) == 1:
         return {r[key_field]: r[value_fields[0]] for r in result}
@@ -200,7 +200,7 @@ def _run_memgraph_proc(session, query, key_field='nid', value_fields=None):
 
 
 def compute_graph_features_memgraph(edge_df, node_index, host='127.0.0.1', port=7687):
-    """Memgraph 기반 그래프 피처 계산 — cuGraph 미지원 피처만
+    """Compute graph features on Memgraph: only features not supported by cuGraph
     cc, harmonic, clustering, sq_clustering, avg_neighbor_deg,
     load_cen, voterank, constraint, effective_size, eigenvector
     """
@@ -214,13 +214,13 @@ def compute_graph_features_memgraph(edge_df, node_index, host='127.0.0.1', port=
     print('[INFO] Connected to Memgraph')
 
     try:
-        # --- 그래프 적재 ---
+        # --- Load graph ---
         t0 = time.time()
         with driver.session(database='memgraph') as session:
             n_n, n_e = _load_graph_to_memgraph(session, edge_df, node_index)
         print(f'[INFO] Graph loaded into Memgraph: {n_n:,} nodes, {n_e:,} edges ({time.time()-t0:.1f}s)')
 
-        # cuGraph 미지원 피처만 Memgraph로 계산
+        # Compute only the cuGraph-unsupported features via Memgraph
         FEATURES = [
             ('cc', 'CALL graph_features.closeness_centrality() YIELD node, rank RETURN node.nid AS nid, rank', ['rank']),
             ('harmonic', 'CALL graph_features.harmonic_centrality() YIELD node, rank RETURN node.nid AS nid, rank', ['rank']),
@@ -253,10 +253,10 @@ def compute_graph_features_memgraph(edge_df, node_index, host='127.0.0.1', port=
 
 
 # ============================================================
-# NetworkX CPU — GPU/Memgraph 없는 환경용 폴백
+# NetworkX CPU: fallback for environments without GPU/Memgraph
 # ============================================================
 def compute_graph_features_cpu(G):
-    """NetworkX CPU 기반 그래프 피처 계산"""
+    """Compute graph features on NetworkX CPU"""
     results = {}
     G_un = G.to_undirected()
 
@@ -296,19 +296,19 @@ def compute_graph_features_cpu(G):
 
 
 # ============================================================
-# build_node_features — 메인 파이프라인
+# build_node_features: main pipeline
 # ============================================================
 def build_node_features(df, seed=2025, cpu_only=False, gpu_only=False,
                         mg_host='127.0.0.1', mg_port=7687, gpu_id=0):
-    """거래 데이터로부터 노드 피처 + 그래프 피처 + 엣지 리스트 생성"""
+    """Build node features + graph features + edge list from transaction data"""
     print('[INFO] Building node features...')
 
-    # 계좌별 거래 집계 (전체 기간)
+    # Aggregate transactions per account (full period)
     features_out = df.groupby('source')['tran_amt'].agg(['mean', 'max', 'std', 'count']).add_prefix('out_')
     features_in = df.groupby('target')['tran_amt'].agg(['mean', 'max', 'std', 'count']).add_prefix('in_')
     node_features = pd.concat([features_out, features_in], axis=1).fillna(0)
 
-    # 시간 윈도우별 거래 집계 (최근 3/6/12개월)
+    # Aggregate transactions per time window (last 3/6/12 months)
     df['tran_date'] = pd.to_datetime(df['tran_dt'], format='%Y%m%d')
     max_date = df['tran_date'].max()
     for months in [3, 6, 12]:
@@ -320,7 +320,7 @@ def build_node_features(df, seed=2025, cpu_only=False, gpu_only=False,
     node_features.fillna(0, inplace=True)
     df.drop(columns=['tran_date'], inplace=True)
 
-    # 이상거래 레이블
+    # Suspicious-transaction label
     src_label = df.groupby('source')['label'].max()
     tgt_label = df.groupby('target')['label'].max()
     labels = src_label.combine(tgt_label, func=lambda s, t: max(s, t)).fillna(
@@ -333,11 +333,11 @@ def build_node_features(df, seed=2025, cpu_only=False, gpu_only=False,
     node_features = node_features.join(md_entropy, how='left').join(fnd_entropy, how='left')
     node_features.fillna(0, inplace=True)
 
-    # 엣지 리스트 (멀티엣지 보존 — 동일 계좌 간 반복 거래를 개별 엣지로 유지)
+    # Edge list (preserve multi-edges: keep repeated transactions between the same accounts as separate edges)
     edge_df = df[['source', 'target']]
     node_index = {acc: i for i, acc in enumerate(node_features.index)}
 
-    # ---- 그래프 피처 계산 ----
+    # ---- Compute graph features ----
     print('[INFO] Computing graph features...')
 
     def _apply_feats(feat_dicts, use_node_index=True):
@@ -357,13 +357,13 @@ def build_node_features(df, seed=2025, cpu_only=False, gpu_only=False,
         cpu_feats = compute_graph_features_cpu(G)
         _apply_feats(cpu_feats, use_node_index=False)
     else:
-        # Step 1: cuGraph (GPU) — 빠른 피처 9개
+        # Step 1: cuGraph (GPU): fast features (9)
         print('[INFO] === Step 1: cuGraph (GPU) ===')
         gpu_feats = compute_graph_features_gpu(edge_df, node_index, gpu_id=gpu_id)
         _apply_feats(gpu_feats)
 
         if not gpu_only:
-            # Step 2: Memgraph — 느린 피처 10개
+            # Step 2: Memgraph: slow features (10)
             print('[INFO] === Step 2: Memgraph ===')
             mg_feats = compute_graph_features_memgraph(edge_df, node_index,
                                                        host=mg_host, port=mg_port)
@@ -371,7 +371,7 @@ def build_node_features(df, seed=2025, cpu_only=False, gpu_only=False,
 
     node_features.fillna(0, inplace=True)
 
-    # 피처별 통계 출력
+    # Print per-feature statistics
     print(f'\n[INFO] === Graph Feature Statistics ===')
     for feat in GRAPH_FEATURE_NAMES:
         if feat in node_features.columns:
@@ -409,20 +409,20 @@ def main():
     parser.add_argument('--output_name', type=str, default='HOFINET')
     parser.add_argument('--output_dir', type=str, default='./datasets')
     parser.add_argument('--cpu_only', action='store_true',
-                        help='NetworkX CPU만 사용 (GPU/Memgraph 없는 환경)')
+                        help='Use NetworkX CPU only (for environments without GPU/Memgraph)')
     parser.add_argument('--gpu_only', action='store_true',
-                        help='cuGraph GPU만 사용 (Memgraph 미사용, 피처 9개)')
+                        help='Use cuGraph GPU only (no Memgraph, 9 features)')
     parser.add_argument('--mg_host', type=str, default='127.0.0.1',
-                        help='Memgraph 호스트 (기본: 127.0.0.1)')
+                        help='Memgraph host (default: 127.0.0.1)')
     parser.add_argument('--mg_port', type=int, default=7687,
-                        help='Memgraph 포트 (기본: 7687)')
+                        help='Memgraph port (default: 7687)')
     parser.add_argument('--gpu', type=int, default=0,
-                        help='cuGraph에 사용할 GPU ID (기본: 0)')
+                        help='GPU ID for cuGraph (default: 0)')
     parser.add_argument('--seed', type=int, default=2025)
     args = parser.parse_args()
 
     if args.cpu_only and args.gpu_only:
-        parser.error('--cpu_only와 --gpu_only는 동시에 사용할 수 없습니다')
+        parser.error('--cpu_only and --gpu_only cannot be used at the same time')
 
     df = load_and_rename(args.input)
     df = add_source_target(df)

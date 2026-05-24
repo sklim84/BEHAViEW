@@ -4,7 +4,7 @@ from torch_geometric.data import Data
 
 
 def load_graph_data(args, device=None):
-    """CSV 파일에서 노드 피처, 엣지, 중심성 피처를 로드하여 PyG Data 객체를 반환한다."""
+    """Load node features, edges, and centrality features from CSV files and return a PyG Data object."""
     df = pd.read_csv(f'./datasets/{args.node_data_name}.csv')
     edge_df = pd.read_csv(f'./datasets/{args.edge_data_name}.csv')
 
@@ -35,7 +35,7 @@ def load_graph_data(args, device=None):
 
 
 def load_knn_graph(knn_graph_name, device=None):
-    """k-NN 그래프 edge index 로드."""
+    """Load the k-NN graph edge index."""
     path = f'./datasets/{knn_graph_name}.csv'
     df = pd.read_csv(path)
     edge_index = torch.tensor([df['source'].values, df['target'].values], dtype=torch.long)

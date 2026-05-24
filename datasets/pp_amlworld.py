@@ -1,8 +1,8 @@
 """
-AMLworld HI-Small 전처리 파이프라인.
-Transaction CSV → Node features + Edge list (HOFINET과 동일 형식)
+AMLworld HI-Small preprocessing pipeline.
+Transaction CSV -> node features + edge list (same format as the other dataset pipelines)
 
-사용법:
+Usage:
     python datasets/pp_amlworld.py
 """
 import os

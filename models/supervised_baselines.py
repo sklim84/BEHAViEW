@@ -4,9 +4,9 @@ Supervised baseline models for AML comparison.
 - LightGBM, XGBoost (tabular)
 - MLP (neural network)
 
-동일 10%/80% train/test split, F1_susp metric.
+Same 10%/80% train/test split and F1_susp metric.
 
-사용법:
+Usage:
     python models/supervised_baselines.py --gpu 0 --seed 2025
     python models/supervised_baselines.py --gpu 0 --seed 2025 --dataset amlworld
 """

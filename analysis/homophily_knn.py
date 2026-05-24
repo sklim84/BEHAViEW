@@ -1,8 +1,8 @@
 """
-RQ4: k-NN graph별 homophily ratio 측정.
-각 k-NN graph에서 같은 label의 노드끼리 연결된 edge 비율을 계산.
+RQ4: measure the homophily ratio per k-NN graph.
+For each k-NN graph, compute the fraction of edges connecting nodes with the same label.
 
-사용법:
+Usage:
     python analysis/homophily_knn.py
 """
 import os

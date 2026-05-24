@@ -1,10 +1,11 @@
 """
 Subgraph-Level Contrastive Learning for AML Detection.
 
-두 이종 그래프(Transaction + Behavioral k-NN)에서 각 노드의 ego-subgraph 표현을
-대조학습으로 일치시킴. G2L의 class imbalance 문제와 L2L의 경로 정보 부재를 동시 해결.
+Align each node's ego-subgraph representation across two heterogeneous graphs
+(Transaction + Behavioral k-NN) via contrastive learning. Jointly addresses the
+class imbalance issue of G2L and the missing path information of L2L.
 
-사용법:
+Usage:
     python models/subgraph_cl.py \
         --model_name subgraph_cl \
         --gpu 5 --seed 2025 \
@@ -72,8 +73,8 @@ class GNNEncoder_DGI(nn.Module):
 
 
 class GNNEncoder_MVGRL(nn.Module):
-    """MVGRL-style: dual GCN encoders (하나로 두 view 처리).
-    forward는 single encoder로 동작, SubgraphCL에서 두 번 호출."""
+    """MVGRL-style: dual GCN encoders (one encoder handles both views).
+    forward acts as a single encoder, called twice within SubgraphCL."""
     def __init__(self, input_dim, hidden_dim, num_layers):
         super().__init__()
         self.layers = nn.ModuleList()
@@ -133,7 +134,7 @@ class GNNEncoder_GRACE(nn.Module):
 
 
 class GNNEncoder_DGI_BN(nn.Module):
-    """DGI + BatchNorm: BN 효과 검증용."""
+    """DGI + BatchNorm: for verifying the effect of BN."""
     def __init__(self, input_dim, hidden_dim, num_layers, dropout=0.2):
         super().__init__()
         self.layers = nn.ModuleList()
@@ -158,7 +159,7 @@ class GNNEncoder_DGI_BN(nn.Module):
 
 
 class GNNEncoder_MVGRL_BN(nn.Module):
-    """MVGRL + BatchNorm: BN 효과 검증용."""
+    """MVGRL + BatchNorm: for verifying the effect of BN."""
     def __init__(self, input_dim, hidden_dim, num_layers, dropout=0.2):
         super().__init__()
         self.layers = nn.ModuleList()
@@ -181,7 +182,7 @@ class GNNEncoder_MVGRL_BN(nn.Module):
 
 
 class GNNEncoder_GRACE_BN(nn.Module):
-    """GRACE + BatchNorm: BN 효과 검증용."""
+    """GRACE + BatchNorm: for verifying the effect of BN."""
     def __init__(self, input_dim, hidden_dim, num_layers, dropout=0.2):
         super().__init__()
         self.layers = nn.ModuleList()
@@ -259,11 +260,11 @@ ENCODERS = {
 
 
 class SubgraphPooling(nn.Module):
-    """각 노드의 ego-subgraph 표현을 mean pooling으로 계산.
+    """Compute each node's ego-subgraph representation via mean pooling.
 
-    GNN 출력(모든 노드 임베딩) + 그래프의 edge_index를 받아,
-    각 노드의 이웃 임베딩을 mean pooling하여 subgraph representation 생성.
-    self-loop 포함 (자기 자신 + 이웃).
+    Takes the GNN output (all node embeddings) plus the graph's edge_index,
+    and mean-pools each node's neighbor embeddings to form the subgraph representation.
+    Includes self-loop (self + neighbors).
     """
     def __init__(self):
         super().__init__()
@@ -275,10 +276,10 @@ class SubgraphPooling(nn.Module):
         Returns: [N, D] subgraph representations (mean of self + neighbors)
         """
         N, D = z.size()
-        # Scatter mean: 각 target 노드에 대해 source 노드 임베딩 합산
+        # Scatter mean: sum source node embeddings for each target node
         src, tgt = edge_index[0], edge_index[1]
 
-        # 이웃 합산
+        # Neighbor sum
         neigh_sum = torch.zeros(N, D, device=z.device)
         neigh_count = torch.zeros(N, 1, device=z.device)
         neigh_sum.scatter_add_(0, tgt.unsqueeze(1).expand(-1, D), z[src])
@@ -295,9 +296,9 @@ class SubgraphPooling(nn.Module):
 class HeterophilyAwarePool(nn.Module):
     """Cosine-similarity-weighted ego-subgraph pooling.
 
-    Mean pool의 한계 (heterophilous 이웃에서 noise amplification) 회피.
-    각 edge (u, v)의 가중치 w_uv = max(0, cos(z_u, z_v)). self-loop 가중치 1.0 고정.
-    이질적 이웃 (cos < 0) 은 가중치 0으로 사실상 제외 → 의심 신호 희석 완화.
+    Avoids the limitation of mean pool (noise amplification from heterophilous neighbors).
+    Each edge (u, v) has weight w_uv = max(0, cos(z_u, z_v)). self-loop weight fixed at 1.0.
+    Heterophilous neighbors (cos < 0) are effectively excluded with weight 0, mitigating dilution of the suspicious signal.
 
         s_v = (z_v + sum_u w_uv * z_u) / (1 + sum_u w_uv)
     """
@@ -325,12 +326,12 @@ class HeterophilyAwarePool(nn.Module):
 class CycleAwarePool(nn.Module):
     """HAP + cycle-membership boost.
 
-    HeterophilyAwarePool 의 cosine 가중치에 triangle (cycle) 멤버십 가중치 추가.
-    각 edge (u, v) 의 weight = max(0, cos(z_u, z_v)) * (1 + alpha * 1[tri_u > 0]).
+    Adds a triangle (cycle) membership weight to the cosine weight of HeterophilyAwarePool.
+    Each edge (u, v) has weight = max(0, cos(z_u, z_v)) * (1 + alpha * 1[tri_u > 0]).
     self-loop weight = 1 + alpha * 1[tri_v > 0].
 
-    triangle membership 은 외부에서 set_tri() 로 주입한다 (HOFINET 의 'triangle' feature).
-    의심 계좌가 거래 cycle (mule layering 패턴) 에 더 자주 참여한다는 도메인 가정 활용.
+    triangle membership is injected externally via set_tri() (the 'triangle' feature of HOFINET).
+    Leverages the domain assumption that suspicious accounts participate more often in transaction cycles (mule layering patterns).
     """
     def __init__(self, alpha=2.0):
         super().__init__()
@@ -338,7 +339,7 @@ class CycleAwarePool(nn.Module):
         self.tri_indicator = None
 
     def set_tri(self, tri_count):
-        """tri_count: [N] tensor of triangle counts; 0/1 indicator 로 변환."""
+        """tri_count: [N] tensor of triangle counts; converted to a 0/1 indicator."""
         self.tri_indicator = (tri_count > 0).float().unsqueeze(1)
 
     def forward(self, z, edge_index):
@@ -369,16 +370,16 @@ class CycleAwarePool(nn.Module):
 class SubgraphCL(nn.Module):
     """Unified Contrastive Learning framework.
 
-    4가지 설정 지원:
+    Supports 4 settings:
     (a) aug view + node-level: use_knn=False, use_subgraph=False
     (b) behav view + node-level: use_knn=True, use_subgraph=False
     (c) aug view + subgraph: use_knn=False, use_subgraph=True
     (d) behav view + subgraph: use_knn=True, use_subgraph=True
 
-    pool_variant ('mean' | 'heterophily' | 'cycle'): subgraph pool 방식 선택.
-      - 'mean': 표준 mean pool (BehaView 기본)
-      - 'heterophily': cosine-sim weighted pool (heterophilous 이웃 noise 완화)
-      - 'cycle': HAP + triangle membership boost (cycle 패턴 amplification, P5)
+    pool_variant ('mean' | 'heterophily' | 'cycle'): selects the subgraph pool method.
+      - 'mean': standard mean pool (BehaView default)
+      - 'heterophily': cosine-sim weighted pool (mitigates noise from heterophilous neighbors)
+      - 'cycle': HAP + triangle membership boost (cycle pattern amplification, P5)
     """
     def __init__(self, encoder, hidden_dim, proj_dim=64, use_subgraph=True,
                  pool_variant='mean', cycle_alpha=2.0):
@@ -423,7 +424,7 @@ class SubgraphCL(nn.Module):
             p.data = momentum * p.data + (1 - momentum) * new_p.data
 
     def _encode(self, encoder, x, edge_index):
-        """GNN encoding (gradient checkpointing 지원)."""
+        """GNN encoding (supports gradient checkpointing)."""
         if self.training:
             from torch.utils.checkpoint import checkpoint
             return checkpoint(encoder, x, edge_index, use_reentrant=False)
@@ -541,7 +542,7 @@ def train(model, x, edge_index_v1, edge_index_v2, optimizer, loss_name='Bootstra
 
 
 def get_embeddings(model, x, edge_index_v1, edge_index_v2):
-    """추론 시 두 view의 표현을 결합."""
+    """Combine the representations of both views at inference time."""
     model.eval()
     with torch.no_grad():
         r1 = model._get_repr(model.online_encoder, x, edge_index_v1)
@@ -568,7 +569,7 @@ def main(args):
     data, _ = load_graph_data(args, device=device)
     print(f'Transaction graph: {data}')
 
-    # View 설정: k-NN graph 또는 augmented transaction graph
+    # View setup: k-NN graph or augmented transaction graph
     use_knn = args.knn_graph is not None
     use_subgraph = getattr(args, 'subgraph_pool', False)
 
