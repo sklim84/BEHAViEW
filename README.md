@@ -1,14 +1,14 @@
-# BehaView: Self-Supervised Money Laundering Detection via Behavioral Topology Repair
+# BEHAViEW: Self-Supervised Money Laundering Detection via Behavioral Topology Repair
 
 In anti-money laundering (AML) transaction graphs, suspicious accounts have predominantly benign neighbors, so graph neural network (GNN) aggregation dilutes a rare suspicious signal. We trace this to a *topology--behavior mismatch*: the evasion-shaped transaction network fails to reflect homophily within the suspicious class.
 
-**BehaView** is a self-supervised graph contrastive learning framework that performs **topology repair through behavioral homophily recovery**. It builds a topology-independent recovered neighborhood graph from behavioral similarity (e.g., transaction amount and timing patterns) and aligns it with the transaction graph through contrastive learning. Across three AML datasets, the repair compresses the suspicious-edge S-S:S-B ratio from 1:5.7--15.8 to 1:1.3--9.4. At 1% labels, BehaView attains the highest suspicious-class F1 on all three datasets, with a 0.010--0.016 gap over the strongest supervised baseline.
+**BEHAViEW** is a self-supervised graph contrastive learning framework that performs **topology repair through behavioral homophily recovery**. It builds a topology-independent recovered neighborhood graph from behavioral similarity (e.g., transaction amount and timing patterns) and aligns it with the transaction graph through contrastive learning. Across three AML datasets, the repair compresses the suspicious-edge S-S:S-B ratio from 1:5.7--15.8 to 1:1.3--9.4. At 1% labels, BEHAViEW attains the highest suspicious-class F1 on all three datasets, with a 0.010--0.016 gap over the strongest supervised baseline.
 
 ---
 
 ## Two design axes
 
-| Axis | Standard GCL | BehaView |
+| Axis | Standard GCL | BEHAViEW |
 |---|---|---|
 | **View construction** | augmentations of the same graph | **behavior-only k-NN graph** (links behaviorally similar accounts) |
 | **Contrastive level** | node-level only | **subgraph pooling** (ego + neighbors) |
@@ -24,7 +24,7 @@ The 4-setting ablation:
 
 ## Research questions (current paper)
 
-| RQ | Question | Key finding (HOFINET) |
+| RQ | Question | Key finding (ATNet) |
 |---|---|---|
 | **RQ1** Homophily Recovery | Does the recovered graph carry class-relevant evidence? | edge homophily 0.690 → 0.981; S-S:S-B 1:5.7 → 1:1.4 |
 | **RQ2** Signal Preservation | Does pooling on the repaired topology preserve or dilute the signal? | sign-flip threshold separates amplification from dilution; (c) hurts by 17--30%, (d) wins |
@@ -35,14 +35,14 @@ The 4-setting ablation:
 
 ## Datasets
 
-| | HOFINET | AMLworld HI-Small | AMLNet |
+| | ATNet | AMLworld HI-Small | AMLNet |
 |---|---|---|---|
-| Source | National interbank transfer (40 months) | [NeurIPS 2023 benchmark](https://arxiv.org/abs/2306.16424) | Huda et al., Expert Systems with Applications 2025 |
+| Source | Real-derived synthetic interbank transfers (40 months) | [NeurIPS 2023 benchmark](https://arxiv.org/abs/2306.16424) | Huda et al., Expert Systems with Applications 2025 |
 | Nodes | 452,816 | 515,088 | 11,000 |
 | Edges | 4,732,130 (directed multi-edges) | 5,078,345 | 1,090,172 |
 | Suspicious ratio ρ | 2.13% | 1.23% | 13.52% |
 
-HOFINET is anonymized as **ATNet** in the paper (double-blind review).
+**Availability.** ATNet is a real-derived synthetic dataset and cannot be shared under its data-sharing agreement. The other two are public: AMLworld HI-Small from the [NeurIPS 2023 benchmark](https://arxiv.org/abs/2306.16424) (IBM Transactions for Anti-Money Laundering, on Kaggle), and AMLNet from Huda et al., *Expert Systems with Applications* 2025. AMLworld and AMLNet experiments are fully reproducible from these public sources.
 
 ---
 
@@ -52,14 +52,14 @@ HOFINET is anonymized as **ATNet** in the paper (double-blind review).
 
 | Dataset | Graph | Homophily | S-S:S-B |
 |---|---|---|---|
-| HOFINET | Transaction | 0.690 | 1:5.7 |
-| HOFINET | Behavioral repair | **0.981** | **1:1.4** |
+| ATNet | Transaction | 0.690 | 1:5.7 |
+| ATNet | Behavioral repair | **0.981** | **1:1.4** |
 | AMLworld | Transaction | 0.886 | 1:15.8 |
 | AMLworld | Behavioral repair | **0.980** | **1:9.4** |
 | AMLNet | Transaction | 0.791 | 1:7.2 |
 | AMLNet | Behavioral repair | **0.900** | **1:1.3** |
 
-### 4-setting ablation on HOFINET (F1_susp, 4-seed mean±std)
+### 4-setting ablation on ATNet (F1_susp, 4-seed mean±std)
 
 Selected encoders (full table in `_manuscript/main.tex` / `results/rq1/main_sweep.csv`):
 
@@ -71,11 +71,11 @@ Selected encoders (full table in `_manuscript/main.tex` / `results/rq1/main_swee
 | GIN | 0.181±.022 | 0.591±.017 | 0.127±.001 | **0.590±.012** |
 | DGI (no BN) | 0.044±.002 | 0.054±.007 | 0.048±.004 | **0.068±.007** |
 
-### Label-efficiency at 1% labels (BehaView vs. supervised baselines)
+### Label-efficiency at 1% labels (BEHAViEW vs. supervised baselines)
 
-| Dataset | BehaView (d) | Best supervised baseline | Gap |
+| Dataset | BEHAViEW (d) | Best supervised baseline | Gap |
 |---|---|---|---|
-| HOFINET | **0.647±.007** | XGBoost 0.633±.015 | +0.014 |
+| ATNet | **0.647±.007** | XGBoost 0.633±.015 | +0.014 |
 | AMLworld | **0.062±.014** | GAT 0.046±.002 | +0.016 |
 | AMLNet | **0.632±.081** | MLP 0.622±.085 | +0.010 |
 
@@ -134,11 +134,11 @@ _manuscript/                          # Paper source (LaTeX) + figures + referen
   references/md/                 # Reference paper markdown extracts
   _docs/                         # Source PDFs of cited papers and AML domain notes
 models/
-  subgraph_cl.py                 # Main BehaView training (9 encoders × 4 settings)
+  subgraph_cl.py                 # Main BEHAViEW training (9 encoders × 4 settings)
   supervised_baselines.py        # Supervised comparison (10+ baselines)
   config.py, data_loader.py, utils.py
 datasets/
-  HOFINET_*.csv                  # Anonymized national interbank transfer dataset
+  HOFINET_*.csv                  # ATNet: real-derived synthetic interbank dataset (not shared)
   amlworld/                      # AMLworld HI-Small (NeurIPS 2023)
   amlnet/                        # AMLNet
   build_knn_graph.py             # Builds the behavioral / structural / feature k-NN graphs
