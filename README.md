@@ -1,8 +1,8 @@
 # BEHAViEW: Self-Supervised Money Laundering Detection via Behavioral Topology Repair
 
-In anti-money laundering (AML) transaction graphs, suspicious accounts have predominantly benign neighbors, so graph neural network (GNN) aggregation dilutes a rare suspicious signal. We trace this to a *topology--behavior mismatch*: the evasion-shaped transaction network fails to reflect homophily within the suspicious class.
+In anti-money laundering (AML) transaction graphs, suspicious accounts have predominantly benign neighbors, so graph neural network (GNN) aggregation dilutes a rare suspicious signal. We trace this to a *topology-behavior mismatch*: the evasion-shaped transaction network fails to reflect homophily within the suspicious class.
 
-**BEHAViEW** is a self-supervised graph contrastive learning framework that performs **topology repair through behavioral homophily recovery**. It builds a topology-independent recovered neighborhood graph from behavioral similarity (e.g., transaction amount and timing patterns) and aligns it with the transaction graph through contrastive learning. Across three AML datasets, the repair compresses the suspicious-edge S-S:S-B ratio from 1:5.7--15.8 to 1:1.3--9.4. At 1% labels, BEHAViEW attains the highest suspicious-class F1 on all three datasets, with a 0.010--0.016 gap over the strongest supervised baseline.
+**BEHAViEW** is a self-supervised graph contrastive learning framework that performs **topology repair through behavioral homophily recovery**. It builds a topology-independent recovered neighborhood graph from behavioral similarity (e.g., transaction amount and timing patterns) and aligns it with the transaction graph through contrastive learning. Across three AML datasets, the repair compresses the suspicious-edge S-S:S-B ratio (suspicious-to-suspicious vs suspicious-to-benign edges) from 1:5.7–15.8 to 1:1.3–9.4. At 1% labels, BEHAViEW attains the highest suspicious-class F1 on all three datasets, with a 0.010–0.016 gap over the strongest supervised baseline.
 
 ---
 
@@ -27,8 +27,8 @@ The 4-setting ablation:
 | RQ | Question | Key finding (ATNet) |
 |---|---|---|
 | **RQ1** Homophily Recovery | Does the recovered graph carry class-relevant evidence? | edge homophily 0.690 → 0.981; S-S:S-B 1:5.7 → 1:1.4 |
-| **RQ2** Signal Preservation | Does pooling on the repaired topology preserve or dilute the signal? | sign-flip threshold separates amplification from dilution; (c) hurts by 17--30%, (d) wins |
-| **RQ3** Label-Efficiency | Is the self-supervised representation competitive under label scarcity? | best F1_susp at 1% labels on all three datasets; +0.010--0.016 over the strongest baseline |
+| **RQ2** Signal Preservation | Does pooling on the repaired topology preserve or dilute the signal? | sign-flip threshold separates amplification from dilution; (c) hurts by 17–30%, (d) wins |
+| **RQ3** Label-Efficiency | Is the self-supervised representation competitive under label scarcity? | best F1_susp at 1% labels on all three datasets; +0.010–0.016 over the strongest baseline |
 | **RQ4** Cross-dataset Robustness | Do the patterns transfer across AML prevalences? | topology repair dominates on AMLworld (ρ=1.23%) and AMLNet (ρ=13.52%): (b),(d) ≫ (a),(c); the (d)-over-(b) pooling gain is conditional |
 
 ---
@@ -85,11 +85,13 @@ Full tables for label fractions {1%, 5%, 10%}: `results/rq3/`.
 
 ## Setup
 
+Python 3.10+ and a CUDA GPU are recommended.
+
 ```bash
 pip install -r requirements.txt
 ```
 
-Under PyTorch 2.10+, PyGCL 0.1.2 needs four small patches (lazy `dgl` / `RWSampling` imports and optional `torch_sparse` / `torch_scatter`); the exact files are listed in `requirements.txt`. Public datasets are not bundled: download AMLworld and AMLNet (see the Datasets table) into `datasets/amlworld/` and `datasets/amlnet/`, then run the matching `datasets/pp_*.py` preprocessing and `python datasets/build_knn_graph.py --k 10`.
+Under PyTorch 2.10+, PyGCL 0.1.2 needs four small patches (lazy `dgl` / `RWSampling` imports and optional `torch_sparse` / `torch_scatter`); the exact files are listed in `requirements.txt`. For the larger graphs (AMLworld has 515K nodes), set `export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` to reduce memory fragmentation; the scripts under `scripts/` already export this. Public datasets are not bundled: download AMLworld and AMLNet (see the Datasets table) into `datasets/amlworld/` and `datasets/amlnet/`, then run the matching `datasets/pp_*.py` preprocessing and `python datasets/build_knn_graph.py --k 10`.
 
 ---
 
@@ -125,6 +127,8 @@ wait
 # Build the behavioral k-NN graph (one-time preprocessing)
 python datasets/build_knn_graph.py --k 10
 ```
+
+Each run appends metrics (`F1_susp`, AUROC, AUPRC) to `--metric_save_path` (default `results/exp_results.csv`); the sweep scripts write per-RQ CSVs under `results/rq*/`.
 
 Key arguments (see `models/config.py`):
 - `--encoder_type`: gbt, bgrl, dgi, mvgrl, grace, gca, dgi_bn, mvgrl_bn, grace_bn, gin
