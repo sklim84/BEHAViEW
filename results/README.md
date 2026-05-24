@@ -5,15 +5,15 @@ CSV files are organized by the research question (RQ) they feed.
 ```
 results/
 ├── rq1/                        # Homophily Recovery (Table 3, Figure 1)
-│   ├── main_sweep.csv          # 9 encoders × 4 settings × 4 seeds × HOFINET
+│   ├── main_sweep.csv          # 9 encoders × 4 settings × 4 seeds × ATNET
 │   └── case_study/             # Figure 1 fixtures
 ├── rq2/                        # Signal Preservation (Table 5)
 │   ├── paired_t_test.csv       # Holm-Bonferroni results (long format)
 │   ├── paired_t_test_bn.csv
 │   └── pool_variants.csv       # HAP / Cycle pool alternatives
 ├── rq3/                        # Label Efficiency (Figure 6, Table 8)
-│   ├── behaview_{hofinet,amlworld,amlnet}.csv
-│   ├── supervised_{hofinet,amlworld,amlnet}.csv   # GCN/GAT/SAGE/MLP/XGB/LGBM/CARE-GNN
+│   ├── behaview_{atnet,amlworld,amlnet}.csv
+│   ├── supervised_{atnet,amlworld,amlnet}.csv   # GCN/GAT/SAGE/MLP/XGB/LGBM/CARE-GNN
 │   ├── bwgnn_gaga_{...}.csv
 │   ├── caregnn_pcgnn_{...}.csv
 │   ├── consisgad_{...}.csv

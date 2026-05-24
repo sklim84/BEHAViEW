@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================
-# Train BehaView (GBT) on HOFINET for the four ablation settings
+# Train BehaView (GBT) on ATNET for the four ablation settings
 # (a/b/c/d) and dump the joint node embeddings (z = h^{(1)} || h^{(2)})
 # for downstream t-SNE/UMAP visualization. We run a single seed since
 # the figure is qualitative.
@@ -9,16 +9,16 @@
 #   GPU   single GPU index (default 4 -- the V0 HP sweep uses 0-3)
 #   SEED  fixed seed (default 2025)
 # Outputs under results/embeddings/tsne_v0/:
-#   HOFINET_z_<setting>_s<seed>.npz   each containing arrays z and y
+#   ATNET_z_<setting>_s<seed>.npz   each containing arrays z and y
 # =============================================================
 set -e
 
 GPU="${GPU:-4}"
 SEED="${SEED:-2025}"
 HP="--lr 0.0005 --hidden_dim 256 --gconv_nlayers 2"
-NODE="hofinet/HOFINET_NODE_FEAT"
-EDGE="hofinet/HOFINET_EDGES"
-KNN="hofinet/HOFINET_KNN_BEHAV_k10"
+NODE="atnet/ATNET_NODE_FEAT"
+EDGE="atnet/ATNET_EDGES"
+KNN="atnet/ATNET_KNN_BEHAV_k10"
 OUT_DIR="results/embeddings/tsne_v0"
 
 mkdir -p "$OUT_DIR"
@@ -36,8 +36,8 @@ run_one() {
         d) FLAGS="--knn_graph $KNN --subgraph_pool" ;;
         *) echo "unknown setting"; exit 1 ;;
     esac
-    local NAME="tsne_emb_hof_gbt_${SETTING}_s${SEED}"
-    local OUT="${OUT_DIR}/HOFINET_z_${SETTING}_s${SEED}.npz"
+    local NAME="tsne_emb_atn_gbt_${SETTING}_s${SEED}"
+    local OUT="${OUT_DIR}/ATNET_z_${SETTING}_s${SEED}.npz"
     if [ -f "$OUT" ]; then
         echo "[$(date)] [skip] $OUT exists"
         return

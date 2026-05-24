@@ -132,7 +132,7 @@ def run_tests(df, dataset, metric="f1_1"):
 
 if __name__ == "__main__":
     rows = []
-    for ds, path in [("HOFINET", "results/rq1/main_sweep.csv"),
+    for ds, path in [("ATNET", "results/rq1/main_sweep.csv"),
                      ("AMLworld", "results/rq4/amlworld_main_sweep.csv")]:
         df = load(path)
         rows.extend(run_tests(df, ds))

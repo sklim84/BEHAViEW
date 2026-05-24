@@ -1,6 +1,6 @@
 """Generate a PCA style topology evolution figure for BehaView.
 
-The figure uses the representative HOFINET account selected by
+The figure uses the representative ATNET account selected by
 analysis/case_study_topology_repair.py. It places the ego, transaction
 neighbors, and recovered behavioral kNN neighbors in a 2D behavioral-feature
 projection, then overlays the topology used at each stage.
@@ -34,8 +34,8 @@ CASE_STUDY_DIRS = [
     BASE / "results" / "rq1" / "case_study",
     BASE / "results" / "case_study",
 ]
-NODE_FEAT = BASE / "datasets" / "hofinet" / "HOFINET_NODE_FEAT.csv"
-EDGE_FILE = BASE / "datasets" / "hofinet" / "HOFINET_EDGES.csv"
+NODE_FEAT = BASE / "datasets" / "atnet" / "ATNET_NODE_FEAT.csv"
+EDGE_FILE = BASE / "datasets" / "atnet" / "ATNET_EDGES.csv"
 OUT_DIRS = [BASE / "_paper" / "figures", BASE / "results" / "rq1" / "figures"]
 
 BEHAVIOR_COLS = [

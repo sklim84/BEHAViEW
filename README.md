@@ -147,11 +147,11 @@ models/
   supervised_baselines.py        # Supervised comparison (10+ baselines)
   config.py, data_loader.py, utils.py
 datasets/
-  hofinet/                       # ATNet: real-derived synthetic interbank dataset (not shared)
+  atnet/                       # ATNet: real-derived synthetic interbank dataset (not shared)
   amlworld/                      # AMLworld HI-Small (NeurIPS 2023)
   amlnet/                        # AMLNet
   build_knn_graph.py             # Builds the behavioral / structural / feature k-NN graphs
-  pp_{hofinet,amlworld,amlnet}.py  # Per-dataset preprocessing
+  pp_{atnet,amlworld,amlnet}.py  # Per-dataset preprocessing
 scripts/
   run_main_table.sh              # Multi-GPU main table dispatcher
   rq{1,2,3,4}/                   # RQ-specific scripts (HP sweeps, t-SNE, etc.)

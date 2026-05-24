@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================
-# Table 8 Native column re-experiment (HOFINET only).
+# Table 8 Native column re-experiment (ATNET only).
 # Re-runs each encoder under its paper-native contrastive loss in
 # the BehaView setting (d) framework, current env (Step 9 aligned).
 #
@@ -30,9 +30,9 @@ GPU="${GPU:-3}"
 SEEDS="${SEEDS:-2024 2025 2026 2027}"
 HP="--lr 0.0005 --hidden_dim 256 --gconv_nlayers 2"
 
-NODE="hofinet/HOFINET_NODE_FEAT"
-EDGE="hofinet/HOFINET_EDGES"
-KNN="hofinet/HOFINET_KNN_BEHAV_k10"
+NODE="atnet/ATNET_NODE_FEAT"
+EDGE="atnet/ATNET_EDGES"
+KNN="atnet/ATNET_KNN_BEHAV_k10"
 RESULT="results/appendix/loss_ablation/native_loss.csv"
 
 # Default: full Table 8 Native re-experiment (28 runs = 7 encoders x 4 seeds)
@@ -40,7 +40,7 @@ PAIRS="${PAIRS:-dgi:JSD dgi_bn:JSD mvgrl:JSD mvgrl_bn:JSD grace:InfoNCE grace_bn
 
 export PYTORCH_CUDA_ALLOC_CONF="max_split_size_mb:256,expandable_segments:True"
 
-echo "[$(date)] === Native loss re-experiment (Table 8 Native, HOFINET) ==="
+echo "[$(date)] === Native loss re-experiment (Table 8 Native, ATNET) ==="
 echo "  GPU=$GPU"
 echo "  PAIRS=$PAIRS"
 echo "  SEEDS=$SEEDS"

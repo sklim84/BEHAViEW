@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================
-# Pool variant experiments (HAP / Cycle) for HOFINET
+# Pool variant experiments (HAP / Cycle) for ATNET
 #
 # Tests the alternatives to mean pool theoretically motivated by
 # Theorem 4 (HAP signal preservation) and the cycle-membership
@@ -19,9 +19,9 @@ HP="--lr 0.0005 --hidden_dim 256 --gconv_nlayers 2"
 
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-NODE="hofinet/HOFINET_NODE_FEAT"
-EDGE="hofinet/HOFINET_EDGES"
-KNN="hofinet/HOFINET_KNN_BEHAV_k10"
+NODE="atnet/ATNET_NODE_FEAT"
+EDGE="atnet/ATNET_EDGES"
+KNN="atnet/ATNET_KNN_BEHAV_k10"
 RESULT="./results/rq2/pool_variants.csv"
 
 run_one() {
@@ -38,7 +38,7 @@ run_one() {
         *) echo "unknown: $SETTING"; exit 1 ;;
     esac
 
-    local NAME="hof_${ENC}_${SETTING}_s${SEED}"
+    local NAME="atn_${ENC}_${SETTING}_s${SEED}"
     echo "[$(date)] $NAME"
     python -u models/subgraph_cl.py \
         --model_name "$NAME" \
@@ -51,7 +51,7 @@ run_one() {
         $FLAGS 2>&1 | grep -E "^\(E\)" || true
 }
 
-echo "[$(date)] === Pool variant sweep (HOFINET) ==="
+echo "[$(date)] === Pool variant sweep (ATNET) ==="
 for ENC in $ENCODERS; do
     for SETTING in c_hap c_cycle d_hap d_cycle; do
         for SEED in $SEEDS; do

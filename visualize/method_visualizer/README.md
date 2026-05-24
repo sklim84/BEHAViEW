@@ -1,12 +1,12 @@
 # BehaView 3D Method Comparator
 
 Independent Streamlit app for comparing the repository's BehaView setting
-against existing transaction-view GCL settings on HOFINET and AMLworld.
+against existing transaction-view GCL settings on ATNET and AMLworld.
 
 The app reads the current local CSV assets:
 
-- `datasets/hofinet/HOFINET_NODE_FEAT.csv`
-- `datasets/hofinet/HOFINET_EDGES.csv`
+- `datasets/atnet/ATNET_NODE_FEAT.csv`
+- `datasets/atnet/ATNET_EDGES.csv`
 - `datasets/amlworld/AMLWORLD_NODE_FEAT.csv`
 - `datasets/amlworld/AMLWORLD_EDGES.csv`
 - cached experiment CSVs under `results/`

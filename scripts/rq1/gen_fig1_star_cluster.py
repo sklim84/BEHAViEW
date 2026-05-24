@@ -117,7 +117,7 @@ def select_flagged_benign_neighbors(rep: dict, max_flags: int = 1) -> set[int]:
     if not benign_tx:
         return set()
 
-    path = BASE / "datasets" / "hofinet" / "HOFINET_NODE_FEAT.csv"
+    path = BASE / "datasets" / "atnet" / "ATNET_NODE_FEAT.csv"
     if not path.exists():
         return set()
 

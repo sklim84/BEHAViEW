@@ -9,9 +9,9 @@ Usage:
     python models/subgraph_cl.py \
         --model_name subgraph_cl \
         --gpu 5 --seed 2025 \
-        --node_data_name hofinet/HOFINET_NODE_FEAT \
-        --edge_data_name hofinet/HOFINET_EDGES \
-        --knn_graph hofinet/HOFINET_KNN_BEHAV_k10 \
+        --node_data_name atnet/ATNET_NODE_FEAT \
+        --edge_data_name atnet/ATNET_EDGES \
+        --knn_graph atnet/ATNET_KNN_BEHAV_k10 \
         --lr 0.0005 --hidden_dim 256 --gconv_nlayers 2 \
         --loss BarlowTwins --skip_tsne
 """
@@ -330,7 +330,7 @@ class CycleAwarePool(nn.Module):
     Each edge (u, v) has weight = max(0, cos(z_u, z_v)) * (1 + alpha * 1[tri_u > 0]).
     self-loop weight = 1 + alpha * 1[tri_v > 0].
 
-    triangle membership is injected externally via set_tri() (the 'triangle' feature of HOFINET).
+    triangle membership is injected externally via set_tri() (the 'triangle' feature of ATNET).
     Leverages the domain assumption that suspicious accounts participate more often in transaction cycles (mule layering patterns).
     """
     def __init__(self, alpha=2.0):

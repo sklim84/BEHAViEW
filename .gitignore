@@ -18,8 +18,8 @@ results.tsv
 program.md
 
 # Large data files (tracked via Git LFS or excluded)
-datasets/HOFINET.csv
-datasets/HOFINET_KNN_*.csv
+datasets/ATNET.csv
+datasets/ATNET_KNN_*.csv
 datasets/amlworld/*.csv
 datasets/amlworld/*.txt
 datasets/amlnet/*.csv
@@ -34,7 +34,7 @@ datasets/elliptic/processed/*.pt
 datasets/elliptic/*.npz
 datasets/elliptic2/*.csv
 datasets/elliptic_plus_plus/repo/
-datasets/hofinet
+datasets/atnet
 datasets/amlworld
 results/embeddings
 

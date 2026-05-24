@@ -30,7 +30,7 @@ sys.path.insert(0, str(BASE / "models"))
 
 from utils import make_split  # noqa: E402
 
-NODE_FEAT = BASE / "datasets" / "hofinet" / "HOFINET_NODE_FEAT.csv"
+NODE_FEAT = BASE / "datasets" / "atnet" / "ATNET_NODE_FEAT.csv"
 MAIN_SWEEP = BASE / "results" / "rq1" / "main_sweep.csv"
 OUT = BASE / "results" / "rq1" / "feature_topology_gap.csv"
 SEEDS = (2024, 2025, 2026, 2027)
@@ -119,7 +119,7 @@ def feature_only_probe() -> dict:
 
 def gbt_row(setting: str, label: str, graph: str, repaired: bool, diagnostic: str) -> dict:
     df = pd.read_csv(MAIN_SWEEP)
-    mask = df["Model"].str.contains(fr"hof_gbt_{setting}_s", regex=True)
+    mask = df["Model"].str.contains(fr"atn_gbt_{setting}_s", regex=True)
     rows = df.loc[mask].copy()
     if rows.empty:
         raise RuntimeError(f"No GBT rows found for setting {setting} in {MAIN_SWEEP}")

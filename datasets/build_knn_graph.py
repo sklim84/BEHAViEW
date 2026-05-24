@@ -65,31 +65,31 @@ def main():
 
     for k in args.k:
         # (D) Feature k-NN graph
-        if not os.path.exists(os.path.join(args.output_dir, f'HOFINET_KNN_FEAT_k{k}.csv')):
+        if not os.path.exists(os.path.join(args.output_dir, f'ATNET_KNN_FEAT_k{k}.csv')):
             print(f'\n[k={k}] Building feature k-NN graph...')
             t0 = time.time()
             src, tgt = build_knn_edges(x_behav, k)
             elapsed = time.time() - t0
-            out_path = os.path.join(args.output_dir, f'HOFINET_KNN_FEAT_k{k}.csv')
+            out_path = os.path.join(args.output_dir, f'ATNET_KNN_FEAT_k{k}.csv')
             pd.DataFrame({'source': src, 'target': tgt}).to_csv(out_path, index=False)
             print(f'  Saved: {out_path} ({len(src)} edges, {elapsed:.1f}s)')
         else:
             print(f'\n[k={k}] Feature k-NN graph already exists, skipping.')
 
         # (F) Centrality k-NN graph
-        if not os.path.exists(os.path.join(args.output_dir, f'HOFINET_KNN_CEN_k{k}.csv')):
+        if not os.path.exists(os.path.join(args.output_dir, f'ATNET_KNN_CEN_k{k}.csv')):
             print(f'[k={k}] Building centrality k-NN graph...')
             t0 = time.time()
             src, tgt = build_knn_edges(x_struct, k)
             elapsed = time.time() - t0
-            out_path = os.path.join(args.output_dir, f'HOFINET_KNN_CEN_k{k}.csv')
+            out_path = os.path.join(args.output_dir, f'ATNET_KNN_CEN_k{k}.csv')
             pd.DataFrame({'source': src, 'target': tgt}).to_csv(out_path, index=False)
             print(f'  Saved: {out_path} ({len(src)} edges, {elapsed:.1f}s)')
         else:
             print(f'[k={k}] Centrality k-NN graph already exists, skipping.')
 
         # Pure behavioral k-NN (exclude in_dc, out_dc)
-        out_pure = os.path.join(args.output_dir, f'HOFINET_KNN_PURE_k{k}.csv')
+        out_pure = os.path.join(args.output_dir, f'ATNET_KNN_PURE_k{k}.csv')
         if not os.path.exists(out_pure):
             pure_cols = [c for c in agg_cols if c not in ('in_dc', 'out_dc')]
             x_pure = df[pure_cols].values
@@ -103,7 +103,7 @@ def main():
             print(f'[k={k}] Pure behavioral k-NN already exists, skipping.')
 
         # Strict behavioral k-NN (amount/entropy only, no count/dc)
-        out_strict = os.path.join(args.output_dir, f'HOFINET_KNN_BEHAV_k{k}.csv')
+        out_strict = os.path.join(args.output_dir, f'ATNET_KNN_BEHAV_k{k}.csv')
         if not os.path.exists(out_strict):
             struct_cols = {'in_dc', 'out_dc', 'in_count', 'out_count'}
             behav_cols = [c for c in agg_cols if c not in struct_cols]
@@ -118,7 +118,7 @@ def main():
             print(f'[k={k}] Strict behavioral k-NN already exists, skipping.')
 
         # Structural k-NN (count + dc from x_behav + all centrality)
-        out_struct = os.path.join(args.output_dir, f'HOFINET_KNN_STRUCT_k{k}.csv')
+        out_struct = os.path.join(args.output_dir, f'ATNET_KNN_STRUCT_k{k}.csv')
         if not os.path.exists(out_struct):
             struct_from_agg = [c for c in agg_cols if c in ('out_count', 'in_count', 'in_dc', 'out_dc')]
             struct_cols = struct_from_agg + [c for c in cen_cols if c not in struct_from_agg]
@@ -133,7 +133,7 @@ def main():
             print(f'[k={k}] Structural k-NN already exists, skipping.')
 
         # Hybrid k-NN graph (feature + centrality concatenated)
-        out_hybrid = os.path.join(args.output_dir, f'HOFINET_KNN_HYBRID_k{k}.csv')
+        out_hybrid = os.path.join(args.output_dir, f'ATNET_KNN_HYBRID_k{k}.csv')
         if not os.path.exists(out_hybrid):
             print(f'[k={k}] Building hybrid k-NN graph (feat+cen)...')
             t0 = time.time()

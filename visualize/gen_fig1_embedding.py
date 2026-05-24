@@ -35,7 +35,7 @@ def load_embeddings():
 
 def load_node_features():
     """Load node labels and features."""
-    df = pd.read_csv('datasets/hofinet/HOFINET_NODE_FEAT.csv')
+    df = pd.read_csv('datasets/atnet/ATNET_NODE_FEAT.csv')
     return df['label'].to_numpy(), df
 
 

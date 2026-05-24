@@ -5,7 +5,7 @@ set -e
 GPU="${GPU:-7}"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-for DS in hofinet amlworld amlnet; do
+for DS in atnet amlworld amlnet; do
     echo "[$(date)] === Dataset: $DS ==="
     python -u models/supervised_baselines.py \
         --gpu "$GPU" --seeds 2024 2025 2026 2027 \

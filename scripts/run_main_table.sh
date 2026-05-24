@@ -4,11 +4,11 @@
 # under the current code revision.
 #
 # 9 encoders x 4 settings (a/b/c/d) x 4 seeds x DATASET
-# = 144 runs per dataset on HOFINET
+# = 144 runs per dataset on ATNET
 # = 64 runs per dataset on AMLworld / AMLNet (4 encoders only)
 #
 # Encoder set:
-#   HOFINET: gbt bgrl dgi mvgrl grace dgi_bn mvgrl_bn grace_bn gin
+#   ATNET: gbt bgrl dgi mvgrl grace dgi_bn mvgrl_bn grace_bn gin
 #   Cross-dataset (Table 6): bgrl gbt dgi_bn grace_bn
 #
 # Loss: BootstrapLatent (matches the unified BYOL bootstrap used
@@ -29,19 +29,19 @@
 #
 # Env vars (all overridable):
 #   GPU         single GPU index (e.g., 0)
-#   DATASETS    space-separated subset of {hofinet amlworld amlnet}
+#   DATASETS    space-separated subset of {atnet amlworld amlnet}
 #   ENCODERS    space-separated encoder subset
 #   SETTINGS    space-separated subset of {a b c d}
 #   SEEDS       space-separated seed list
 #   TAG         suffix for the temp CSV (default: gpu${GPU})
-#   OUTPUT_DIR_HOFINET / OUTPUT_DIR_AMLWORLD / OUTPUT_DIR_AMLNET
+#   OUTPUT_DIR_ATNET / OUTPUT_DIR_AMLWORLD / OUTPUT_DIR_AMLNET
 #               per-dataset output dirs (defaults: results/rq1,
 #               results/rq4, results/rq4)
 #
 # Example (4-GPU parallel):
-#   GPU=0 ENCODERS="gbt bgrl dgi"        DATASETS=hofinet  TAG=g0 bash scripts/run_main_table.sh &
-#   GPU=1 ENCODERS="mvgrl grace dgi_bn"  DATASETS=hofinet  TAG=g1 bash scripts/run_main_table.sh &
-#   GPU=2 ENCODERS="mvgrl_bn grace_bn gin" DATASETS=hofinet TAG=g2 bash scripts/run_main_table.sh &
+#   GPU=0 ENCODERS="gbt bgrl dgi"        DATASETS=atnet  TAG=g0 bash scripts/run_main_table.sh &
+#   GPU=1 ENCODERS="mvgrl grace dgi_bn"  DATASETS=atnet  TAG=g1 bash scripts/run_main_table.sh &
+#   GPU=2 ENCODERS="mvgrl_bn grace_bn gin" DATASETS=atnet TAG=g2 bash scripts/run_main_table.sh &
 #   GPU=3 ENCODERS="bgrl gbt dgi_bn grace_bn" DATASETS="amlworld amlnet" TAG=g3 bash scripts/run_main_table.sh &
 #   wait
 #   bash scripts/merge_main_table.sh
@@ -49,19 +49,19 @@
 set -e
 
 GPU="${GPU:-0}"
-DATASETS="${DATASETS:-hofinet amlworld amlnet}"
+DATASETS="${DATASETS:-atnet amlworld amlnet}"
 ENCODERS="${ENCODERS:-gbt bgrl dgi mvgrl grace dgi_bn mvgrl_bn grace_bn gin}"
 SETTINGS="${SETTINGS:-a b c d}"
 SEEDS="${SEEDS:-2024 2025 2026 2027}"
 TAG="${TAG:-gpu${GPU}}"
-# Per-dataset output directories: HOFINET (RQ1) and AMLworld/AMLNet (RQ4).
+# Per-dataset output directories: ATNET (RQ1) and AMLworld/AMLNet (RQ4).
 # Override OUTPUT_DIR_${DS} to point elsewhere.
-OUTPUT_DIR_HOFINET="${OUTPUT_DIR_HOFINET:-results/rq1}"
+OUTPUT_DIR_ATNET="${OUTPUT_DIR_ATNET:-results/rq1}"
 OUTPUT_DIR_AMLWORLD="${OUTPUT_DIR_AMLWORLD:-results/rq4}"
 OUTPUT_DIR_AMLNET="${OUTPUT_DIR_AMLNET:-results/rq4}"
 HP="--lr 0.0005 --hidden_dim 256 --gconv_nlayers 2"
 
-mkdir -p "$OUTPUT_DIR_HOFINET" "$OUTPUT_DIR_AMLWORLD" "$OUTPUT_DIR_AMLNET"
+mkdir -p "$OUTPUT_DIR_ATNET" "$OUTPUT_DIR_AMLWORLD" "$OUTPUT_DIR_AMLNET"
 
 export PYTORCH_CUDA_ALLOC_CONF="max_split_size_mb:256,expandable_segments:True"
 
@@ -74,7 +74,7 @@ echo "  DATASETS=$DATASETS"
 echo "  ENCODERS=$ENCODERS"
 echo "  SETTINGS=$SETTINGS"
 echo "  SEEDS=$SEEDS"
-echo "  OUTPUT (hofinet)=$OUTPUT_DIR_HOFINET / (amlworld)=$OUTPUT_DIR_AMLWORLD / (amlnet)=$OUTPUT_DIR_AMLNET"
+echo "  OUTPUT (atnet)=$OUTPUT_DIR_ATNET / (amlworld)=$OUTPUT_DIR_AMLWORLD / (amlnet)=$OUTPUT_DIR_AMLNET"
 
 # is_done $NAME $TMP $FINAL: 0 (done, skip) | 1 (not done, run)
 # Also scans sibling tmp files (other tags) so parallel dispatchers can
@@ -124,12 +124,12 @@ run_one() {
 
 for DS in $DATASETS; do
     case "$DS" in
-        hofinet)
-            DS_TAG="hof"
-            NODE="hofinet/HOFINET_NODE_FEAT"
-            EDGE="hofinet/HOFINET_EDGES"
-            KNN="hofinet/HOFINET_KNN_BEHAV_k10"
-            OUT_DIR="$OUTPUT_DIR_HOFINET"
+        atnet)
+            DS_TAG="atn"
+            NODE="atnet/ATNET_NODE_FEAT"
+            EDGE="atnet/ATNET_EDGES"
+            KNN="atnet/ATNET_KNN_BEHAV_k10"
+            OUT_DIR="$OUTPUT_DIR_ATNET"
             ;;
         amlworld)
             DS_TAG="aml"
@@ -150,7 +150,7 @@ for DS in $DATASETS; do
 
     RESULT="${OUT_DIR}/.tmp_${DS}_main_sweep_${TAG}.csv"
     case "$DS" in
-        hofinet)  FINAL="${OUT_DIR}/main_sweep.csv" ;;
+        atnet)  FINAL="${OUT_DIR}/main_sweep.csv" ;;
         amlworld) FINAL="${OUT_DIR}/amlworld_main_sweep.csv" ;;
         amlnet)   FINAL="${OUT_DIR}/amlnet_main_sweep.csv" ;;
     esac

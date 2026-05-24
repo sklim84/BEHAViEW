@@ -9,7 +9,7 @@ scripts/
 ├── run_main_table.sh           # shared 4-setting × encoder sweep (RQ1 + RQ4)
 ├── merge_main_table.sh         # per-tag tmp file collapser for the above
 ├── rq1/                        # Homophily Recovery (Table 3)
-│   └── run_main_sweep.sh       # HOFINET wrapper -> results/rq1/main_sweep.csv
+│   └── run_main_sweep.sh       # ATNET wrapper -> results/rq1/main_sweep.csv
 ├── rq2/                        # Signal Preservation (Table 5)
 │   ├── compute_paired_t_test.py
 │   └── run_pool_variants.sh

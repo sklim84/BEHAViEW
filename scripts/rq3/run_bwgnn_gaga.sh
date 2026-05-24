@@ -4,7 +4,7 @@
 set -e
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-DS="${DS:-hofinet}"
+DS="${DS:-atnet}"
 GPU="${GPU:-7}"
 
 python -u models/supervised_baselines.py \

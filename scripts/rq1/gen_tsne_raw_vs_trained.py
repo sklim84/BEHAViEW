@@ -1,5 +1,5 @@
 """Two-panel t-SNE: raw 20-d behavioral features vs BehaView (d) trained
-joint embeddings, on the same HOFINET subsample.
+joint embeddings, on the same ATNET subsample.
 
 Narrative: behavioral features already separate the suspicious class
 somewhat (left); BehaView's repaired-topology contrastive training
@@ -18,7 +18,7 @@ DATA_DIR = 'results/embeddings/tsne_v0'
 FIG_DIR = 'results/rq1/figures'
 os.makedirs(FIG_DIR, exist_ok=True)
 
-NODE_DATA = 'datasets/hofinet/HOFINET_NODE_FEAT.csv'
+NODE_DATA = 'datasets/atnet/ATNET_NODE_FEAT.csv'
 
 # Same as build_knn_graph_variants._behavioral_columns(): exclude label,
 # account, network-derived counts/degree, and structural features.
@@ -47,7 +47,7 @@ def load_raw_behavioral():
 
 
 def load_trained(setting, seed):
-    p = os.path.join(DATA_DIR, f'HOFINET_z_{setting}_s{seed}.npz')
+    p = os.path.join(DATA_DIR, f'ATNET_z_{setting}_s{seed}.npz')
     d = np.load(p, allow_pickle=True)
     return d['z'], d['y']
 

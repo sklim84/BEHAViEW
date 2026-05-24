@@ -19,7 +19,7 @@ os.makedirs(FIG_DIR, exist_ok=True)
 
 
 def load_npz(setting, seed):
-    p = os.path.join(DATA_DIR, f'HOFINET_z_{setting}_s{seed}.npz')
+    p = os.path.join(DATA_DIR, f'ATNET_z_{setting}_s{seed}.npz')
     if not os.path.exists(p):
         raise FileNotFoundError(p)
     d = np.load(p, allow_pickle=True)
@@ -95,8 +95,8 @@ def main():
     fig.legend(handles, labels, loc='lower center', ncol=2, frameon=False,
                bbox_to_anchor=(0.5, -0.05), fontsize=11)
     plt.tight_layout()
-    out_pdf = os.path.join(FIG_DIR, 'fig_tsne_hofinet.pdf')
-    out_png = os.path.join(FIG_DIR, 'fig_tsne_hofinet.png')
+    out_pdf = os.path.join(FIG_DIR, 'fig_tsne_atnet.pdf')
+    out_png = os.path.join(FIG_DIR, 'fig_tsne_atnet.png')
     plt.savefig(out_pdf, bbox_inches='tight', dpi=300)
     plt.savefig(out_png, bbox_inches='tight', dpi=200)
     plt.close()

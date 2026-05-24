@@ -1,6 +1,6 @@
 #!/bin/bash
 # Merge per-tag temp CSVs into one CSV per dataset.
-# HOFINET (RQ1) -> results/rq1/main_sweep.csv
+# ATNET (RQ1) -> results/rq1/main_sweep.csv
 # AMLworld/AMLNet (RQ4) -> results/rq4/${ds}_main_sweep.csv
 set -e
 
@@ -8,7 +8,7 @@ python - <<'EOF'
 import pandas as pd, glob, os
 
 JOBS = [
-    ("hofinet",  "results/rq1",        "main_sweep.csv"),
+    ("atnet",  "results/rq1",        "main_sweep.csv"),
     ("amlworld", "results/rq4",        "amlworld_main_sweep.csv"),
     ("amlnet",   "results/rq4",        "amlnet_main_sweep.csv"),
 ]

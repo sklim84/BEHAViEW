@@ -661,7 +661,7 @@ def fig1_framework():
                                     facecolor='#fff9c4', edgecolor='black', linewidth=1.5)
     ax.add_patch(box6)
     ax.text(5, 1.75, 'Frozen [s₁ ∥ s₂] → LogReg Evaluation', ha='center', fontsize=9, fontweight='bold')
-    ax.text(5, 1.5, 'F1_susp = 0.682 (GBT encoder, HOFINET)', ha='center', fontsize=8, color='#e74c3c')
+    ax.text(5, 1.5, 'F1_susp = 0.682 (GBT encoder, ATNET)', ha='center', fontsize=8, color='#e74c3c')
 
     # Axis labels for two dimensions
     ax.annotate('', xy=(0.3, 4.65), xytext=(0.3, 6.15),
@@ -686,15 +686,15 @@ def fig_rq3_baseline():
 
     Values mirror Table tab:rq3 exactly (4-seed mean, std for errorbars).
     BehaView uses setting (d) with the strongest encoder per dataset
-    (GBT on HOFINET/AMLNet, BGRL on AMLworld).
+    (GBT on ATNET/AMLNet, BGRL on AMLworld).
     """
     datasets = [
-        ('HOFINET',  r'HOFINET ($\rho{=}2.13\%$)',  0.85),
+        ('ATNET',  r'ATNET ($\rho{=}2.13\%$)',  0.85),
         ('AMLworld', r'AMLworld ($\rho{=}1.23\%$)', 0.10),
         ('AMLNet',   r'AMLNet ($\rho{=}13.52\%$)',  0.85),
     ]
 
-    # (model, category, HOFINET[mean,std], AMLworld[mean,std], AMLNet[mean,std])
+    # (model, category, ATNET[mean,std], AMLworld[mean,std], AMLNet[mean,std])
     rows = [
         ('XGBoost',   'Tabular',  (0.675, 0.001), (0.073, 0.002), (0.699, 0.007)),
         ('LightGBM',  'Tabular',  (0.670, 0.001), (0.070, 0.002), (0.687, 0.011)),
@@ -728,7 +728,7 @@ def fig_rq3_baseline():
 
     fig, axes = plt.subplots(3, 1, figsize=(3.55, 7.85))
     for ax, (key, title, ymax) in zip(axes, datasets):
-        col = {'HOFINET': 2, 'AMLworld': 3, 'AMLNet': 4}[key]
+        col = {'ATNET': 2, 'AMLworld': 3, 'AMLNet': 4}[key]
         means = [r[col][0] for r in plot_rows]
         stds  = [r[col][1] for r in plot_rows]
         colors = [cat_color[r[1]] for r in plot_rows]

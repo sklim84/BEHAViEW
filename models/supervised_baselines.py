@@ -265,7 +265,7 @@ class PCGNN(nn.Module):
     so that the GNN sees a relatively balanced ego-neighborhood. Minority
     nodes always keep all their neighbors (high-recall) ; majority-majority
     edges keep with prob p_keep (default 0.3, roughly matching prevalence
-    ratio for HOFINET 2%-prevalence).
+    ratio for ATNET 2%-prevalence).
     """
     def __init__(self, input_dim, hidden_dim, num_layers=2, dropout=0.2, p_keep_mm=0.3):
         super().__init__()
@@ -581,7 +581,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', type=str, default='0')
     parser.add_argument('--seeds', nargs='+', type=int, default=[2024, 2025, 2026, 2027])
-    parser.add_argument('--dataset', type=str, default='amlworld', choices=['hofinet', 'amlworld', 'amlnet'])
+    parser.add_argument('--dataset', type=str, default='amlworld', choices=['atnet', 'amlworld', 'amlnet'])
     parser.add_argument('--result_file', type=str, default='./results/exp_results_supervised.csv')
     parser.add_argument('--train_ratio', type=float, default=0.1,
                         help='Train split ratio (val_ratio fixed at 0.1; test = 1 - train - val)')
@@ -609,9 +609,9 @@ def main():
         device = torch.device(args.device)
     print(f'Device: {device}')
 
-    if args.dataset == 'hofinet':
-        node_data = 'hofinet/HOFINET_NODE_FEAT'
-        edge_data = 'hofinet/HOFINET_EDGES'
+    if args.dataset == 'atnet':
+        node_data = 'atnet/ATNET_NODE_FEAT'
+        edge_data = 'atnet/ATNET_EDGES'
     elif args.dataset == 'amlworld':
         node_data = 'amlworld/AMLWORLD_NODE_FEAT'
         edge_data = 'amlworld/AMLWORLD_EDGES'

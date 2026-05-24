@@ -9,7 +9,7 @@
 set -e
 
 GPU="${GPU:-1}"
-DATASET="${DATASET:-hofinet}"
+DATASET="${DATASET:-atnet}"
 SEEDS="${SEEDS:-2024 2025 2026 2027}"
 MODELS="${MODELS:-lgbm xgb}"
 RATIOS="${RATIOS:-0.01 0.05 0.10}"

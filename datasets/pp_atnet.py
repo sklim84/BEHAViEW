@@ -1,12 +1,12 @@
 """
-HOFINET.csv preprocessing pipeline
+ATNET.csv preprocessing pipeline
 Raw transaction data -> node feature CSV + edge CSV
 
 Usage:
-    python datasets/pp_hofinet.py                          # Hybrid: cuGraph (GPU) + Memgraph (recommended)
-    python datasets/pp_hofinet.py --mg_host 192.168.1.10   # Remote Memgraph
-    python datasets/pp_hofinet.py --gpu_only               # cuGraph only (no Memgraph, 8 features)
-    python datasets/pp_hofinet.py --cpu_only               # NetworkX only (for environments without GPU/Memgraph)
+    python datasets/pp_atnet.py                          # Hybrid: cuGraph (GPU) + Memgraph (recommended)
+    python datasets/pp_atnet.py --mg_host 192.168.1.10   # Remote Memgraph
+    python datasets/pp_atnet.py --gpu_only               # cuGraph only (no Memgraph, 8 features)
+    python datasets/pp_atnet.py --cpu_only               # NetworkX only (for environments without GPU/Memgraph)
 
 Graph features (19 total):
     cuGraph (GPU, seconds): dc, in_dc, out_dc, pagerank, hits_hub, hits_auth, kcore, triangle, betweenness
@@ -27,7 +27,7 @@ try:
 except ImportError:
     from feature_utils import run_feature
 
-# HOFINET Korean -> English column mapping
+# ATNET Korean -> English column mapping
 COLUMN_MAP = {
     '거래일자': 'tran_dt',
     '거래시간대': 'tran_tmrg',
@@ -404,9 +404,9 @@ def save_outputs(node_features, edge_df, output_name, output_dir='./datasets'):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='HOFINET preprocessing pipeline')
-    parser.add_argument('--input', type=str, default='./datasets/hofinet/HOFINET.csv')
-    parser.add_argument('--output_name', type=str, default='HOFINET')
+    parser = argparse.ArgumentParser(description='ATNET preprocessing pipeline')
+    parser.add_argument('--input', type=str, default='./datasets/atnet/ATNET.csv')
+    parser.add_argument('--output_name', type=str, default='ATNET')
     parser.add_argument('--output_dir', type=str, default='./datasets')
     parser.add_argument('--cpu_only', action='store_true',
                         help='Use NetworkX CPU only (for environments without GPU/Memgraph)')

@@ -1,8 +1,8 @@
 #!/bin/bash
 # =============================================================
-# BehaView label-efficiency sweep for {hofinet, amlworld, amlnet}.
+# BehaView label-efficiency sweep for {atnet, amlworld, amlnet}.
 #
-# Env vars: GPU, DATASET (hofinet/amlworld/amlnet), ENCODER, KNN
+# Env vars: GPU, DATASET (atnet/amlworld/amlnet), ENCODER, KNN
 # 1 setting (d) × 3 fractions × 4 seeds = 12 runs/dataset
 # =============================================================
 set -e
@@ -14,10 +14,10 @@ RATIOS="${RATIOS:-0.01 0.05 0.10}"
 EPOCHS="${EPOCHS:-200}"
 
 # Per-dataset config (matches paper's best encoder per dataset)
-if [[ "$DATASET" == "hofinet" ]]; then
-    NODE="hofinet/HOFINET_NODE_FEAT"
-    EDGE="hofinet/HOFINET_EDGES"
-    KNN="hofinet/HOFINET_KNN_BEHAV_k10"
+if [[ "$DATASET" == "atnet" ]]; then
+    NODE="atnet/ATNET_NODE_FEAT"
+    EDGE="atnet/ATNET_EDGES"
+    KNN="atnet/ATNET_KNN_BEHAV_k10"
     ENCODER="${ENCODER:-gbt}"
 elif [[ "$DATASET" == "amlworld" ]]; then
     NODE="amlworld/AMLWORLD_NODE_FEAT"

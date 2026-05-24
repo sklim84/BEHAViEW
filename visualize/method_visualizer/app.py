@@ -29,20 +29,20 @@ BASE_DIR = APP_DIR.parent
 CASE_STUDY_PATH = BASE_DIR / "results" / "rq1" / "case_study" / "representative.json"
 
 DATASETS = {
-    "HOFINET": {
-        "node_path": BASE_DIR / "datasets" / "hofinet" / "HOFINET_NODE_FEAT.csv",
-        "edge_path": BASE_DIR / "datasets" / "hofinet" / "HOFINET_EDGES.csv",
+    "ATNET": {
+        "node_path": BASE_DIR / "datasets" / "atnet" / "ATNET_NODE_FEAT.csv",
+        "edge_path": BASE_DIR / "datasets" / "atnet" / "ATNET_EDGES.csv",
         "ablation_path": BASE_DIR / "results" / "rq1" / "main_sweep.csv",
-        "supervised_path": BASE_DIR / "results" / "rq3" / "supervised_hofinet.csv",
+        "supervised_path": BASE_DIR / "results" / "rq3" / "supervised_atnet.csv",
         "extra_paths": [
-            BASE_DIR / "results" / "rq3" / "consisgad_hofinet.csv",
-            BASE_DIR / "results" / "rq3" / "caregnn_pcgnn_hofinet.csv",
-            BASE_DIR / "results" / "rq3" / "bwgnn_gaga_hofinet.csv",
+            BASE_DIR / "results" / "rq3" / "consisgad_atnet.csv",
+            BASE_DIR / "results" / "rq3" / "caregnn_pcgnn_atnet.csv",
+            BASE_DIR / "results" / "rq3" / "bwgnn_gaga_atnet.csv",
         ],
-        "node_arg": "hofinet/HOFINET_NODE_FEAT",
-        "edge_arg": "hofinet/HOFINET_EDGES",
-        "knn_prefix": "hofinet/HOFINET_KNN_BEHAV",
-        "model_prefix": "hof",
+        "node_arg": "atnet/ATNET_NODE_FEAT",
+        "edge_arg": "atnet/ATNET_EDGES",
+        "knn_prefix": "atnet/ATNET_KNN_BEHAV",
+        "model_prefix": "atn",
     },
     "AMLworld": {
         "node_path": BASE_DIR / "datasets" / "amlworld" / "AMLWORLD_NODE_FEAT.csv",
@@ -1000,7 +1000,7 @@ with st.sidebar:
 
 st.title("BehaView 2D method comparator")
 st.caption(
-    "On HOFINET and AMLworld, this compares the transaction-graph-based existing method against our repaired-topology method as 2D topology graphs."
+    "On ATNET and AMLworld, this compares the transaction-graph-based existing method against our repaired-topology method as 2D topology graphs."
 )
 
 st.info(
@@ -1180,7 +1180,7 @@ with tab_rq2:
 with tab_rq3:
     st.subheader("Check whether our representation is competitive with supervised baselines under label scarcity")
     rq3_rows = []
-    for ds in ["hofinet", "amlworld", "amlnet"]:
+    for ds in ["atnet", "amlworld", "amlnet"]:
         behav_path = BASE_DIR / "results" / "rq3" / f"behaview_{ds}.csv"
         if behav_path.exists():
             df = pd.read_csv(behav_path)
@@ -1217,7 +1217,7 @@ with tab_rq3:
 with tab_rq4:
     st.subheader("Check whether the same pattern holds across different data scales and suspicious ratios")
     rq4_sources = [
-        ("HOFINET", BASE_DIR / "results" / "rq1" / "main_sweep.csv"),
+        ("ATNET", BASE_DIR / "results" / "rq1" / "main_sweep.csv"),
         ("AMLWORLD", BASE_DIR / "results" / "rq4" / "amlworld_main_sweep.csv"),
         ("AMLNET", BASE_DIR / "results" / "rq4" / "amlnet_main_sweep.csv"),
     ]

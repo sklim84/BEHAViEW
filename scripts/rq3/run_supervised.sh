@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================
 # Supervised label-efficiency sweep for one dataset.
-# Env vars: GPU, DATASET (hofinet/amlworld/amlnet)
+# Env vars: GPU, DATASET (atnet/amlworld/amlnet)
 #
 # 6 baselines × 3 fractions × 4 seeds = 72 runs/dataset
 # Boosting models (xgb, lgbm) use --exclude_struct for fair
@@ -10,7 +10,7 @@
 set -e
 
 GPU="${GPU:-1}"
-DATASET="${DATASET:-hofinet}"
+DATASET="${DATASET:-atnet}"
 SEEDS="${SEEDS:-2024 2025 2026 2027}"
 MODELS="${MODELS:-mlp xgb lgbm gcn gat caregnn}"
 RATIOS="${RATIOS:-0.01 0.05 0.10}"

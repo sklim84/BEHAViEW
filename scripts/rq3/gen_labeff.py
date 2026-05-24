@@ -26,8 +26,8 @@ FIG_OUTS = [
 
 
 def load_behaview(ds):
-    if ds == 'hofinet':
-        df = pd.read_csv(os.path.join(RESULTS, 'rq3/behaview_hofinet.csv'))
+    if ds == 'atnet':
+        df = pd.read_csv(os.path.join(RESULTS, 'rq3/behaview_atnet.csv'))
         df['train_ratio'] = df['Model'].apply(lambda m: float(m.split('_r')[1].split('_s')[0]))
     else:
         df = pd.read_csv(os.path.join(RESULTS, f'rq3/behaview_{ds}.csv'))
@@ -60,7 +60,7 @@ STYLE = {
 MODEL_ORDER = ['BEHAViEW', 'XGBoost', 'LightGBM', 'MLP', 'GAT', 'GCN', 'CARE-GNN']
 
 DATASETS = [
-    ('hofinet',  'ATNet ($\\rho{=}2.13\\%$)'),
+    ('atnet',  'ATNet ($\\rho{=}2.13\\%$)'),
     ('amlworld', 'AMLworld ($\\rho{=}1.23\\%$)'),
     ('amlnet',   'AMLNet ($\\rho{=}13.52\\%$)'),
 ]
@@ -95,7 +95,7 @@ def main():
 
     axes[0].set_ylabel('$F1_{\\mathrm{susp}}$')
 
-    # Y-axis scales: HOFINET/AMLNet medium-high, AMLworld very small
+    # Y-axis scales: ATNET/AMLNet medium-high, AMLworld very small
     axes[0].set_ylim(0, 0.75)
     axes[1].set_ylim(0, 0.12)
     axes[2].set_ylim(0, 0.75)

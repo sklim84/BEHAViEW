@@ -11,8 +11,8 @@
 | `run_boosting_behav.sh` | `results/rq3/boosting_behav.csv` | XGBoost/LightGBM with behavioral-only features |
 
 `run_additional_exp.sh` (still at top level, Phase D will split) writes
-the HOFINET BehaView label-fraction part to
-`results/rq3/behaview_hofinet.csv`; its feature-ablation part belongs
+the ATNET BehaView label-fraction part to
+`results/rq3/behaview_atnet.csv`; its feature-ablation part belongs
 to the appendix.
 
 Re-running any of the above writes to the exact CSV path documented
