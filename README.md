@@ -61,7 +61,7 @@ The 4-setting ablation:
 
 ### 4-setting ablation on ATNet (F1_susp, 4-seed mean±std)
 
-Selected encoders (full table in `_manuscript/main.tex` / `results/rq1/main_sweep.csv`):
+Selected encoders (full table in `results/rq1/main_sweep.csv`):
 
 | Encoder | (a) Tx + node | (b) Recovered + node | (c) Tx + pool | (d) Repaired + pool |
 |---|---|---|---|---|
@@ -127,18 +127,12 @@ Key arguments (see `models/config.py`):
 ## Project layout
 
 ```
-_manuscript/                          # Paper source (LaTeX) + figures + reference extracts
-  main.tex
-  aml.bib
-  figures/                       # Paper figures (PDF tracked, PNG ignored)
-  references/md/                 # Reference paper markdown extracts
-  _docs/                         # Source PDFs of cited papers and AML domain notes
 models/
   subgraph_cl.py                 # Main BEHAViEW training (9 encoders × 4 settings)
   supervised_baselines.py        # Supervised comparison (10+ baselines)
   config.py, data_loader.py, utils.py
 datasets/
-  HOFINET_*.csv                  # ATNet: real-derived synthetic interbank dataset (not shared)
+  hofinet/                       # ATNet: real-derived synthetic interbank dataset (not shared)
   amlworld/                      # AMLworld HI-Small (NeurIPS 2023)
   amlnet/                        # AMLNet
   build_knn_graph.py             # Builds the behavioral / structural / feature k-NN graphs
@@ -153,7 +147,9 @@ results/
   rq{1,2,3,4}/                   # Per-RQ result CSVs (see results/README.md)
   embeddings/                    # Cached embeddings for downstream visualization
   appendix/                      # Appendix-table CSVs
-method_visualizer/               # Streamlit app for interactive 3D method comparison
+visualize/
+  gen_fig1_embedding.py          # Embedding / t-SNE figure generation
+  method_visualizer/             # Streamlit app for interactive 3D method comparison
 ```
 
 ---
@@ -166,5 +162,4 @@ method_visualizer/               # Streamlit app for interactive 3D method compa
 | [GCPAL](https://doi.org/10.1007/s44196-024-00720-4) | IJCIS 2024 | k-NN view for AML |
 | [SUBG-CON](https://arxiv.org/abs/2009.10564) | ICDM 2020 | Subgraph contrastive learning |
 | [AMLworld](https://arxiv.org/abs/2306.16424) | NeurIPS 2023 | AML synthetic benchmark |
-| [RF Proximity for Bonds](https://dl.acm.org/doi/10.1145/3533271.3561736) | ICAIF 2022 | Tree-based similarity (k-NN advancement ablation) |
 
