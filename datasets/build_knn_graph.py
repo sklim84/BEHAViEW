@@ -43,9 +43,9 @@ def build_knn_edges(features, k):
 
 def main():
     parser = argparse.ArgumentParser(description='Build k-NN graphs')
-    parser.add_argument('--node_data', default='datasets/hofinet/HOFINET_NODE_FEAT.csv')
+    parser.add_argument('--node_data', default='datasets/amlworld/AMLWORLD_NODE_FEAT.csv')
     parser.add_argument('--k', nargs='+', type=int, default=[10])
-    parser.add_argument('--output_dir', default='datasets/hofinet')
+    parser.add_argument('--output_dir', default='datasets/amlworld')
     args = parser.parse_args()
 
     print(f'Loading {args.node_data}...')

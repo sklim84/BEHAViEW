@@ -581,7 +581,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', type=str, default='0')
     parser.add_argument('--seeds', nargs='+', type=int, default=[2024, 2025, 2026, 2027])
-    parser.add_argument('--dataset', type=str, default='hofinet', choices=['hofinet', 'amlworld', 'amlnet'])
+    parser.add_argument('--dataset', type=str, default='amlworld', choices=['hofinet', 'amlworld', 'amlnet'])
     parser.add_argument('--result_file', type=str, default='./results/exp_results_supervised.csv')
     parser.add_argument('--train_ratio', type=float, default=0.1,
                         help='Train split ratio (val_ratio fixed at 0.1; test = 1 - train - val)')

@@ -83,6 +83,16 @@ Full tables for label fractions {1%, 5%, 10%}: `results/rq3/`.
 
 ---
 
+## Setup
+
+```bash
+pip install -r requirements.txt
+```
+
+Under PyTorch 2.10+, PyGCL 0.1.2 needs four small patches (lazy `dgl` / `RWSampling` imports and optional `torch_sparse` / `torch_scatter`); the exact files are listed in `requirements.txt`. Public datasets are not bundled: download AMLworld and AMLNet (see the Datasets table) into `datasets/amlworld/` and `datasets/amlnet/`, then run the matching `datasets/pp_*.py` preprocessing and `python datasets/build_knn_graph.py --k 10`.
+
+---
+
 ## Quick start
 
 ```bash
